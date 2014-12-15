@@ -1,0 +1,170 @@
+[Language]
+FileMenu = Файл
+DoItItem = Сделать скриншот
+ScreenFolderOpenItem = Открыть папку скриншотов
+ExitItem = Выйти
+
+ToolsMenu = Инструменты
+WcShootItem = Захват с веб-камеры
+IsUploadingItem = Загрузка скриншотов на ImageShack
+AeroSwitchMenu = Режим Aero
+AeroSwitchEnable = Включить
+AeroSwitchDisable = Отключить
+
+SettingsMenu = Настройки
+HotKeyItem = Назначить горячие клавиши
+SettingsItem = Настройки...
+
+HelpMenu = Помощь
+WebSiteItem = Сайт программы
+AboutItem = О программе
+
+FolderToSaveImages = Папка для сохранения скриншотов
+SettingsGroup = Настройки программы
+CollapseAtStart = Запускать свёрнутым
+UseSounds = Использовать звуки
+IncludeCursor = Захватывать курсор
+
+ShootMode = Режим сьёмки
+AllScreenMode = Весь экран
+SelectedWindowMode = Выбранное окно (под курсором)
+RegionShootMode = Выделенная область
+
+SettingsButton = Настройки
+DoItButton = Скриншот
+HotKeyButton = Клавиши
+ExitButton = Выйти
+
+AboutDlgTitle = О программе
+TranslatorLabel = Перевод:
+GratitudesLabel = Благодарности:
+QuickLicenseText = Эта программа бесплатна и распространяется\nпод лицензией GNU General Public License.
+
+ChangeFolderTitle = Выберите папку для сохранения скриншотов...
+
+WCShootTitle = Захват с веб-камеры
+
+WCVideoSettingsGroup = Параметры видео
+WCVideoSourceLabel = Настроить источник видео:
+WCVideoFormatLabel = Настроить формат видео:
+WCVideoCompressionLabel = Настроить сжатие видео:
+
+WCScreenShootButton = Скриншот
+WCRecordButton = Запись
+WCStopButton = Остановить
+WCCloseButton = Закрыть
+
+WCErrorTitle = Ошибка
+WCErrorUnloadText = Ошибка при отключении от веб-камеры
+WCErrorStartText = Ошибка старта записи
+WCErrorStopText = Ошибка остановки записи
+WCErrorShootText = Ошибка сохранения / создания изображения
+
+SettingsTitle = Настройки
+SettingsOkButton = ОК
+SettingsCancelButton = Отмена
+SettingsNeedRestart = необходим перезапуск
+
+SettingsMainTab = Основные
+SettingsAlwaysOnTop = Поверх остальных окон
+SettingsUseManifest = Использовать оформление системы
+SettingsCollapseAtStart = Запускать свёрнутым
+
+SettingsUseSounds= Использовать звуки
+SettingsIncludeCursor = Захватывать курсор
+
+SettingsLanguageGroup = Язык интерфейса
+SettingsSelectLangText = Выберите язык из списка:
+
+SettingsTransparencyGroup = Прозрачность окон программы
+SettingsUseTransparency = Использовать прозрачность
+
+SettingsTransparencyGroup = Прозрачность окон программы
+SettingsUseTransparency = Использовать прозрачность
+SettingsTransparency = Прозрачность:
+
+SettingsScreenshootTab = Скриншоты
+SettingsImagesFormat = Формат изображений
+SettingsFormatInfo = Сведения о формате (Wiki)
+
+SettingsDelayGroup = Задержка
+SettingsUseDelay = Использовать задержку
+SettingsDelayLabel = Задержка:
+SettingsDelaySecLabel = сек.
+
+SettingsShootNameGroup = Имя скриншотов
+SettingsNumbersName = 001...xxx
+SettingsRandomName = случайные символы
+SettingsDateName = дата и время
+
+SettingsSavingModeGroup = Режим сохранения
+SettingsSaveToFile = Сохранение в файл
+SettingsSaveToClip = Помещать изображение в буфер обмена (без эффектов)
+
+SettingsEffectsTab = Эффекты
+SettingsResizeGroup = Изменение размеров
+SettingsUseResize = Изменять размеры
+SettingsResizeWidth = Ширина:
+SettingsResizeHeight = Высота:
+SettingsDisableAeroOnWnd = Отключать Aero окна
+SettingsDisableAeroOnWndText = Перед созданием скриншота в режиме "Выбранное окно", Aero окна отключится, затем вернётся в прежнее состояние
+SettingsRotateGroup = Вращение
+SettingsRotateDisable = Отключить
+SettingsRotate90 = По часовой стрелке
+SettingsRotate270 = Против часовой стрелки
+SettingsRotate180 = Перевернуть
+
+SettingsHotKeyTab = Горячие клавиши
+SettingsHotKeyAllScreen = Во весь экран
+SettingsHotKeySelectedWindow = Выбранное окно (под курсором)
+SettingsHotKeyRegion = Выделенная область
+
+SettingsActionTab = Действия
+SettingsActionAfterShoot = После создания скриншота
+SettingsActionIShack = Включить загрузку на ImageShack
+SettingsActionSilent = Не выполнять никаких действий (тихий режим)
+SettingsActionShellEx = Открыть в программе по умолчанию
+SettingsActionExecute = Выполнить программу
+SettingsActionHelp = Вы можете задать параметры для выполняемого приложения:\n%s - полный путь к созданному скриншоту\n%f - папка программы
+SettingsActionShellExChangeFile = Выберите файл...
+SettingsApplicationType = Приложения
+SettingsAllFilesType = Все файлы
+
+SettingsFtpTab = FTP
+SettingsFtpUploadGroup = Загрузка на FTP сервер
+SettingsEnableFtp = Включить загрузку
+SettingsFtpServer = Сервер:
+SettingsFtpUser = Пользователь:
+SettingsFtpPassword = Пароль:
+SettingsFtpFolder = Папка:
+SettingsNoFtpGui = Не показывать  диалог загрузки
+SettingsFtpDelAfterUpload = Удалять исходный файл после загрузки
+
+FtpUploading = Загрузка на FTP сервер...
+FtpConnecting = Соединение с сервером...
+FtpNoConnect = Неудалось подключиться к серверу...
+FtpUploading = Загрузка файла на сервер...
+
+SettingsWarningTitle = Внимание
+SettingsWarningText = Для принятия некоторых настроек необходим перезапуск. Перезапустить?
+
+RegionMouseLocationStartText = Нажмите "Левую кнопку мыши" для начала выделения\n\n"Правую кнопку мыши" для выхода из режима
+RegionMouseLocationText = Горизонталь [X]: Начало = %i, Длина = %i\nВертикаль [Y]: Начало = %i, Высота = %i\n\nОтпустите клавишу мыши для завершения
+
+FolderErrorTitle = Ошибка
+FolderErrorText = Введённый путь в строке адреса неправильный или не существует
+
+CmdHelpMessageTitle = Параметры коммандной строки
+CmdHelpMessageText = Параметры запуска программы:\n\n/fullscreen - снимок всего экрана\n/window - снимок выбранного окна\n/region - снимок выделенной области
+
+ImageShackDlgTitle = Загрузка на ImageShack...
+ImageShackImageGroup = Изображение для загрузки
+ImageShackLinksGroup = Ссылка на изображение
+ImageShackUploadBtn = Загрузить
+ImageShackCloseBtn = Закрыть
+ImageShackSelectImageTitle = Выберите изображения...
+ImageShackSelectImage = Изображения
+ImageShackErrorTitle = Ошибка
+ImageShackNotExistsText = Необходимо выбрать файл для загрузки
+ImageShackDllNotExistsText = Отсутствует файл UploadFile.dll необходимый для загрузки скриншотов
+ImageShackContentTypeErrorText = Невозможно определить "Content Type" файла
