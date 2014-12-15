@@ -7,7 +7,7 @@
 
 If $cmdline[0] = 0 Then
 	If _Mutex("FREE_SHOOTER") = 1 Then 
-		MsgBox(64, "Ошибка", "Программа уже запущена")
+		MsgBox(64, "РћС€РёР±РєР°", "РџСЂРѕРіСЂР°РјРјР° СѓР¶Рµ Р·Р°РїСѓС‰РµРЅР°")
 		Exit
 	EndIf
 Else
@@ -45,7 +45,7 @@ Global $imageupload_dll = @ScriptDir &"\UploadFile.dll"
 
 ;Global Language Settings
 Global $lang_dir = @ScriptDir &"\Lang"
-Global $language = IniRead($settings_file, "freeshooter", "Language", "Русский")
+Global $language = IniRead($settings_file, "freeshooter", "Language", "Р СѓСЃСЃРєРёР№")
 Global $default_lang = $lang_dir &"\"& $language &".lng"
 Global $translator = IniRead($default_lang, "Language", "Translator", "")
 	
@@ -65,7 +65,7 @@ Global $main_dlg, $wc_dlg, $opt_dlg, $hHwnd, $hTab, $sFile
 If $cmdline[0] Then
 	If not StringInStr($cmdline[1], "/fromrestart") Then
 		If StringInStr($cmdline[1], "/h") or StringInStr($cmdline[1], "/help") or StringInStr($cmdline[1], "-h") or StringInStr($cmdline[1], "-help") or StringInStr($cmdline[1], "-?") or StringInStr($cmdline[1], "/?") Then 
-			MsgBox(64, T("CmdHelpMessageTitle", "Параметры коммандной строки"), T("CmdHelpMessageText", "Параметры запуска программы:" &@CRLF&@CRLF& "/fullscreen - снимок всего экрана" &@CRLF& "/window - снимок выбранного окна" &@CRLF& "/region - снимок выделенной области"))
+			MsgBox(64, T("CmdHelpMessageTitle", "РџР°СЂР°РјРµС‚СЂС‹ РєРѕРјРјР°РЅРґРЅРѕР№ СЃС‚СЂРѕРєРё"), T("CmdHelpMessageText", "РџР°СЂР°РјРµС‚СЂС‹ Р·Р°РїСѓСЃРєР° РїСЂРѕРіСЂР°РјРјС‹:" &@CRLF&@CRLF& "/fullscreen - СЃРЅРёРјРѕРє РІСЃРµРіРѕ СЌРєСЂР°РЅР°" &@CRLF& "/window - СЃРЅРёРјРѕРє РІС‹Р±СЂР°РЅРЅРѕРіРѕ РѕРєРЅР°" &@CRLF& "/region - СЃРЅРёРјРѕРє РІС‹РґРµР»РµРЅРЅРѕР№ РѕР±Р»Р°СЃС‚Рё"))
 		EndIf
 		If StringInStr($cmdline[1], "/fullscreen") Then _ScreenShoot_FullScreen()
 		If StringInStr($cmdline[1], "/window") Then _ScreenShoot_SelectedWindow()
@@ -90,59 +90,59 @@ Else
 	DllCall("uxtheme.dll", "none", "SetThemeAppProperties", "int", 3)
 EndIf
 
-$file_menu = GUICtrlCreateMenu(T("FileMenu", "Файл"))
-$doit_item = GUICtrlCreateMenuItem(T("DoItItem", "Сделать скриншот"), $file_menu)
-$screen_folder_open_item = GUICtrlCreateMenuItem(T("ScreenFolderOpenItem", "Открыть папку скриншотов"), $file_menu)
-$exit_item = GUICtrlCreateMenuItem(T("ExitItem", "Выйти"), $file_menu)
+$file_menu = GUICtrlCreateMenu(T("FileMenu", "Р¤Р°Р№Р»"))
+$doit_item = GUICtrlCreateMenuItem(T("DoItItem", "РЎРґРµР»Р°С‚СЊ СЃРєСЂРёРЅС€РѕС‚"), $file_menu)
+$screen_folder_open_item = GUICtrlCreateMenuItem(T("ScreenFolderOpenItem", "РћС‚РєСЂС‹С‚СЊ РїР°РїРєСѓ СЃРєСЂРёРЅС€РѕС‚РѕРІ"), $file_menu)
+$exit_item = GUICtrlCreateMenuItem(T("ExitItem", "Р’С‹Р№С‚Рё"), $file_menu)
 
-$tools_menu = GUICtrlCreateMenu(T("ToolsMenu", "Инструменты"))
-$wc_shoot_item = GUICtrlCreateMenuItem(T("WcShootItem", "Захват с веб-камеры"), $tools_menu)
-$is_uploading_item = GUICtrlCreateMenuItem(T("IsUploadingItem", "Загрузка скриншотов на ImageShack"), $tools_menu)
-$aero_switch_menu = GUICtrlCreateMenu(T("AeroSwitchMenu", "Режим Aero"), $tools_menu)
-$aero_enable_item = GUICtrlCreateMenuItem(T("AeroSwitchEnable", "Включить"), $aero_switch_menu)
-$aero_disable_item = GUICtrlCreateMenuItem(T("AeroSwitchDisable", "Отключить"), $aero_switch_menu)
+$tools_menu = GUICtrlCreateMenu(T("ToolsMenu", "РРЅСЃС‚СЂСѓРјРµРЅС‚С‹"))
+$wc_shoot_item = GUICtrlCreateMenuItem(T("WcShootItem", "Р—Р°С…РІР°С‚ СЃ РІРµР±-РєР°РјРµСЂС‹"), $tools_menu)
+$is_uploading_item = GUICtrlCreateMenuItem(T("IsUploadingItem", "Р—Р°РіСЂСѓР·РєР° СЃРєСЂРёРЅС€РѕС‚РѕРІ РЅР° ImageShack"), $tools_menu)
+$aero_switch_menu = GUICtrlCreateMenu(T("AeroSwitchMenu", "Р РµР¶РёРј Aero"), $tools_menu)
+$aero_enable_item = GUICtrlCreateMenuItem(T("AeroSwitchEnable", "Р’РєР»СЋС‡РёС‚СЊ"), $aero_switch_menu)
+$aero_disable_item = GUICtrlCreateMenuItem(T("AeroSwitchDisable", "РћС‚РєР»СЋС‡РёС‚СЊ"), $aero_switch_menu)
 
 If FileExists($imageupload_dll) = 0 Then GUICtrlSetState($is_uploading_item, $GUI_DISABLE)
 GUICtrlSetState($aero_switch_menu, $GUI_DISABLE)
 If @OSVersion = "WIN_VISTA" or @OSVersion = "WIN_7" Then GUICtrlSetState($aero_switch_menu, $GUI_ENABLE)
 	
-$settings_menu = GUICtrlCreateMenu(T("SettingsMenu", "Настройки"))
-$hotkey_item = GUICtrlCreateMenuItem(T("HotKeyItem", "Назначить горячие клавиши"), $settings_menu)
-$settings_item = GUICtrlCreateMenuItem(T("SettingsItem", "Настройки..."), $settings_menu)
+$settings_menu = GUICtrlCreateMenu(T("SettingsMenu", "РќР°СЃС‚СЂРѕР№РєРё"))
+$hotkey_item = GUICtrlCreateMenuItem(T("HotKeyItem", "РќР°Р·РЅР°С‡РёС‚СЊ РіРѕСЂСЏС‡РёРµ РєР»Р°РІРёС€Рё"), $settings_menu)
+$settings_item = GUICtrlCreateMenuItem(T("SettingsItem", "РќР°СЃС‚СЂРѕР№РєРё..."), $settings_menu)
 
-$help_menu = GUICtrlCreateMenu(T("HelpMenu", "Помощь"))
-$website_item = GUICtrlCreateMenuItem(T("WebSiteItem", "Сайт программы"), $help_menu)
-$about_item = GUICtrlCreateMenuItem(T("AboutItem", "О программе"), $help_menu)
+$help_menu = GUICtrlCreateMenu(T("HelpMenu", "РџРѕРјРѕС‰СЊ"))
+$website_item = GUICtrlCreateMenuItem(T("WebSiteItem", "РЎР°Р№С‚ РїСЂРѕРіСЂР°РјРјС‹"), $help_menu)
+$about_item = GUICtrlCreateMenuItem(T("AboutItem", "Рћ РїСЂРѕРіСЂР°РјРјРµ"), $help_menu)
 
-GUICtrlCreateGroup(T("FolderToSaveImages", "Папка для сохранения скриншотов"), 10, 10, 449, 65)
+GUICtrlCreateGroup(T("FolderToSaveImages", "РџР°РїРєР° РґР»СЏ СЃРѕС…СЂР°РЅРµРЅРёСЏ СЃРєСЂРёРЅС€РѕС‚РѕРІ"), 10, 10, 449, 65)
 $path_to_save = GUICtrlCreateInput("", 24, 32, 385, 21)
 $browse_btn = GUICtrlCreateButton("...", 416, 30, 27, 25, Default, 131072)
 
-GUICtrlCreateGroup(T("SettingsGroup", "Настройки программы"), 10, 80, 209, 101)
-$collapse_at_start_chk = GUICtrlCreateCheckbox(T("CollapseAtStart", "Запускать свёрнутым"), 24, 104, 180, 17)
-$use_sounds_chk = GUICtrlCreateCheckbox(T("UseSounds", "Использовать звуки"), 24, 128, 180, 17)
-$include_cursor_chk = GUICtrlCreateCheckbox(T("IncludeCursor", "Захватывать курсор"), 24, 152, 180, 17)
+GUICtrlCreateGroup(T("SettingsGroup", "РќР°СЃС‚СЂРѕР№РєРё РїСЂРѕРіСЂР°РјРјС‹"), 10, 80, 209, 101)
+$collapse_at_start_chk = GUICtrlCreateCheckbox(T("CollapseAtStart", "Р—Р°РїСѓСЃРєР°С‚СЊ СЃРІС‘СЂРЅСѓС‚С‹Рј"), 24, 104, 180, 17)
+$use_sounds_chk = GUICtrlCreateCheckbox(T("UseSounds", "РСЃРїРѕР»СЊР·РѕРІР°С‚СЊ Р·РІСѓРєРё"), 24, 128, 180, 17)
+$include_cursor_chk = GUICtrlCreateCheckbox(T("IncludeCursor", "Р—Р°С…РІР°С‚С‹РІР°С‚СЊ РєСѓСЂСЃРѕСЂ"), 24, 152, 180, 17)
 
-GUICtrlCreateGroup(T("ShootMode", "Режим сьёмки"), 226, 80, 233, 101)
-$all_screen_combo = GUICtrlCreateRadio(T("AllScreenMode", "Весь экран"), 240, 104, 121, 17)
-$selected_window_combo = GUICtrlCreateRadio(T("SelectedWindowMode", "Выбранное окно (под курсором)"), 240, 128, 200, 17)
-$region_shoot_combo = GUICtrlCreateRadio(T("RegionShootMode", "Выделенная область"), 240, 152, 200, 17)
+GUICtrlCreateGroup(T("ShootMode", "Р РµР¶РёРј СЃСЊС‘РјРєРё"), 226, 80, 233, 101)
+$all_screen_combo = GUICtrlCreateRadio(T("AllScreenMode", "Р’РµСЃСЊ СЌРєСЂР°РЅ"), 240, 104, 121, 17)
+$selected_window_combo = GUICtrlCreateRadio(T("SelectedWindowMode", "Р’С‹Р±СЂР°РЅРЅРѕРµ РѕРєРЅРѕ (РїРѕРґ РєСѓСЂСЃРѕСЂРѕРј)"), 240, 128, 200, 17)
+$region_shoot_combo = GUICtrlCreateRadio(T("RegionShootMode", "Р’С‹РґРµР»РµРЅРЅР°СЏ РѕР±Р»Р°СЃС‚СЊ"), 240, 152, 200, 17)
 
-$settings_btn = GUICtrlCreateButton(T("SettingsButton", "Настройки"), 10, 195, 75, 25, Default, 131072)
-$doit_btn = GUICtrlCreateButton(T("DoItButton", "Скриншот"), 226, 195, 74, 25, Default, 131072) 
-$hotkey_btn = GUICtrlCreateButton(T("HotKeyButton", "Клавиши"), 306, 195, 74, 25, Default, 131072)
-$exit_btn = GUICtrlCreateButton(T("ExitButton", "Выйти"), 385, 195, 74, 25, Default, 131072)
+$settings_btn = GUICtrlCreateButton(T("SettingsButton", "РќР°СЃС‚СЂРѕР№РєРё"), 10, 195, 75, 25, Default, 131072)
+$doit_btn = GUICtrlCreateButton(T("DoItButton", "РЎРєСЂРёРЅС€РѕС‚"), 226, 195, 74, 25, Default, 131072) 
+$hotkey_btn = GUICtrlCreateButton(T("HotKeyButton", "РљР»Р°РІРёС€Рё"), 306, 195, 74, 25, Default, 131072)
+$exit_btn = GUICtrlCreateButton(T("ExitButton", "Р’С‹Р№С‚Рё"), 385, 195, 74, 25, Default, 131072)
 
-$snap_full_item_tray = TrayCreateItem(T("AllScreenMode", "Весь экран"))
-$snap_window_item_tray = TrayCreateItem(T("SelectedWindowMode", "Выбранное окно (под курсором)"))
-$snap_region_item_tray = TrayCreateItem(T("RegionShootMode", "Выделенная область"))
+$snap_full_item_tray = TrayCreateItem(T("AllScreenMode", "Р’РµСЃСЊ СЌРєСЂР°РЅ"))
+$snap_window_item_tray = TrayCreateItem(T("SelectedWindowMode", "Р’С‹Р±СЂР°РЅРЅРѕРµ РѕРєРЅРѕ (РїРѕРґ РєСѓСЂСЃРѕСЂРѕРј)"))
+$snap_region_item_tray = TrayCreateItem(T("RegionShootMode", "Р’С‹РґРµР»РµРЅРЅР°СЏ РѕР±Р»Р°СЃС‚СЊ"))
 TrayCreateItem("")
-$settings_item_tray = TrayCreateItem(T("SettingsItem", "Настройки..."))
+$settings_item_tray = TrayCreateItem(T("SettingsItem", "РќР°СЃС‚СЂРѕР№РєРё..."))
 TrayCreateItem("")
-$is_uploading_item_tray = TrayCreateItem(T("IsUploadingItem", "Загрузка скриншотов на ImageShack"))
-$wc_item_tray = TrayCreateItem(T("WcShootItem", "Захват с веб-камеры"))
+$is_uploading_item_tray = TrayCreateItem(T("IsUploadingItem", "Р—Р°РіСЂСѓР·РєР° СЃРєСЂРёРЅС€РѕС‚РѕРІ РЅР° ImageShack"))
+$wc_item_tray = TrayCreateItem(T("WcShootItem", "Р—Р°С…РІР°С‚ СЃ РІРµР±-РєР°РјРµСЂС‹"))
 TrayCreateItem("")
-$exit_item_tray = TrayCreateItem(T("ExitItem", "Выйти"))
+$exit_item_tray = TrayCreateItem(T("ExitItem", "Р’С‹Р№С‚Рё"))
 
 If FileExists($imageupload_dll) = 0 Then TrayItemSetState($is_uploading_item_tray, $TRAY_DISABLE)
 	
@@ -183,7 +183,7 @@ While 1
 				If _IsFolder($folder_path) <> 0 and FileExists($folder_path) = 1 Then
 					ShellExecute($folder_path)
 				Else
-					MsgBox(64, T("FolderErrorTitle", "Ошибка"), T("FolderErrorText", "Введённый путь в строке адреса неправильный или не существует"))
+					MsgBox(64, T("FolderErrorTitle", "РћС€РёР±РєР°"), T("FolderErrorText", "Р’РІРµРґС‘РЅРЅС‹Р№ РїСѓС‚СЊ РІ СЃС‚СЂРѕРєРµ Р°РґСЂРµСЃР° РЅРµРїСЂР°РІРёР»СЊРЅС‹Р№ РёР»Рё РЅРµ СЃСѓС‰РµСЃС‚РІСѓРµС‚"))
 				EndIf
 			Case $msg = $wc_shoot_item
 				_WebCab_View()
@@ -212,11 +212,11 @@ While 1
 				If $translator = "" Then 
 					Local $translator_text = ""
 				Else
-					Local $translator_text = @CRLF&@CRLF& T("TranslatorLabel", "Перевод:")&" "& $translator
+					Local $translator_text = @CRLF&@CRLF& T("TranslatorLabel", "РџРµСЂРµРІРѕРґ:")&" "& $translator
 				EndIf
-				MsgBox(64, T("AboutDlgTitle", "О программе"), $application &" "& $version &@CRLF& "Copyright © 2010 [Nuker-Hoax]"& $translator_text &@CRLF&@CRLF& T("GratitudesLabel", "Благодарности:") &@CRLF& "Mr.Creator, Yashied, Ludocus, Larry, wOuter" &@CRLF& "ProgAndy, Rajesh V R, ezzetabi, Jon" &@CRLF& "Rob Saunders, Paul Campbell, Suppir" &@CRLF&@CRLF& T("QuickLicenseText", "Эта программа бесплатна и распространяется\nпод лицензией GNU General Public License.") &@CRLF&@CRLF& $homepage, 0, $main_dlg )
+				MsgBox(64, T("AboutDlgTitle", "Рћ РїСЂРѕРіСЂР°РјРјРµ"), $application &" "& $version &@CRLF& "Copyright В© 2010 [Nuker-Hoax]"& $translator_text &@CRLF&@CRLF& T("GratitudesLabel", "Р‘Р»Р°РіРѕРґР°СЂРЅРѕСЃС‚Рё:") &@CRLF& "Mr.Creator, Yashied, Ludocus, Larry, wOuter" &@CRLF& "ProgAndy, Rajesh V R, ezzetabi, Jon" &@CRLF& "Rob Saunders, Paul Campbell, Suppir" &@CRLF&@CRLF& T("QuickLicenseText", "Р­С‚Р° РїСЂРѕРіСЂР°РјРјР° Р±РµСЃРїР»Р°С‚РЅР° Рё СЂР°СЃРїСЂРѕСЃС‚СЂР°РЅСЏРµС‚СЃСЏ\nРїРѕРґ Р»РёС†РµРЅР·РёРµР№ GNU General Public License.") &@CRLF&@CRLF& $homepage, 0, $main_dlg )
 			Case $msg = $browse_btn
-				$folder = FileSelectFolder(T("ChangeFolderTitle", "Выберите папку для сохранения скриншотов..."), "", 7)
+				$folder = FileSelectFolder(T("ChangeFolderTitle", "Р’С‹Р±РµСЂРёС‚Рµ РїР°РїРєСѓ РґР»СЏ СЃРѕС…СЂР°РЅРµРЅРёСЏ СЃРєСЂРёРЅС€РѕС‚РѕРІ..."), "", 7)
 				if not @error or FileExists($folder) = 1 then GUICtrlSetData($path_to_save, $folder)
 		EndSelect
 Wend
@@ -437,7 +437,7 @@ Func _WebCab_View($hWnd = $main_dlg)
 	use_settings()
 	
 	GUISetState(@SW_DISABLE, $hWnd)
-	Local $wc_dlg = GUICreate(T("WcShootTitle", "Захват с веб-камеры"), 372, 481, -1, -1, -1, -1, $hHwnd)
+	Local $wc_dlg = GUICreate(T("WcShootTitle", "Р—Р°С…РІР°С‚ СЃ РІРµР±-РєР°РјРµСЂС‹"), 372, 481, -1, -1, -1, -1, $hHwnd)
 	GUISetIcon(@ScriptFullPath, -1, $wc_dlg)
 
 	If $use_trans_read = 1 Then WinSetTrans($wc_dlg, "", (255 / 100) * $trans_ratio_read)
@@ -445,20 +445,20 @@ Func _WebCab_View($hWnd = $main_dlg)
 
 	Local $wc_open = _WebcamOpen($wc_dlg, 10, 10, 352, 288)
 
-	Local $wc_shoot_btn = GUICtrlCreateButton(T("WCScreenShootButton", "Скриншот"), 10, 440, 75, 25, -1, 131072)
-	Local $wc_start_btn = GUICtrlCreateButton(T("WCRecordButton", "Запись"), 92, 440, 75, 25, -1, 131072)
-	Local $wc_stop_btn = GUICtrlCreateButton(T("WCStopButton", "Остановить"), 175, 440, 75, 25, -1, 131072)
-	Local $wc_close_btn = GUICtrlCreateButton(T("WCCloseButton", "Закрыть"), 287, 440, 75, 25, -1, 131072)
+	Local $wc_shoot_btn = GUICtrlCreateButton(T("WCScreenShootButton", "РЎРєСЂРёРЅС€РѕС‚"), 10, 440, 75, 25, -1, 131072)
+	Local $wc_start_btn = GUICtrlCreateButton(T("WCRecordButton", "Р—Р°РїРёСЃСЊ"), 92, 440, 75, 25, -1, 131072)
+	Local $wc_stop_btn = GUICtrlCreateButton(T("WCStopButton", "РћСЃС‚Р°РЅРѕРІРёС‚СЊ"), 175, 440, 75, 25, -1, 131072)
+	Local $wc_close_btn = GUICtrlCreateButton(T("WCCloseButton", "Р—Р°РєСЂС‹С‚СЊ"), 287, 440, 75, 25, -1, 131072)
 
-	GUICtrlCreateGroup(T("WCVideoSettingsGroup", "Параметры видео"), 10, 302, 352, 128)
+	GUICtrlCreateGroup(T("WCVideoSettingsGroup", "РџР°СЂР°РјРµС‚СЂС‹ РІРёРґРµРѕ"), 10, 302, 352, 128)
 
-	GUICtrlCreateLabel(T("WCVideoSourceLabel", "Настроить источник видео:"), 25, 327, 150, 25, 0x0200)
+	GUICtrlCreateLabel(T("WCVideoSourceLabel", "РќР°СЃС‚СЂРѕРёС‚СЊ РёСЃС‚РѕС‡РЅРёРє РІРёРґРµРѕ:"), 25, 327, 150, 25, 0x0200)
 	Local $video_source_btn = GUICtrlCreateButton("...", 322, 327, 25, 25, -1, 131072)
 	
-	GUICtrlCreateLabel(T("WCVideoFormatLabel", "Настроить формат видео:"), 25, 357, 150, 25, 0x0200)
+	GUICtrlCreateLabel(T("WCVideoFormatLabel", "РќР°СЃС‚СЂРѕРёС‚СЊ С„РѕСЂРјР°С‚ РІРёРґРµРѕ:"), 25, 357, 150, 25, 0x0200)
 	Local $video_format_btn = GUICtrlCreateButton("...", 322, 357, 25, 25, -1, 131072)
 
-	GUICtrlCreateLabel(T("WCVideoCompressionLabel", "Настроить сжатие видео:"), 25, 387, 150, 25, 0x0200)
+	GUICtrlCreateLabel(T("WCVideoCompressionLabel", "РќР°СЃС‚СЂРѕРёС‚СЊ СЃР¶Р°С‚РёРµ РІРёРґРµРѕ:"), 25, 387, 150, 25, 0x0200)
 	Local $video_compression_btn = GUICtrlCreateButton("...", 322, 387, 25, 25, -1, 131072)
 
 	GUISetState(@SW_SHOW)
@@ -469,7 +469,7 @@ Func _WebCab_View($hWnd = $main_dlg)
 			Case $GUI_EVENT_CLOSE, $wc_close_btn
 				_WebcamRecordStop($wc_open)
 				$wc_close = _WebcamClose($wc_open)
-				If $wc_close = 0 Then MsgBox(16, T("WCErrorTitle", "Ошибка"), T("WCErrorUnloadText", "Ошибка при отключении от веб-камеры"))
+				If $wc_close = 0 Then MsgBox(16, T("WCErrorTitle", "РћС€РёР±РєР°"), T("WCErrorUnloadText", "РћС€РёР±РєР° РїСЂРё РѕС‚РєР»СЋС‡РµРЅРёРё РѕС‚ РІРµР±-РєР°РјРµСЂС‹"))
 				DllCall('user32.dll', 'int', 'SetActiveWindow', 'hwnd', $hWnd)
 				GuiDelete($wc_dlg)
 				GUISetState(@SW_ENABLE, $hWnd)
@@ -486,13 +486,13 @@ Func _WebCab_View($hWnd = $main_dlg)
 				
 				If $use_sounds_read = 1 Then _PlayWAVResource("SHOOT")
 				$wc_shoot = _WebcamSnap($wc_open, $ImageFullPath)
-				If $wc_shoot = 0 Then MsgBox(16, T("WCErrorTitle", "Ошибка"), T("WCErrorShootText", "Ошибка сохранения / создания изображения"))
+				If $wc_shoot = 0 Then MsgBox(16, T("WCErrorTitle", "РћС€РёР±РєР°"), T("WCErrorShootText", "РћС€РёР±РєР° СЃРѕС…СЂР°РЅРµРЅРёСЏ / СЃРѕР·РґР°РЅРёСЏ РёР·РѕР±СЂР°Р¶РµРЅРёСЏ"))
 			Case $wc_start_btn
 				_WebcamRecordStart($save_path_read &"\"& _FileGetNumberName($save_path_read, "web_cab_movie", $format_read), $wc_open)	
 			Case $wc_stop_btn
 				If $use_sounds_read = 1 Then _PlayWAVResource("SHOOT")
 				$wc_start_rec = _WebcamRecordStop($wc_open)
-				If $wc_start_rec = 0 Then MsgBox(64, T("WCErrorTitle", "Ошибка"), T("WCErrorStopText", "Ошибка остановки записи"))
+				If $wc_start_rec = 0 Then MsgBox(64, T("WCErrorTitle", "РћС€РёР±РєР°"), T("WCErrorStopText", "РћС€РёР±РєР° РѕСЃС‚Р°РЅРѕРІРєРё Р·Р°РїРёСЃРё"))
 			Case $video_source_btn
 				DllCall("user32.dll", "int", "SendMessage", "hWnd", $wc_open, "int", $WM_CAP_DLG_VIDEOSOURCE, "int", 0, "int", 0)
 			Case $video_format_btn
@@ -511,7 +511,7 @@ Func _ImageShack_UploadDlg($sFile = "", $hHwnd = $main_dlg)
 		
 		If FileExists($sFile) Then $FileStr = $sFile
 		GUISetState(@SW_DISABLE, $hHwnd)
-		Local $imageshack_dlg = GUICreate(T("ImageShackDlgTitle", "Загрузка на ImageShack...") , 468, 246, -1, -1, -1, $WS_EX_ACCEPTFILES, $hHwnd)
+		Local $imageshack_dlg = GUICreate(T("ImageShackDlgTitle", "Р—Р°РіСЂСѓР·РєР° РЅР° ImageShack...") , 468, 246, -1, -1, -1, $WS_EX_ACCEPTFILES, $hHwnd)
 		GUISetIcon(@ScriptFullPath, 101, $imageshack_dlg)
 
 		If $use_trans_read = 1 Then WinSetTrans($wc_dlg, "", (255 / 100) * $trans_ratio_read)
@@ -522,17 +522,17 @@ Func _ImageShack_UploadDlg($sFile = "", $hHwnd = $main_dlg)
 		GUICtrlCreatePic("", 0, 0, 468, 60, 256 + 131072 + 67108864, 0x00100000)
 		_ResourceSetImageToCtrl(-1, "IMAGESHACK", $RT_BITMAP)
 		
-		GUICtrlCreateGroup(T("ImageShackImageGroup", "Изображение для загрузки"), 10, 64, 447, 65)
+		GUICtrlCreateGroup(T("ImageShackImageGroup", "РР·РѕР±СЂР°Р¶РµРЅРёРµ РґР»СЏ Р·Р°РіСЂСѓР·РєРё"), 10, 64, 447, 65)
 		Local $file_path_input = GUICtrlCreateInput($FileStr, 24, 88, 377, 21)
 		
 		Local $browse_file_btn = GUICtrlCreateButton("...", 408, 88, 35, 22, Default, 131072)
 
-		GUICtrlCreateGroup(T("ImageShackLinksGroup", "Ссылка на изображение"), 10, 133, 447, 65)
+		GUICtrlCreateGroup(T("ImageShackLinksGroup", "РЎСЃС‹Р»РєР° РЅР° РёР·РѕР±СЂР°Р¶РµРЅРёРµ"), 10, 133, 447, 65)
 		Local $img_link = GUICtrlCreateInput("", 24, 157, 377, 20, 2048)
 		Local $copy_link_btn = GUICtrlCreateButton("copy", 408, 157, 35, 22, Default, 131072)
 
-		Local $upload_btn = GUICtrlCreateButton(T("ImageShackUploadBtn", "Загрузить"), 300, 210, 75, 25, Default, 131072)
-		Local $close_btn = GUICtrlCreateButton(T("ImageShackCloseBtn", "Закрыть"), 383, 210, 75, 25, Default, 131072)
+		Local $upload_btn = GUICtrlCreateButton(T("ImageShackUploadBtn", "Р—Р°РіСЂСѓР·РёС‚СЊ"), 300, 210, 75, 25, Default, 131072)
+		Local $close_btn = GUICtrlCreateButton(T("ImageShackCloseBtn", "Р—Р°РєСЂС‹С‚СЊ"), 383, 210, 75, 25, Default, 131072)
 
 		GUICtrlSetBkColor($drop_zone, $GUI_BKCOLOR_TRANSPARENT)
 		GUICtrlSetState($drop_zone, $GUI_DROPACCEPTED)
@@ -552,7 +552,7 @@ Func _ImageShack_UploadDlg($sFile = "", $hHwnd = $main_dlg)
 				Case $msg = $GUI_EVENT_DROPPED
 					If FileExists(@GUI_DragFile) Then
 						If _GetContentType(@GUI_DragFile) = "" Then
-							MsgBox(16, T("ImageShackErrorTitle", "Ошибка"), T("ImageShackContentTypeErrorText", 'Невозможно определить "Content Type" файла'))
+							MsgBox(16, T("ImageShackErrorTitle", "РћС€РёР±РєР°"), T("ImageShackContentTypeErrorText", 'РќРµРІРѕР·РјРѕР¶РЅРѕ РѕРїСЂРµРґРµР»РёС‚СЊ "Content Type" С„Р°Р№Р»Р°'))
 						Else
 							GUICtrlSetData($file_path_input, @GUI_DragFile)
 						EndIf
@@ -561,19 +561,19 @@ Func _ImageShack_UploadDlg($sFile = "", $hHwnd = $main_dlg)
 					$link = GuiCtrlRead($img_link)
 					If $link <> "" or StringInStr($link, "504 Gateway Time-out") = 0 Then ClipPut($link)
 				Case $msg = $browse_file_btn
-					Local $image = FileOpenDialog(T("ImageShackSelectImageTitle", "Выберите изображения..."), "", T("ImageShackSelectImage", "Изображения") &" (*.jpg;*.jpeg;*.bmp;*.png;*.gif;*.tif;*.tiff;*.pdf;*.swf)", 1)
+					Local $image = FileOpenDialog(T("ImageShackSelectImageTitle", "Р’С‹Р±РµСЂРёС‚Рµ РёР·РѕР±СЂР°Р¶РµРЅРёСЏ..."), "", T("ImageShackSelectImage", "РР·РѕР±СЂР°Р¶РµРЅРёСЏ") &" (*.jpg;*.jpeg;*.bmp;*.png;*.gif;*.tif;*.tiff;*.pdf;*.swf)", 1)
 					If Not @error Then GUICtrlSetData($file_path_input, $image)
 				Case $msg = $upload_btn
 					Local $file_read = GuiCtrlRead($file_path_input)
 					
 					If $file_read = "" or FileExists($file_read) = 0 Then
-						MsgBox(16, T("ImageShackErrorTitle", "Ошибка"), T("ImageShackNotExistsText", "Необходимо выбрать файл для загрузки"))
+						MsgBox(16, T("ImageShackErrorTitle", "РћС€РёР±РєР°"), T("ImageShackNotExistsText", "РќРµРѕР±С…РѕРґРёРјРѕ РІС‹Р±СЂР°С‚СЊ С„Р°Р№Р» РґР»СЏ Р·Р°РіСЂСѓР·РєРё"))
 					Else
 					
 					Local $content_type = _GetContentType($file_read)
 					
 					If $content_type = "" Then
-						MsgBox(16, T("ImageShackErrorTitle", "Ошибка"), T("ImageShackContentTypeErrorText", 'Невозможно определить "Content Type" файла'))
+						MsgBox(16, T("ImageShackErrorTitle", "РћС€РёР±РєР°"), T("ImageShackContentTypeErrorText", 'РќРµРІРѕР·РјРѕР¶РЅРѕ РѕРїСЂРµРґРµР»РёС‚СЊ "Content Type" С„Р°Р№Р»Р°'))
 					Else
 						Local $aRet = DllCall($UploadDll, "str", "UploadFile", "str", "http://www.imageshack.us/upload_api.php", "str", "fileupload", "str", $content_type, "str", $file_read)
 						Local $link = StringRegExpReplace($aRet[0], '(?is).*<(image_link)>(.*?)</\1>.*', '\2')
@@ -587,7 +587,7 @@ Func _ImageShack_UploadDlg($sFile = "", $hHwnd = $main_dlg)
 			EndSelect
 		WEnd
 	Else
-		MsgBox(16, T("ImageShackErrorTitle", "Ошибка"), T("ImageShackDllNotExistsText", "Отсутствует файл UploadFile.dll необходимый для загрузки скриншотов"))
+		MsgBox(16, T("ImageShackErrorTitle", "РћС€РёР±РєР°"), T("ImageShackDllNotExistsText", "РћС‚СЃСѓС‚СЃС‚РІСѓРµС‚ С„Р°Р№Р» UploadFile.dll РЅРµРѕР±С…РѕРґРёРјС‹Р№ РґР»СЏ Р·Р°РіСЂСѓР·РєРё СЃРєСЂРёРЅС€РѕС‚РѕРІ"))
 	EndIf
 EndFunc
 
@@ -625,39 +625,39 @@ Func _SettingsWindow($hTab = "MAIN_TAB", $hHwnd = $main_dlg)
 
     GUISetState(@SW_DISABLE, $hHwnd)
 
-	Global $opt_dlg = GUICreate(T("SettingsTitle", "Настройки"), 462, 310, -1, -1, -1, -1, $hHwnd)
+	Global $opt_dlg = GUICreate(T("SettingsTitle", "РќР°СЃС‚СЂРѕР№РєРё"), 462, 310, -1, -1, -1, -1, $hHwnd)
 	GUISetIcon(@ScriptFullPath, -1, $opt_dlg)
 	If $always_on_top_read = 1 Then WinSetOnTop($opt_dlg, "", 1)
 	If $use_trans_read = 1 Then WinSetTrans($opt_dlg, "", (255 / 100) * $trans_ratio_read)
 		
-	GUICtrlCreateLabel("* - "& T("SettingsNeedRestart", "необходим перезапуск"), 20, 277, 200, 15)
+	GUICtrlCreateLabel("* - "& T("SettingsNeedRestart", "РЅРµРѕР±С…РѕРґРёРј РїРµСЂРµР·Р°РїСѓСЃРє"), 20, 277, 200, 15)
 	GUICtrlSetColor(-1, 0xc9c9c9)
 		
 	Local $opt_ok_btn = GUICtrlCreateButton(T("SettingsOkButton", "OK"), 298, 272, 75, 25, 0x0001, 131072)
-	Local $opt_cancel_btn = GUICtrlCreateButton(T("SettingsCancelButton", "Отмена"), 377, 272, 75, 25, Default, 131072)
+	Local $opt_cancel_btn = GUICtrlCreateButton(T("SettingsCancelButton", "РћС‚РјРµРЅР°"), 377, 272, 75, 25, Default, 131072)
 
 	$settings_tab = GUICtrlCreateTab(10, 10, 444, 249)
 
-	Local $main_tab = GUICtrlCreateTabItem(T("SettingsMainTab", "Основные"))
-	GUICtrlCreateGroup("Параметры", 24, 40, 416, 124)
-	Local $always_on_top_opt_chk = GUICtrlCreateCheckbox(T("SettingsAlwaysOnTop", "Поверх остальных окон"), 38, 58, 250, 17)
+	Local $main_tab = GUICtrlCreateTabItem(T("SettingsMainTab", "РћСЃРЅРѕРІРЅС‹Рµ"))
+	GUICtrlCreateGroup("РџР°СЂР°РјРµС‚СЂС‹", 24, 40, 416, 124)
+	Local $always_on_top_opt_chk = GUICtrlCreateCheckbox(T("SettingsAlwaysOnTop", "РџРѕРІРµСЂС… РѕСЃС‚Р°Р»СЊРЅС‹С… РѕРєРѕРЅ"), 38, 58, 250, 17)
 		If $always_on_top_read = "1" Then GuiCtrlSetState(-1, $GUI_CHECKED)
-	Local $use_manifest_chk = GUICtrlCreateCheckbox(T("SettingsUseManifest", "Использовать оформление системы") &" *", 38, 78, 250, 17)
+	Local $use_manifest_chk = GUICtrlCreateCheckbox(T("SettingsUseManifest", "РСЃРїРѕР»СЊР·РѕРІР°С‚СЊ РѕС„РѕСЂРјР»РµРЅРёРµ СЃРёСЃС‚РµРјС‹") &" *", 38, 78, 250, 17)
 		If $use_manifest_read = "1" Then GuiCtrlSetState(-1, $GUI_CHECKED)
-	Local $collapse_at_start_opt_chk = GUICtrlCreateCheckbox(T("SettingsCollapseAtStart", "Запускать свёрнутым"), 38, 98, 250, 17)
+	Local $collapse_at_start_opt_chk = GUICtrlCreateCheckbox(T("SettingsCollapseAtStart", "Р—Р°РїСѓСЃРєР°С‚СЊ СЃРІС‘СЂРЅСѓС‚С‹Рј"), 38, 98, 250, 17)
 		If $collapse_at_start_read = "1" Then GuiCtrlSetState(-1, $GUI_CHECKED)
-	Local $use_sounds_opt_chk = GUICtrlCreateCheckbox(T("SettingsUseSounds", "Использовать звуки"), 38, 118, 250, 17)
+	Local $use_sounds_opt_chk = GUICtrlCreateCheckbox(T("SettingsUseSounds", "РСЃРїРѕР»СЊР·РѕРІР°С‚СЊ Р·РІСѓРєРё"), 38, 118, 250, 17)
 		If $use_sounds_read = "1" Then GuiCtrlSetState(-1, $GUI_CHECKED)
-	Local $include_cursor_opt_chk = GUICtrlCreateCheckbox(T("SettingsIncludeCursor", "Захватывать курсор"), 38, 138, 250, 17)
+	Local $include_cursor_opt_chk = GUICtrlCreateCheckbox(T("SettingsIncludeCursor", "Р—Р°С…РІР°С‚С‹РІР°С‚СЊ РєСѓСЂСЃРѕСЂ"), 38, 138, 250, 17)
 		If $include_cursor_read = "1" Then GuiCtrlSetState(-1, $GUI_CHECKED)
 	
-	GUICtrlCreateGroup(T("SettingsLanguageGroup", "Язык интерфейса") &" *", 24, 165, 174, 80)
-	GUICtrlCreateLabel(T("SettingsSelectLangText", "Выберите язык из списка:"), 38, 189, 180, 17)
+	GUICtrlCreateGroup(T("SettingsLanguageGroup", "РЇР·С‹Рє РёРЅС‚РµСЂС„РµР№СЃР°") &" *", 24, 165, 174, 80)
+	GUICtrlCreateLabel(T("SettingsSelectLangText", "Р’С‹Р±РµСЂРёС‚Рµ СЏР·С‹Рє РёР· СЃРїРёСЃРєР°:"), 38, 189, 180, 17)
 	Local $lang_combo = GUICtrlCreateCombo("", 38, 209, 140, 22, 0x00200003)
 	GUICtrlSetData(-1, _GetLangList(), $language)
 	
-	GUICtrlCreateGroup(T("SettingsTransparencyGroup", "Прозрачность окон программы"), 205, 165, 235, 80)
-	Global $use_trans_chk = GUICtrlCreateCheckbox(T("SettingsUseTransparency", "Использовать прозрачность"), 219, 189, 180, 17)
+	GUICtrlCreateGroup(T("SettingsTransparencyGroup", "РџСЂРѕР·СЂР°С‡РЅРѕСЃС‚СЊ РѕРєРѕРЅ РїСЂРѕРіСЂР°РјРјС‹"), 205, 165, 235, 80)
+	Global $use_trans_chk = GUICtrlCreateCheckbox(T("SettingsUseTransparency", "РСЃРїРѕР»СЊР·РѕРІР°С‚СЊ РїСЂРѕР·СЂР°С‡РЅРѕСЃС‚СЊ"), 219, 189, 180, 17)
 		If $use_trans_read = "1" Then GuiCtrlSetState(-1, $GUI_CHECKED)
 	Global $trans_slider = GuiCtrlCreateSlider(217, 209, 170, 17)
 	GUICtrlSetLimit(-1, 100, 25)
@@ -666,68 +666,68 @@ Func _SettingsWindow($hTab = "MAIN_TAB", $hHwnd = $main_dlg)
 
 	GUIRegisterMsg($WM_HSCROLL, "TRANS_HSCROLL")
 
-	Local $shoot_tab = GUICtrlCreateTabItem(T("SettingsScreenshootTab", "Скриншоты"))
-	GUICtrlCreateGroup(T("SettingsImagesFormat", "Формат изображений"), 24, 40, 172, 80)
+	Local $shoot_tab = GUICtrlCreateTabItem(T("SettingsScreenshootTab", "РЎРєСЂРёРЅС€РѕС‚С‹"))
+	GUICtrlCreateGroup(T("SettingsImagesFormat", "Р¤РѕСЂРјР°С‚ РёР·РѕР±СЂР°Р¶РµРЅРёР№"), 24, 40, 172, 80)
 	Local $format_combo = GUICtrlCreateCombo("", 38, 63, 140, 17, 0x00200003)
 	GUICtrlSetData($format_combo, "PNG|JPG|BMP|GIF|TIF", $image_format_read)
-	Local $info_about_format_label = GUICtrlCreateLabel(T("SettingsFormatInfo", "Сведения о формате (Wiki)"), 38, 93, 150, 15)
+	Local $info_about_format_label = GUICtrlCreateLabel(T("SettingsFormatInfo", "РЎРІРµРґРµРЅРёСЏ Рѕ С„РѕСЂРјР°С‚Рµ (Wiki)"), 38, 93, 150, 15)
 	
 	GUICtrlSetCursor(-1, 0)
 	GUICtrlSetFont(-1, 8.5, 400, 4)
 	GUICtrlSetColor(-1, 0x0000FF)
 	
-	GUICtrlCreateGroup(T("SettingsDelayGroup", "Задержка"), 204, 40, 236, 80)
-	Local $use_delay_chk = GUICtrlCreateCheckbox(T("SettingsUseDelay", "Использовать задержку"), 220, 60, 150, 17)
+	GUICtrlCreateGroup(T("SettingsDelayGroup", "Р—Р°РґРµСЂР¶РєР°"), 204, 40, 236, 80)
+	Local $use_delay_chk = GUICtrlCreateCheckbox(T("SettingsUseDelay", "РСЃРїРѕР»СЊР·РѕРІР°С‚СЊ Р·Р°РґРµСЂР¶РєСѓ"), 220, 60, 150, 17)
 	If $delay_use_read = 1 Then GuiCtrlSetState($use_delay_chk, $GUI_CHECKED)
-	GUICtrlCreateLabel(T("SettingsDelayLabel", "Задержка:"), 220, 92, 55, 124)
+	GUICtrlCreateLabel(T("SettingsDelayLabel", "Р—Р°РґРµСЂР¶РєР°:"), 220, 92, 55, 124)
 	Local $delay_input = GUICtrlCreateInput($delay_read, 281, 85, 31, 20, 0x2000 + 0x0001)
-	GUICtrlCreateLabel(T("SettingsDelaySecLabel", "сек."), 320, 92, 50, 17)
+	GUICtrlCreateLabel(T("SettingsDelaySecLabel", "СЃРµРє."), 320, 92, 50, 17)
 	
-	GUICtrlCreateGroup(T("SettingsShootNameGroup", "Имя скриншотов"), 24, 121, 416, 61)
+	GUICtrlCreateGroup(T("SettingsShootNameGroup", "РРјСЏ СЃРєСЂРёРЅС€РѕС‚РѕРІ"), 24, 121, 416, 61)
 	Local $number_name_radio = GUICtrlCreateRadio("screenshoot_[ "& T("SettingsNumbersName", "001...xxx") &" ]", 38, 138, 170, 17)
 		If $name_mode_read = "1" Then GuiCtrlSetState(-1, $GUI_CHECKED)
-	Local $random_name_radio = GUICtrlCreateRadio("screenshoot_[ "& T("SettingsRandomName", "случайные символы") &" ]", 38, 156, 200, 17)
+	Local $random_name_radio = GUICtrlCreateRadio("screenshoot_[ "& T("SettingsRandomName", "СЃР»СѓС‡Р°Р№РЅС‹Рµ СЃРёРјРІРѕР»С‹") &" ]", 38, 156, 200, 17)
 		If $name_mode_read = "2" Then GuiCtrlSetState(-1, $GUI_CHECKED)
-	Local $date_name_radio = GUICtrlCreateRadio("screenshoot_[ "& T("SettingsDateName", "дата и время") &" ]", 258, 138, 164, 17)
+	Local $date_name_radio = GUICtrlCreateRadio("screenshoot_[ "& T("SettingsDateName", "РґР°С‚Р° Рё РІСЂРµРјСЏ") &" ]", 258, 138, 164, 17)
 		If $name_mode_read = "3" Then GuiCtrlSetState(-1, $GUI_CHECKED)
 
-	GUICtrlCreateGroup(T("SettingsSavingModeGroup", "Режим сохранения"), 24, 183, 416, 62)
-	Local $save_to_file_radio = GUICtrlCreateRadio(T("SettingsSaveToFile", "Сохранение в файл"), 38, 200, 350, 17)
+	GUICtrlCreateGroup(T("SettingsSavingModeGroup", "Р РµР¶РёРј СЃРѕС…СЂР°РЅРµРЅРёСЏ"), 24, 183, 416, 62)
+	Local $save_to_file_radio = GUICtrlCreateRadio(T("SettingsSaveToFile", "РЎРѕС…СЂР°РЅРµРЅРёРµ РІ С„Р°Р№Р»"), 38, 200, 350, 17)
 		If $saving_mode_read = "1" Then GuiCtrlSetState(-1, $GUI_CHECKED)
-	Local $save_to_clip_radio = GUICtrlCreateRadio(T("SettingsSaveToClip", "Помещать изображение в буфер обмена (без эффектов)"), 38, 218, 350, 17)
+	Local $save_to_clip_radio = GUICtrlCreateRadio(T("SettingsSaveToClip", "РџРѕРјРµС‰Р°С‚СЊ РёР·РѕР±СЂР°Р¶РµРЅРёРµ РІ Р±СѓС„РµСЂ РѕР±РјРµРЅР° (Р±РµР· СЌС„С„РµРєС‚РѕРІ)"), 38, 218, 350, 17)
 		If $saving_mode_read = "2" Then GuiCtrlSetState(-1, $GUI_CHECKED)
 	
-	Local $effects_tab = GUICtrlCreateTabItem(T("SettingsEffectsTab", "Эффекты"))
-	GUICtrlCreateGroup(T("SettingsResizeGroup", "Изменение размеров"), 24, 40, 416, 94)
-	Local $resize_enable_chk = GUICtrlCreateCheckbox(T("SettingsUseResize", "Изменять размеры"), 38, 60, 350, 17)
+	Local $effects_tab = GUICtrlCreateTabItem(T("SettingsEffectsTab", "Р­С„С„РµРєС‚С‹"))
+	GUICtrlCreateGroup(T("SettingsResizeGroup", "РР·РјРµРЅРµРЅРёРµ СЂР°Р·РјРµСЂРѕРІ"), 24, 40, 416, 94)
+	Local $resize_enable_chk = GUICtrlCreateCheckbox(T("SettingsUseResize", "РР·РјРµРЅСЏС‚СЊ СЂР°Р·РјРµСЂС‹"), 38, 60, 350, 17)
 	If $use_resize_read = 1 Then GuiCtrlSetState($resize_enable_chk, $GUI_CHECKED)
 	
-	GUICtrlCreateLabel(T("SettingsResizeWidth", "Ширина:"), 38, 90, 46, 17)
+	GUICtrlCreateLabel(T("SettingsResizeWidth", "РЁРёСЂРёРЅР°:"), 38, 90, 46, 17)
 	Local $width_size = GUICtrlCreateInput("", 86, 84, 40, 20, 0x2000 + 0x0001)
 	GUICtrlSetData($width_size, $resize_width_read)
-	GUICtrlCreateLabel(T("SettingsResizeHeight", "Высота:"), 147, 90, 45, 17)
+	GUICtrlCreateLabel(T("SettingsResizeHeight", "Р’С‹СЃРѕС‚Р°:"), 147, 90, 45, 17)
 	Local $height_size = GUICtrlCreateInput("", 197, 84, 40, 20, 0x2000 + 0x0001)
 	GUICtrlSetData($height_size, $resize_height_read)
 	
 	GUICtrlCreateGroup(T("SettingsAeroGroup", "Aero"), 24, 135, 206, 110)
-	Local $disable_aero_on_wnd_chk = GUICtrlCreateCheckbox(T("SettingsDisableAeroOnWnd", "Отключать Aero окна"), 38, 155, 180, 17)
+	Local $disable_aero_on_wnd_chk = GUICtrlCreateCheckbox(T("SettingsDisableAeroOnWnd", "РћС‚РєР»СЋС‡Р°С‚СЊ Aero РѕРєРЅР°"), 38, 155, 180, 17)
  		If $disable_aero_on_wnd_read = "1" Then GuiCtrlSetState(-1, $GUI_CHECKED)
 	GUICtrlSetState($disable_aero_on_wnd_chk, $GUI_DISABLE)
 	If @OSVersion = "WIN_VISTA" or @OSVersion = "WIN_7" Then GUICtrlSetState($disable_aero_on_wnd_chk, $GUI_ENABLE)
-	GUICtrlCreateLabel(T("SettingsDisableAeroOnWndText", 'Перед созданием скриншота в режиме "Выбранное окно", Aero окна отключится, затем вернётся в прежнее состояние'), 38, 175, 180, 51, $GUI_FOCUS)
+	GUICtrlCreateLabel(T("SettingsDisableAeroOnWndText", 'РџРµСЂРµРґ СЃРѕР·РґР°РЅРёРµРј СЃРєСЂРёРЅС€РѕС‚Р° РІ СЂРµР¶РёРјРµ "Р’С‹Р±СЂР°РЅРЅРѕРµ РѕРєРЅРѕ", Aero РѕРєРЅР° РѕС‚РєР»СЋС‡РёС‚СЃСЏ, Р·Р°С‚РµРј РІРµСЂРЅС‘С‚СЃСЏ РІ РїСЂРµР¶РЅРµРµ СЃРѕСЃС‚РѕСЏРЅРёРµ'), 38, 175, 180, 51, $GUI_FOCUS)
 		
-	GUICtrlCreateGroup(T("SettingsRotateGroup", "Вращение"), 238, 135, 202, 110)
-	Local $no_rotate_radio = GUICtrlCreateRadio(T("SettingsRotateDisable", "Отключить"), 252, 155, 150, 17)
+	GUICtrlCreateGroup(T("SettingsRotateGroup", "Р’СЂР°С‰РµРЅРёРµ"), 238, 135, 202, 110)
+	Local $no_rotate_radio = GUICtrlCreateRadio(T("SettingsRotateDisable", "РћС‚РєР»СЋС‡РёС‚СЊ"), 252, 155, 150, 17)
 		If $rotate_read = "0" Then GuiCtrlSetState(-1, $GUI_CHECKED)
-	Local $right_rotate_radio = GUICtrlCreateRadio(T("SettingsRotate90", "По часовой стрелке"), 252, 175, 150, 17)
+	Local $right_rotate_radio = GUICtrlCreateRadio(T("SettingsRotate90", "РџРѕ С‡Р°СЃРѕРІРѕР№ СЃС‚СЂРµР»РєРµ"), 252, 175, 150, 17)
 		If $rotate_read = "1" Then GuiCtrlSetState(-1, $GUI_CHECKED)
-	Local $left_rotate_radio = GUICtrlCreateRadio(T("SettingsRotate270", "Против часовой стрелки"), 252, 195, 150, 17)
+	Local $left_rotate_radio = GUICtrlCreateRadio(T("SettingsRotate270", "РџСЂРѕС‚РёРІ С‡Р°СЃРѕРІРѕР№ СЃС‚СЂРµР»РєРё"), 252, 195, 150, 17)
 		If $rotate_read = "2" Then GuiCtrlSetState(-1, $GUI_CHECKED)
-	Local $top_rotate_radio = GUICtrlCreateRadio(T("SettingsRotate180", "Перевернуть"), 252, 215, 150, 17)
+	Local $top_rotate_radio = GUICtrlCreateRadio(T("SettingsRotate180", "РџРµСЂРµРІРµСЂРЅСѓС‚СЊ"), 252, 215, 150, 17)
 		If $rotate_read = "3" Then GuiCtrlSetState(-1, $GUI_CHECKED)
 
-	Local $hk_tab = GUICtrlCreateTabItem(T("SettingsHotKeyTab", "Горячие клавиши"))
-	GUICtrlCreateGroup(T("SettingsHotKeyAllScreen", "Во весь экран"), 24, 40, 416, 67)
+	Local $hk_tab = GUICtrlCreateTabItem(T("SettingsHotKeyTab", "Р“РѕСЂСЏС‡РёРµ РєР»Р°РІРёС€Рё"))
+	GUICtrlCreateGroup(T("SettingsHotKeyAllScreen", "Р’Рѕ РІРµСЃСЊ СЌРєСЂР°РЅ"), 24, 40, 416, 67)
 	Local $all_screen_ctrl_chk = GUICtrlCreateCheckbox("CTRL", 38, 67, 50, 17)
 		If $all_screen_ctrl_read = "1" Then GuiCtrlSetState(-1, $GUI_CHECKED)
 	Local $all_screen_alt_chk = GUICtrlCreateCheckbox("ALT", 138, 67, 50, 17)
@@ -737,7 +737,7 @@ Func _SettingsWindow($hTab = "MAIN_TAB", $hHwnd = $main_dlg)
 	Local $all_screen_extra_key = GuiCtrlCreateCombo("", 325, 67, 85, 22, 0x00200003)
 	GUICtrlSetData(-1, _GetHotKeysList(), $all_screen_extra_read)
 	
-	GUICtrlCreateGroup(T("SettingsHotKeySelectedWindow", "Выбранное окно (под курсором)"), 24, 109, 416, 67)
+	GUICtrlCreateGroup(T("SettingsHotKeySelectedWindow", "Р’С‹Р±СЂР°РЅРЅРѕРµ РѕРєРЅРѕ (РїРѕРґ РєСѓСЂСЃРѕСЂРѕРј)"), 24, 109, 416, 67)
 	Local $selected_win_ctrl_chk = GUICtrlCreateCheckbox("CTRL", 38, 135, 50, 17)
 		If $selected_win_ctrl_read = "1" Then GuiCtrlSetState(-1, $GUI_CHECKED)
 	Local $selected_win_alt_chk = GUICtrlCreateCheckbox("ALT", 138, 135, 50, 17)
@@ -747,7 +747,7 @@ Func _SettingsWindow($hTab = "MAIN_TAB", $hHwnd = $main_dlg)
 	Local $selected_win_extra_key = GuiCtrlCreateCombo("", 325, 135, 85, 22, 0x00200003)
 	GUICtrlSetData(-1, _GetHotKeysList(), $selected_win_extra_read)
 	
-	GUICtrlCreateGroup(T("SettingsHotKeyRegion", "Выделенная область"), 24, 178, 416, 67)
+	GUICtrlCreateGroup(T("SettingsHotKeyRegion", "Р’С‹РґРµР»РµРЅРЅР°СЏ РѕР±Р»Р°СЃС‚СЊ"), 24, 178, 416, 67)
 	Local $region_ctrl_chk = GUICtrlCreateCheckbox("CTRL", 38, 203, 50, 17)
 		If $region_ctrl_read = "1" Then GuiCtrlSetState(-1, $GUI_CHECKED)
 	Local $region_alt_chk = GUICtrlCreateCheckbox("ALT", 138, 203, 50, 17)
@@ -757,38 +757,38 @@ Func _SettingsWindow($hTab = "MAIN_TAB", $hHwnd = $main_dlg)
 	Local $region_extra_key = GuiCtrlCreateCombo("", 325, 203, 85, 22, 0x00200003)
 	GUICtrlSetData(-1, _GetHotKeysList(), $region_extra_read)
 	
-	Local $action_tab = GUICtrlCreateTabItem(T("SettingsActionTab", "Действия"))
-	GUICtrlCreateGroup(T("SettingsActionAfterShoot", "После создания скриншота"), 24, 40, 416, 205)
-	Local $enable_ishack_uploading_chk = GUICtrlCreateCheckbox(T("SettingsActionIShack", "Включить загрузку скриншотов на ImageShack"), 38, 60, 270, 17)
+	Local $action_tab = GUICtrlCreateTabItem(T("SettingsActionTab", "Р”РµР№СЃС‚РІРёСЏ"))
+	GUICtrlCreateGroup(T("SettingsActionAfterShoot", "РџРѕСЃР»Рµ СЃРѕР·РґР°РЅРёСЏ СЃРєСЂРёРЅС€РѕС‚Р°"), 24, 40, 416, 205)
+	Local $enable_ishack_uploading_chk = GUICtrlCreateCheckbox(T("SettingsActionIShack", "Р’РєР»СЋС‡РёС‚СЊ Р·Р°РіСЂСѓР·РєСѓ СЃРєСЂРёРЅС€РѕС‚РѕРІ РЅР° ImageShack"), 38, 60, 270, 17)
 		If $enable_ishack_read = "1" Then GuiCtrlSetState(-1, $GUI_CHECKED)
 		If FileExists($imageupload_dll) = 0 Then GuiCtrlSetState(-1, $GUI_DISABLE)
-	Local $do_nothing_chk = GUICtrlCreateRadio(T("SettingsActionSilent", "Не выполнять никаких действий (тихий режим)"), 38, 80, 270, 17)
+	Local $do_nothing_chk = GUICtrlCreateRadio(T("SettingsActionSilent", "РќРµ РІС‹РїРѕР»РЅСЏС‚СЊ РЅРёРєР°РєРёС… РґРµР№СЃС‚РІРёР№ (С‚РёС…РёР№ СЂРµР¶РёРј)"), 38, 80, 270, 17)
 		If $finish_mode_read = "1" Then GuiCtrlSetState(-1, $GUI_CHECKED)
-	Local $shellex_chk = GUICtrlCreateRadio(T("SettingsActionShellEx", "Открыть в программе по умолчанию"), 38, 100, 270, 17)
+	Local $shellex_chk = GUICtrlCreateRadio(T("SettingsActionShellEx", "РћС‚РєСЂС‹С‚СЊ РІ РїСЂРѕРіСЂР°РјРјРµ РїРѕ СѓРјРѕР»С‡Р°РЅРёСЋ"), 38, 100, 270, 17)
 		If $finish_mode_read = "2" Then GuiCtrlSetState(-1, $GUI_CHECKED)
-	Local $set_shellex_chk = GUICtrlCreateRadio(T("SettingsActionExecute", "Выполнить программу"), 38, 120, 270, 17)
+	Local $set_shellex_chk = GUICtrlCreateRadio(T("SettingsActionExecute", "Р’С‹РїРѕР»РЅРёС‚СЊ РїСЂРѕРіСЂР°РјРјСѓ"), 38, 120, 270, 17)
 		If $finish_mode_read = "3" Then GuiCtrlSetState(-1, $GUI_CHECKED)
 	Local $set_shellex_input = GuiCtrlCreateInput($finish_mode_path_read, 38, 145, 240, 22)
 	Local $browse_shellex_btn = GUICtrlCreateButton("...", 285, 145, 22, 22, Default, 131072)
-	GuiCtrlCreateLabel(T("SettingsActionHelp", "Вы можете задать параметры для выполняемого приложения:" &@CRLF& "%s - полный путь к созданному скриншоту" &@CRLF& "%f - папка программы"), 38, 175, 400, 60, 256)
+	GuiCtrlCreateLabel(T("SettingsActionHelp", "Р’С‹ РјРѕР¶РµС‚Рµ Р·Р°РґР°С‚СЊ РїР°СЂР°РјРµС‚СЂС‹ РґР»СЏ РІС‹РїРѕР»РЅСЏРµРјРѕРіРѕ РїСЂРёР»РѕР¶РµРЅРёСЏ:" &@CRLF& "%s - РїРѕР»РЅС‹Р№ РїСѓС‚СЊ Рє СЃРѕР·РґР°РЅРЅРѕРјСѓ СЃРєСЂРёРЅС€РѕС‚Сѓ" &@CRLF& "%f - РїР°РїРєР° РїСЂРѕРіСЂР°РјРјС‹"), 38, 175, 400, 60, 256)
 
 	Local $ftp_tab = GUICtrlCreateTabItem(T("SettingsFtpTab", "FTP"))
-	GUICtrlCreateGroup(T("SettingsFtpUploadGroup", "Загрузка на FTP сервер"), 24, 40, 416, 205)
-	Local $enable_ftp_chk = GUICtrlCreateCheckbox(T("SettingsEnableFtp", "Включить загрузку"), 38, 60, 270, 17)
+	GUICtrlCreateGroup(T("SettingsFtpUploadGroup", "Р—Р°РіСЂСѓР·РєР° РЅР° FTP СЃРµСЂРІРµСЂ"), 24, 40, 416, 205)
+	Local $enable_ftp_chk = GUICtrlCreateCheckbox(T("SettingsEnableFtp", "Р’РєР»СЋС‡РёС‚СЊ Р·Р°РіСЂСѓР·РєСѓ"), 38, 60, 270, 17)
 		If $enable_ftp_read = "1" Then GuiCtrlSetState(-1, $GUI_CHECKED)
-	GUICtrlCreateLabel(T("SettingsFtpServer", "Сервер:"), 38, 90, 120, 17)
+	GUICtrlCreateLabel(T("SettingsFtpServer", "РЎРµСЂРІРµСЂ:"), 38, 90, 120, 17)
 	Local $ftp_server_input = GuiCtrlCreateInput($ftp_server_read, 150, 85, 150, 18)
-	GUICtrlCreateLabel(T("SettingsFtpUser", "Пользователь:"), 38, 116, 120, 17)
+	GUICtrlCreateLabel(T("SettingsFtpUser", "РџРѕР»СЊР·РѕРІР°С‚РµР»СЊ:"), 38, 116, 120, 17)
 	Local $ftp_name_input = GuiCtrlCreateInput($ftp_username_read, 150, 112, 150, 18)
-	GUICtrlCreateLabel(T("SettingsFtpPassword", "Пароль:"), 38, 145, 120, 17)
+	GUICtrlCreateLabel(T("SettingsFtpPassword", "РџР°СЂРѕР»СЊ:"), 38, 145, 120, 17)
 	Local $ftp_password_input = GuiCtrlCreateInput($ftp_password_read, 150, 140, 150, 18, $ES_PASSWORD)
-	GUICtrlCreateLabel(T("SettingsFtpFolder", "Папка:"), 38, 172, 120, 17)
+	GUICtrlCreateLabel(T("SettingsFtpFolder", "РџР°РїРєР°:"), 38, 172, 120, 17)
 	Local $ftp_folder_input = GuiCtrlCreateInput($ftp_folder_read, 150, 167, 150, 18)
 
-	Local $no_ftp_gui_chk = GUICtrlCreateCheckbox(T("SettingsNoFtpGui", "Не показывать  диалог загрузки"), 38, 200, 270, 17)
+	Local $no_ftp_gui_chk = GUICtrlCreateCheckbox(T("SettingsNoFtpGui", "РќРµ РїРѕРєР°Р·С‹РІР°С‚СЊ  РґРёР°Р»РѕРі Р·Р°РіСЂСѓР·РєРё"), 38, 200, 270, 17)
 		If $no_ftp_gui_read = "1" Then GuiCtrlSetState(-1, $GUI_CHECKED)
 
-	Local $ftp_del_after_upload_chk = GUICtrlCreateCheckbox(T("SettingsFtpDelAfterUpload", "Удалять исходный файл после загрузки"), 38, 220, 270, 17)
+	Local $ftp_del_after_upload_chk = GUICtrlCreateCheckbox(T("SettingsFtpDelAfterUpload", "РЈРґР°Р»СЏС‚СЊ РёСЃС…РѕРґРЅС‹Р№ С„Р°Р№Р» РїРѕСЃР»Рµ Р·Р°РіСЂСѓР·РєРё"), 38, 220, 270, 17)
 		If $ftp_del_after_upload_read = "1" Then GuiCtrlSetState(-1, $GUI_CHECKED)
 			
 	GUISetState(@SW_SHOW)
@@ -814,7 +814,7 @@ Func _SettingsWindow($hTab = "MAIN_TAB", $hHwnd = $main_dlg)
 		$nMsg = GUIGetMsg()
 		Select
 			Case $nMsg = $browse_shellex_btn
-				$shellex_file = FileOpenDialog(T("SettingsActionShellExChangeFile", "Выберите файл..."), "", T("SettingsApplicationType", "Приложения") &" (*.exe;*.com;*.bat;*.cmd)|"& T("SettingsAllFilesType", "Все файлы") &" (*.*)", 1+2)
+				$shellex_file = FileOpenDialog(T("SettingsActionShellExChangeFile", "Р’С‹Р±РµСЂРёС‚Рµ С„Р°Р№Р»..."), "", T("SettingsApplicationType", "РџСЂРёР»РѕР¶РµРЅРёСЏ") &" (*.exe;*.com;*.bat;*.cmd)|"& T("SettingsAllFilesType", "Р’СЃРµ С„Р°Р№Р»С‹") &" (*.*)", 1+2)
 				If not @error Then
 					GUICtrlSetData($set_shellex_input, $shellex_file)
 				EndIf
@@ -935,7 +935,7 @@ Func _SettingsWindow($hTab = "MAIN_TAB", $hHwnd = $main_dlg)
 				IniWrite($settings_file, "freeshooter", "Language", GuiCtrlRead($lang_combo))
 				
 				If $check_lng <> GuiCtrlRead($lang_combo) or $use_manifest_read <> $check_manifest Then 
-					If MsgBox(64 + 4, T("SettingsWarningTitle", "Внимание"), T("SettingsWarningText", "Для принятия некоторых настроек необходим перезапуск. Перезапустить?")) = 6 Then _RestartApp()
+					If MsgBox(64 + 4, T("SettingsWarningTitle", "Р’РЅРёРјР°РЅРёРµ"), T("SettingsWarningText", "Р”Р»СЏ РїСЂРёРЅСЏС‚РёСЏ РЅРµРєРѕС‚РѕСЂС‹С… РЅР°СЃС‚СЂРѕРµРє РЅРµРѕР±С…РѕРґРёРј РїРµСЂРµР·Р°РїСѓСЃРє. РџРµСЂРµР·Р°РїСѓСЃС‚РёС‚СЊ?")) = 6 Then _RestartApp()
 				EndIf
 
 				DllCall('user32.dll', 'int', 'SetActiveWindow', 'hwnd', $hHwnd)
@@ -954,7 +954,7 @@ Func TRANS_HSCROLL($hWnd, $iMsg, $iwParam, $ilParam)
 EndFunc
 
 Func read_settings()
-	Global $language = IniRead($settings_file, "freeshooter", "Language", "Русский")
+	Global $language = IniRead($settings_file, "freeshooter", "Language", "Р СѓСЃСЃРєРёР№")
 	Global $shoot_mode_read = IniRead($settings_file, "freeshooter", "ShootMode", "1")
 	Global $collapse_at_start_read = IniRead($settings_file, "freeshooter", "CollapseAtStart", "0")
 	Global $use_sounds_read = IniRead($settings_file, "freeshooter", "UseSounds", "1")
@@ -1176,7 +1176,7 @@ Func _FtpUpload($hFile)
 	If $no_ftp_gui_read = 0 Then
 		$hParent = GUICreate('', 0, 0, 0, 0, 0, $WS_EX_TOOLWINDOW)
 		
-		Global $upload_dlg = GUICreate(T("FtpUploading", "Загрузка на FTP сервер..."), 250, 70, @DesktopWidth - (250 + 12), @DesktopHeight - (70 + 53), -2138570752 + 131072, Default, $hParent)
+		Global $upload_dlg = GUICreate(T("FtpUploading", "Р—Р°РіСЂСѓР·РєР° РЅР° FTP СЃРµСЂРІРµСЂ..."), 250, 70, @DesktopWidth - (250 + 12), @DesktopHeight - (70 + 53), -2138570752 + 131072, Default, $hParent)
 		_HideWin($upload_dlg)
 		GUICtrlCreateLabel("", 0, 0, 250, 70, Default, 0x00100000)
 		
@@ -1184,7 +1184,7 @@ Func _FtpUpload($hFile)
 		If $use_trans_read = 1 Then WinSetTrans($upload_dlg, "", (255 / 100) * $trans_ratio_read)
 			
 		Global $upload_progress = GUICtrlCreateProgress(25, 20, 200, 20)
-		Global $upload_status = GUICtrlCreateLabel(T("FtpUploading", "Загрузка на FTP сервер..."), 25, 45, 200, 20)
+		Global $upload_status = GUICtrlCreateLabel(T("FtpUploading", "Р—Р°РіСЂСѓР·РєР° РЅР° FTP СЃРµСЂРІРµСЂ..."), 25, 45, 200, 20)
 		GUICtrlSetColor($upload_status, 0xffffff)
 		GUISetBkColor ("0x5671c3")
 		
@@ -1201,13 +1201,13 @@ Func _FtpUpload($hFile)
 		DllCall("wininet.dll", 'ptr', 'InternetSetStatusCallback', 'ptr', $ftp_open, 'ptr', DllCallbackGetPtr($hProc))
 	EndIf
 	
-	If $no_ftp_gui_read = 0 Then GUICtrlSetData($upload_status, T("FtpConnecting", "Соединение с сервером..."))
+	If $no_ftp_gui_read = 0 Then GUICtrlSetData($upload_status, T("FtpConnecting", "РЎРѕРµРґРёРЅРµРЅРёРµ СЃ СЃРµСЂРІРµСЂРѕРј..."))
 	Local $ftp_connect = _FTPConnect($ftp_open, $ftp_server_read, $ftp_username_read, $ftp_password_read)
 	If $ftp_connect = 0 and $no_ftp_gui_read = 0 Then 
-		GUICtrlSetData($upload_status, T("FtpNoConnect", "Неудалось подключиться к серверу..."))
+		GUICtrlSetData($upload_status, T("FtpNoConnect", "РќРµСѓРґР°Р»РѕСЃСЊ РїРѕРґРєР»СЋС‡РёС‚СЊСЃСЏ Рє СЃРµСЂРІРµСЂСѓ..."))
 		GuiDelete($upload_dlg)
 	Else
-		GUICtrlSetData($upload_status, T("FtpUploading", "Загрузка файла на сервер..."))
+		GUICtrlSetData($upload_status, T("FtpUploading", "Р—Р°РіСЂСѓР·РєР° С„Р°Р№Р»Р° РЅР° СЃРµСЂРІРµСЂ..."))
 	If $no_ftp_gui_read = 0 Then
 		Local $ftp_upload = _FTPPutFile($ftp_connect, $hFile, $ftp_folder_read & $filename, 0, DllStructGetPtr($tData))
 	Else
@@ -1283,7 +1283,7 @@ Func GetRegion()
 	$zoom_label_dlg = GUICreate("", $iSIZEX, 60, 0, $iSIZEY-60, BitOR($WS_BORDER, $WS_POPUP), $WS_EX_TOPMOST, $zoom_dlg)
 	_HideWin($zoom_label_dlg)
 	
-	$zoom_label = GUICtrlCreateLabel(T("RegionMouseLocationStartText", 'Нажмите "Левую кнопку мыши" для начала выделения\n\n"Правую кнопку мыши" для выхода из режима'), 5, 3, $iSIZEX-10, 55)
+	$zoom_label = GUICtrlCreateLabel(T("RegionMouseLocationStartText", 'РќР°Р¶РјРёС‚Рµ "Р›РµРІСѓСЋ РєРЅРѕРїРєСѓ РјС‹С€Рё" РґР»СЏ РЅР°С‡Р°Р»Р° РІС‹РґРµР»РµРЅРёСЏ\n\n"РџСЂР°РІСѓСЋ РєРЅРѕРїРєСѓ РјС‹С€Рё" РґР»СЏ РІС‹С…РѕРґР° РёР· СЂРµР¶РёРјР°'), 5, 3, $iSIZEX-10, 55)
 
 	GUISetState(@SW_SHOW, $zoom_dlg)
 	GUISetState(@SW_SHOW, $zoom_label_dlg)
@@ -1342,7 +1342,7 @@ Func GetRegion()
 	$pos_x_1 = $aMouse_Pos[0]
 	$pos_y_1 = $aMouse_Pos[1]
 	
-	$sData = T("RegionMouseLocationText", "Горизонталь [X]: Начало = %i, Длина = %i\nВертикаль [Y]: Начало = %i, Высота = %i\n\nОтпустите клавишу мыши для завершения")
+	$sData = T("RegionMouseLocationText", "Р“РѕСЂРёР·РѕРЅС‚Р°Р»СЊ [X]: РќР°С‡Р°Р»Рѕ = %i, Р”Р»РёРЅР° = %i\nР’РµСЂС‚РёРєР°Р»СЊ [Y]: РќР°С‡Р°Р»Рѕ = %i, Р’С‹СЃРѕС‚Р° = %i\n\nРћС‚РїСѓСЃС‚РёС‚Рµ РєР»Р°РІРёС€Сѓ РјС‹С€Рё РґР»СЏ Р·Р°РІРµСЂС€РµРЅРёСЏ")
 	
 	While _IsPressed("01", $UserDLL)
 		$aMouse_Pos = MouseGetPos()
