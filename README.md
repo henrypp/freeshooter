@@ -2,8 +2,8 @@
 
 ![Free Shooter](https://www.henrypp.org/images/freeshooter.png)
 
-This is old-school tool for taking screenshots without bloatware features, simple as life, light as air.
-It is my first application, written in AutoIt3 and now rewritten on C++.
+This is old-school tool for taking screenshots without bloatware features, simple as life, light as air.<br />
+It is my first application, written in AutoIt3 and now rewritten on C++.<br />
 I love this tool, and i hope you are take to love it too.
 
 ### Features:
