@@ -461,7 +461,7 @@ void _app_hotkeyinit (HWND hwnd)
 		if (is_noregion)
 			buffer.AppendFormat (L"- %s\r\n", app.LocaleString (IDS_MODE_REGION, nullptr));
 
-		app.ConfirmMessage (hwnd, app.LocaleString (IDS_WARNING_HOTKEYS, nullptr), buffer.Trim (L"\r\n"), L"NoHotkeysWarning");
+		app.ConfirmMessage (hwnd, app.LocaleString (IDS_WARNING_HOTKEYS, nullptr), buffer.Trim (L"\r\n"), L"IsWarnHotkeys");
 	}
 }
 
