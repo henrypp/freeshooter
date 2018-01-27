@@ -1,4 +1,4 @@
-v2.0 (27 January 2018) 
+v2.0 (27 January 2018)
 + code rewritten on c++
 + added clear window background feature (vista+)
 + added multi-monitor support
