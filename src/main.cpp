@@ -767,31 +767,93 @@ INT_PTR CALLBACK HotkeysProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 			app.SetIcon (hwnd, 0, false);
 
 			// localize window
-			SetWindowText (hwnd, app.LocaleString (IDS_SETTINGS, nullptr));
+			SetWindowText (hwnd, app.LocaleString (IDS_HOTKEYS, nullptr));
 
-			SetDlgItemText (hwnd, IDC_TITLE_HOTKEYS, app.LocaleString (IDS_HOTKEYS, L":"));
-
-			SetDlgItemText (hwnd, IDC_ENABLE_FULLSCREEN_CHK, app.LocaleString (IDS_MODE_FULLSCREEN, nullptr));
-			SetDlgItemText (hwnd, IDC_ENABLE_WINDOW_CHK, app.LocaleString (IDS_MODE_WINDOW, nullptr));
-			SetDlgItemText (hwnd, IDC_ENABLE_REGION_CHK, app.LocaleString (IDS_MODE_REGION, nullptr));
+			SetDlgItemText (hwnd, IDC_TITLE_FULLSCREEN, app.LocaleString (IDS_MODE_FULLSCREEN, L":"));
+			SetDlgItemText (hwnd, IDC_TITLE_WINDOW, app.LocaleString (IDS_MODE_WINDOW, L":"));
+			SetDlgItemText (hwnd, IDC_TITLE_REGION, app.LocaleString (IDS_MODE_REGION, L":"));
 
 			SetDlgItemText (hwnd, IDC_SAVE, app.LocaleString (IDS_SAVE, nullptr));
 			SetDlgItemText (hwnd, IDC_CANCEL, app.LocaleString (IDS_CANCEL, nullptr));
 
-			CheckDlgButton (hwnd, IDC_ENABLE_FULLSCREEN_CHK, app.ConfigGet (L"HotkeyFullscreenEnabled", true).AsBool () ? BST_CHECKED : BST_UNCHECKED);
-			CheckDlgButton (hwnd, IDC_ENABLE_WINDOW_CHK, app.ConfigGet (L"HotkeyWindowEnabled", true).AsBool () ? BST_CHECKED : BST_UNCHECKED);
-			CheckDlgButton (hwnd, IDC_ENABLE_REGION_CHK, app.ConfigGet (L"HotkeyRegionEnabled", true).AsBool () ? BST_CHECKED : BST_UNCHECKED);
+			SendDlgItemMessage (hwnd, IDC_FULLSCREEN_CB, CB_INSERTSTRING, 0, (LPARAM)app.LocaleString (IDS_DISABLE, nullptr).GetString ());
+			SendDlgItemMessage (hwnd, IDC_WINDOW_CB, CB_INSERTSTRING, 0, (LPARAM)app.LocaleString (IDS_DISABLE, nullptr).GetString ());
+			SendDlgItemMessage (hwnd, IDC_REGION_CB, CB_INSERTSTRING, 0, (LPARAM)app.LocaleString (IDS_DISABLE, nullptr).GetString ());
 
-			SendDlgItemMessage (hwnd, IDC_HOTKEY_FULLSCREEN, HKM_SETHOTKEY, app.ConfigGet (L"HotkeyFullscreen", HOTKEY_FULLSCREEN).AsUint (), 0);
-			SendDlgItemMessage (hwnd, IDC_HOTKEY_WINDOW, HKM_SETHOTKEY, app.ConfigGet (L"HotkeyWindow", HOTKEY_WINDOW).AsUint (), 0);
-			SendDlgItemMessage (hwnd, IDC_HOTKEY_REGION, HKM_SETHOTKEY, app.ConfigGet (L"HotkeyRegion", HOTKEY_REGION).AsUint (), 0);
+			// show config
+			const DWORD fullscreen_code = app.ConfigGet (L"HotkeyFullscreen", HOTKEY_FULLSCREEN).AsUlong ();
+			const DWORD window_code = app.ConfigGet (L"HotkeyWindow", HOTKEY_WINDOW).AsUlong ();
+			const DWORD region_code = app.ConfigGet (L"HotkeyRegion", HOTKEY_REGION).AsUlong ();
+
+			const bool fullscreen_allowed = app.ConfigGet (L"HotkeyFullscreenEnabled", true).AsBool ();
+			const bool window_allowed = app.ConfigGet (L"HotkeyWindowEnabled", true).AsBool ();
+			const bool region_allowed = app.ConfigGet (L"HotkeyRegionEnabled", true).AsBool ();
+
+			CheckDlgButton (hwnd, IDC_FULLSCREEN_SHIFT, ((HIBYTE (fullscreen_code) & HOTKEYF_SHIFT) != 0) ? BST_CHECKED : BST_UNCHECKED);
+			CheckDlgButton (hwnd, IDC_FULLSCREEN_CTRL, ((HIBYTE (fullscreen_code) & HOTKEYF_CONTROL) != 0) ? BST_CHECKED : BST_UNCHECKED);
+			CheckDlgButton (hwnd, IDC_FULLSCREEN_ALT, ((HIBYTE (fullscreen_code) & HOTKEYF_ALT) != 0) ? BST_CHECKED : BST_UNCHECKED);
+
+			CheckDlgButton (hwnd, IDC_WINDOW_SHIFT, ((HIBYTE (window_code) & HOTKEYF_SHIFT) != 0) ? BST_CHECKED : BST_UNCHECKED);
+			CheckDlgButton (hwnd, IDC_WINDOW_CTRL, ((HIBYTE (window_code) & HOTKEYF_CONTROL) != 0) ? BST_CHECKED : BST_UNCHECKED);
+			CheckDlgButton (hwnd, IDC_WINDOW_ALT, ((HIBYTE (window_code) & HOTKEYF_ALT) != 0) ? BST_CHECKED : BST_UNCHECKED);
+
+			CheckDlgButton (hwnd, IDC_REGION_SHIFT, ((HIBYTE (region_code) & HOTKEYF_SHIFT) != 0) ? BST_CHECKED : BST_UNCHECKED);
+			CheckDlgButton (hwnd, IDC_REGION_CTRL, ((HIBYTE (region_code) & HOTKEYF_CONTROL) != 0) ? BST_CHECKED : BST_UNCHECKED);
+			CheckDlgButton (hwnd, IDC_REGION_ALT, ((HIBYTE (region_code) & HOTKEYF_ALT) != 0) ? BST_CHECKED : BST_UNCHECKED);
+
+			const static UINT keys[] = {VK_SNAPSHOT, VK_SPACE, VK_F1, VK_F2, VK_F3, VK_F4, VK_F5, VK_F6, VK_F7, VK_F8, VK_F9, VK_F10, VK_F11, VK_F12, VK_F12};
+
+			for (INT i = 0; i < _countof (keys); i++)
+			{
+				WCHAR name[128] = {0};
+
+				if (keys[i] == VK_SNAPSHOT)
+				{
+					StringCchCopy (name, _countof (name), L"Print Screen");
+				}
+				else
+				{
+					const UINT scan_code = MapVirtualKeyW (keys[i], MAPVK_VK_TO_VSC);
+					const LONG lparam = (scan_code << 16);
+
+					GetKeyNameText (lparam, name, _countof (name));
+				}
+
+				const UINT idx = i + 1;
+
+				SendDlgItemMessage (hwnd, IDC_FULLSCREEN_CB, CB_INSERTSTRING, idx, (LPARAM)name);
+				SendDlgItemMessage (hwnd, IDC_WINDOW_CB, CB_INSERTSTRING, idx, (LPARAM)name);
+				SendDlgItemMessage (hwnd, IDC_REGION_CB, CB_INSERTSTRING, idx, (LPARAM)name);
+
+				SendDlgItemMessage (hwnd, IDC_FULLSCREEN_CB, CB_SETITEMDATA, idx, keys[i]);
+				SendDlgItemMessage (hwnd, IDC_WINDOW_CB, CB_SETITEMDATA, idx, keys[i]);
+				SendDlgItemMessage (hwnd, IDC_REGION_CB, CB_SETITEMDATA, idx, keys[i]);
+
+				if (fullscreen_allowed && LOBYTE (fullscreen_code) == keys[i])
+					SendDlgItemMessage (hwnd, IDC_FULLSCREEN_CB, CB_SETCURSEL, idx, 0);
+
+				if (window_allowed && LOBYTE (window_code) == keys[i])
+					SendDlgItemMessage (hwnd, IDC_WINDOW_CB, CB_SETCURSEL, idx, 0);
+
+				if (region_allowed && LOBYTE (region_code) == keys[i])
+					SendDlgItemMessage (hwnd, IDC_REGION_CB, CB_SETCURSEL, idx, 0);
+			}
+
+			if (SendDlgItemMessage (hwnd, IDC_FULLSCREEN_CB, CB_GETCURSEL, 0, 0) == CB_ERR)
+				SendDlgItemMessage (hwnd, IDC_FULLSCREEN_CB, CB_SETCURSEL, 0, 0);
+
+			if (SendDlgItemMessage (hwnd, IDC_WINDOW_CB, CB_GETCURSEL, 0, 0) == CB_ERR)
+				SendDlgItemMessage (hwnd, IDC_WINDOW_CB, CB_SETCURSEL, 0, 0);
+
+			if (SendDlgItemMessage (hwnd, IDC_REGION_CB, CB_GETCURSEL, 0, 0) == CB_ERR)
+				SendDlgItemMessage (hwnd, IDC_REGION_CB, CB_SETCURSEL, 0, 0);
 
 			_r_wnd_addstyle (hwnd, IDC_SAVE, app.IsClassicUI () ? WS_EX_STATICEDGE : 0, WS_EX_STATICEDGE, GWL_EXSTYLE);
 			_r_wnd_addstyle (hwnd, IDC_CANCEL, app.IsClassicUI () ? WS_EX_STATICEDGE : 0, WS_EX_STATICEDGE, GWL_EXSTYLE);
 
-			PostMessage (hwnd, WM_COMMAND, MAKEWPARAM (IDC_ENABLE_FULLSCREEN_CHK, 0), 0);
-			PostMessage (hwnd, WM_COMMAND, MAKEWPARAM (IDC_ENABLE_WINDOW_CHK, 0), 0);
-			PostMessage (hwnd, WM_COMMAND, MAKEWPARAM (IDC_ENABLE_REGION_CHK, 0), 0);
+			PostMessage (hwnd, WM_COMMAND, MAKEWPARAM (IDC_FULLSCREEN_CB, CBN_SELCHANGE), 0);
+			PostMessage (hwnd, WM_COMMAND, MAKEWPARAM (IDC_WINDOW_CB, CBN_SELCHANGE), 0);
+			PostMessage (hwnd, WM_COMMAND, MAKEWPARAM (IDC_REGION_CB, CBN_SELCHANGE), 0);
 
 			break;
 		}
@@ -804,18 +866,77 @@ INT_PTR CALLBACK HotkeysProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 
 		case WM_COMMAND:
 		{
+			if (HIWORD (wparam) == CBN_SELCHANGE && (LOWORD (wparam) == IDC_FULLSCREEN_CB || LOWORD (wparam) == IDC_WINDOW_CB || LOWORD (wparam) == IDC_REGION_CB))
+			{
+				const bool is_disable = (DWORD)SendDlgItemMessage (hwnd, LOWORD (wparam), CB_GETCURSEL, 0, 0) > 0;
+
+				_r_ctrl_enable (hwnd, LOWORD (wparam) - 3, is_disable); // shift
+				_r_ctrl_enable (hwnd, LOWORD (wparam) - 2, is_disable); // ctrl
+				_r_ctrl_enable (hwnd, LOWORD (wparam) - 1, is_disable); // alt
+
+				break;
+			}
+
 			switch (LOWORD (wparam))
 			{
 				case IDOK: // process Enter key
 				case IDC_SAVE:
 				{
-					app.ConfigSet (L"HotkeyFullscreenEnabled", (IsDlgButtonChecked (hwnd, IDC_ENABLE_FULLSCREEN_CHK) == BST_CHECKED) ? true : false);
-					app.ConfigSet (L"HotkeyWindowEnabled", (IsDlgButtonChecked (hwnd, IDC_ENABLE_WINDOW_CHK) == BST_CHECKED) ? true : false);
-					app.ConfigSet (L"HotkeyRegionEnabled", (IsDlgButtonChecked (hwnd, IDC_ENABLE_REGION_CHK) == BST_CHECKED) ? true : false);
+					const DWORD fullscreen_idx = (DWORD)SendDlgItemMessage (hwnd, IDC_FULLSCREEN_CB, CB_GETCURSEL, 0, 0);
+					const DWORD window_idx = (DWORD)SendDlgItemMessage (hwnd, IDC_WINDOW_CB, CB_GETCURSEL, 0, 0);
+					const DWORD region_idx = (DWORD)SendDlgItemMessage (hwnd, IDC_REGION_CB, CB_GETCURSEL, 0, 0);
 
-					app.ConfigSet (L"HotkeyFullscreen", (DWORD)SendDlgItemMessage (hwnd, IDC_HOTKEY_FULLSCREEN, HKM_GETHOTKEY, 0, 0));
-					app.ConfigSet (L"HotkeyWindow", (DWORD)SendDlgItemMessage (hwnd, IDC_HOTKEY_WINDOW, HKM_GETHOTKEY, 0, 0));
-					app.ConfigSet (L"HotkeyRegion", (DWORD)SendDlgItemMessage (hwnd, IDC_HOTKEY_REGION, HKM_GETHOTKEY, 0, 0));
+					app.ConfigSet (L"HotkeyFullscreenEnabled", (fullscreen_idx > 0));
+					app.ConfigSet (L"HotkeyWindowEnabled", (window_idx > 0));
+					app.ConfigSet (L"HotkeyRegionEnabled", (region_idx > 0));
+
+					if (fullscreen_idx > 0)
+					{
+						DWORD modifiers = 0;
+
+						if (IsDlgButtonChecked (hwnd, IDC_FULLSCREEN_SHIFT) == BST_CHECKED)
+							modifiers |= HOTKEYF_SHIFT;
+
+						if (IsDlgButtonChecked (hwnd, IDC_FULLSCREEN_CTRL) == BST_CHECKED)
+							modifiers |= HOTKEYF_CONTROL;
+
+						if (IsDlgButtonChecked (hwnd, IDC_FULLSCREEN_ALT) == BST_CHECKED)
+							modifiers |= HOTKEYF_ALT;
+
+						app.ConfigSet (L"HotkeyFullscreen", (DWORD)MAKEWORD (SendDlgItemMessage (hwnd, IDC_FULLSCREEN_CB, CB_GETITEMDATA, fullscreen_idx, 0), modifiers));
+					}
+
+					if (window_idx > 0)
+					{
+						DWORD modifiers = 0;
+
+						if (IsDlgButtonChecked (hwnd, IDC_WINDOW_SHIFT) == BST_CHECKED)
+							modifiers |= HOTKEYF_SHIFT;
+
+						if (IsDlgButtonChecked (hwnd, IDC_WINDOW_CTRL) == BST_CHECKED)
+							modifiers |= HOTKEYF_CONTROL;
+
+						if (IsDlgButtonChecked (hwnd, IDC_WINDOW_ALT) == BST_CHECKED)
+							modifiers |= HOTKEYF_ALT;
+
+						app.ConfigSet (L"HotkeyWindow", (DWORD)MAKEWORD (SendDlgItemMessage (hwnd, IDC_WINDOW_CB, CB_GETITEMDATA, window_idx, 0), modifiers));
+					}
+
+					if (region_idx > 0)
+					{
+						DWORD modifiers = 0;
+
+						if (IsDlgButtonChecked (hwnd, IDC_REGION_SHIFT) == BST_CHECKED)
+							modifiers |= HOTKEYF_SHIFT;
+
+						if (IsDlgButtonChecked (hwnd, IDC_REGION_CTRL) == BST_CHECKED)
+							modifiers |= HOTKEYF_CONTROL;
+
+						if (IsDlgButtonChecked (hwnd, IDC_REGION_ALT) == BST_CHECKED)
+							modifiers |= HOTKEYF_ALT;
+
+						app.ConfigSet (L"HotkeyRegion", (DWORD)MAKEWORD (SendDlgItemMessage (hwnd, IDC_REGION_CB, CB_GETITEMDATA, region_idx, 0), modifiers));
+					}
 
 					// without break;
 				}
@@ -824,17 +945,6 @@ INT_PTR CALLBACK HotkeysProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 				case IDC_CANCEL:
 				{
 					EndDialog (hwnd, 0);
-					break;
-				}
-
-				case IDC_ENABLE_FULLSCREEN_CHK:
-				case IDC_ENABLE_WINDOW_CHK:
-				case IDC_ENABLE_REGION_CHK:
-				{
-					const bool is_enabled = (IsDlgButtonChecked (hwnd, LOWORD (wparam)) == BST_CHECKED);
-
-					_r_ctrl_enable (hwnd, LOWORD (wparam) + 1, is_enabled);
-
 					break;
 				}
 			}
@@ -846,7 +956,7 @@ INT_PTR CALLBACK HotkeysProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 	return FALSE;
 }
 
-void _app_initdropdownmenu (HMENU hmenu)
+void _app_initdropdownmenu (HMENU hmenu, bool is_button)
 {
 	app.LocaleMenu (hmenu, IDS_LOADONSTARTUP_CHK, IDM_LOADONSTARTUP_CHK, false, nullptr);
 	app.LocaleMenu (hmenu, IDS_CHECKUPDATES_CHK, IDM_CHECKUPDATES_CHK, false, nullptr);
@@ -854,9 +964,9 @@ void _app_initdropdownmenu (HMENU hmenu)
 	app.LocaleMenu (hmenu, IDS_PLAYSOUNDS_CHK, IDM_PLAYSOUNDS_CHK, false, nullptr);
 	app.LocaleMenu (hmenu, IDS_INCLUDEMOUSECURSOR_CHK, IDM_INCLUDEMOUSECURSOR_CHK, false, nullptr);
 	app.LocaleMenu (hmenu, IDS_CLEARBACKGROUND_CHK, IDM_CLEARBACKGROUND_CHK, false, L" (vista+)");
-	app.LocaleMenu (hmenu, IDS_DISABLEAEROONWND_CHK, IDM_DISABLEAEROONWND_CHK, false, L" (vista+) [BETA]");
+	app.LocaleMenu (hmenu, IDS_DISABLEAEROONWND_CHK, IDM_DISABLEAEROONWND_CHK, false, L" (vista+)");
 	app.LocaleMenu (hmenu, IDS_IMAGEFORMAT, FORMAT_MENU, true, nullptr);
-	app.LocaleMenu (hmenu, IDS_HOTKEYS, IDM_HOTKEYS, false, L"...\tF3");
+	app.LocaleMenu (hmenu, IDS_HOTKEYS, IDM_HOTKEYS, false, is_button ? L"...\tF3" : nullptr);
 
 	CheckMenuItem (hmenu, IDM_LOADONSTARTUP_CHK, MF_BYCOMMAND | (app.AutorunIsEnabled () ? MF_CHECKED : MF_UNCHECKED));
 	CheckMenuItem (hmenu, IDM_CHECKUPDATES_CHK, MF_BYCOMMAND | (app.ConfigGet (L"CheckUpdates", true).AsBool () ? MF_CHECKED : MF_UNCHECKED));
@@ -1018,7 +1128,7 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 						hmenu_settings = LoadMenu (nullptr, MAKEINTRESOURCE (IDM_SETTINGS));
 						const HMENU hsubmenu_settings = GetSubMenu (hmenu_settings, 0);
 
-						_app_initdropdownmenu (hsubmenu_settings);
+						_app_initdropdownmenu (hsubmenu_settings, false);
 
 						MENUITEMINFO menuinfo = {0};
 						menuinfo.cbSize = sizeof (menuinfo);
@@ -1285,7 +1395,7 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 					const HMENU hmenu = LoadMenu (nullptr, MAKEINTRESOURCE (IDM_SETTINGS));
 					const HMENU submenu = GetSubMenu (hmenu, 0);
 
-					_app_initdropdownmenu (submenu);
+					_app_initdropdownmenu (submenu, true);
 
 					TrackPopupMenuEx (submenu, TPM_RIGHTBUTTON | TPM_LEFTBUTTON, rc.left, rc.bottom, hwnd, nullptr);
 

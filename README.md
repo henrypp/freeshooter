@@ -4,7 +4,6 @@
 
 ### Description:
 This is old-school tool for taking screenshots without bloatware features, simple as life, light as air.<br />
-<br />
 It is my first application, written in AutoIt3 and now rewritten on C++. I love this tool, and i hope you are take to love it too.
 
 ### Features:
