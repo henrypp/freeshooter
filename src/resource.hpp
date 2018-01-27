@@ -137,9 +137,10 @@
 #define IDS_HOTKEYS 33
 
 #define IDS_DISABLE 34
+#define IDS_WARNING_HOTKEYS 35
 
-#define IDS_SAVE 35
-#define IDS_CANCEL 36
+#define IDS_SAVE 36
+#define IDS_CANCEL 37
 
 // Wav
 #define IDW_MAIN 1

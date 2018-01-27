@@ -209,6 +209,7 @@ STRINGTABLE
 	IDS_HOTKEYS "Hotkeys"
 
 	IDS_DISABLE "Disable"
+	IDS_WARNING_HOTKEYS "Hotkeys already in use!"
 
 	IDS_SAVE "OK"
 	IDS_CANCEL "Cancel"

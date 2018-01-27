@@ -461,7 +461,7 @@ void _app_hotkeyinit (HWND hwnd)
 		if (is_noregion)
 			buffer.AppendFormat (L"- %s\r\n", app.LocaleString (IDS_MODE_REGION, nullptr));
 
-		app.ConfirmMessage (hwnd, L"Hotkeys already in use!", buffer, L"NoHotkeysWarning");
+		app.ConfirmMessage (hwnd, app.LocaleString (IDS_WARNING_HOTKEYS, nullptr), buffer.Trim (L"\r\n"), L"NoHotkeysWarning");
 	}
 }
 
@@ -710,12 +710,14 @@ LRESULT CALLBACK RegionProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 			}
 			else
 			{
-				// draw cursor crosshair
-				MoveToEx (hdc, pt.x, rc.top, nullptr);
-				LineTo (hdc, pt.x, _R_RECT_HEIGHT (&rc));
+				LPRECT lpcrosshairRect = &rc;
 
-				MoveToEx (hdc, rc.left, pt.y, nullptr);
-				LineTo (hdc, _R_RECT_WIDTH (&rc), pt.y);
+				// draw cursor crosshair
+				MoveToEx (hdc, pt.x, lpcrosshairRect->top, nullptr);
+				LineTo (hdc, pt.x, _R_RECT_HEIGHT (lpcrosshairRect));
+
+				MoveToEx (hdc, lpcrosshairRect->left, pt.y, nullptr);
+				LineTo (hdc, _R_RECT_WIDTH (lpcrosshairRect), pt.y);
 			}
 
 			SelectObject (hdc, old_pen);
@@ -801,7 +803,7 @@ INT_PTR CALLBACK HotkeysProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 			CheckDlgButton (hwnd, IDC_REGION_CTRL, ((HIBYTE (region_code) & HOTKEYF_CONTROL) != 0) ? BST_CHECKED : BST_UNCHECKED);
 			CheckDlgButton (hwnd, IDC_REGION_ALT, ((HIBYTE (region_code) & HOTKEYF_ALT) != 0) ? BST_CHECKED : BST_UNCHECKED);
 
-			const static UINT keys[] = {VK_SNAPSHOT, VK_SPACE, VK_F1, VK_F2, VK_F3, VK_F4, VK_F5, VK_F6, VK_F7, VK_F8, VK_F9, VK_F10, VK_F11, VK_F12, VK_F12};
+			const static UINT keys[] = {VK_SNAPSHOT, VK_SPACE, VK_F1, VK_F2, VK_F3, VK_F4, VK_F5, VK_F6, VK_F7, VK_F8, VK_F9, VK_F10, VK_F11, VK_F12};
 
 			for (INT i = 0; i < _countof (keys); i++)
 			{
