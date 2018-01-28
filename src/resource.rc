@@ -75,6 +75,7 @@ IDM_SETTINGS MENU
 {
 	POPUP ""
 	{
+		MENUITEM " ", IDM_STARTMINIMIZED_CHK
 		MENUITEM " ", IDM_LOADONSTARTUP_CHK
 		MENUITEM " ", IDM_CHECKUPDATES_CHK
 		MENUITEM SEPARATOR
@@ -186,6 +187,7 @@ STRINGTABLE
 	IDS_HIDEME_CHK "Hide main window before capture"
 	IDS_CLASSICUI_CHK "Use classic interface (restart required)"
 
+	IDS_STARTMINIMIZED_CHK "Start minimized"
 	IDS_LOADONSTARTUP_CHK "Load on system startup"
 	IDS_CHECKUPDATES_CHK "Periodically check for updates (recommended)"
 	IDS_COPYTOCLIPBOARD_CHK "Copy image to clipboard"
@@ -194,7 +196,7 @@ STRINGTABLE
 	IDS_FOLDER "Screenshots folder"
 	IDS_QUICKSETTINGS "Quick settings"
 	IDS_MODE "Mode"
-	IDS_IMAGEFORMAT "Image format"
+	IDS_IMAGEFORMAT "Save as..."
 
 	IDS_PLAYSOUNDS_CHK "Play capture sound"
 	IDS_INCLUDEMOUSECURSOR_CHK "Include mouse cursor"

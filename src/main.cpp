@@ -401,18 +401,15 @@ void _app_takeshot (HWND hwnd, EnumScreenshot mode)
 	}
 }
 
-void _app_hotkeyuninit (HWND hwnd)
-{
-	UnregisterHotKey (hwnd, HOTKEY_ID_FULLSCREEN);
-	UnregisterHotKey (hwnd, HOTKEY_ID_WINDOW);
-	UnregisterHotKey (hwnd, HOTKEY_ID_REGION);
-}
-
 void _app_hotkeyinit (HWND hwnd)
 {
 	bool is_nofullscreen = false;
 	bool is_nowindow = false;
 	bool is_noregion = false;
+
+	UnregisterHotKey (hwnd, HOTKEY_ID_FULLSCREEN);
+	UnregisterHotKey (hwnd, HOTKEY_ID_WINDOW);
+	UnregisterHotKey (hwnd, HOTKEY_ID_REGION);
 
 	if (app.ConfigGet (L"HotkeyFullscreenEnabled", true).AsBool ())
 	{
@@ -761,8 +758,6 @@ INT_PTR CALLBACK HotkeysProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 	{
 		case WM_INITDIALOG:
 		{
-			_app_hotkeyuninit (app.GetHWND ());
-
 			// configure window
 			_r_wnd_center (hwnd, GetParent (hwnd));
 
@@ -860,12 +855,6 @@ INT_PTR CALLBACK HotkeysProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 			break;
 		}
 
-		case WM_DESTROY:
-		{
-			_app_hotkeyinit (app.GetHWND ());
-			break;
-		}
-
 		case WM_COMMAND:
 		{
 			if (HIWORD (wparam) == CBN_SELCHANGE && (LOWORD (wparam) == IDC_FULLSCREEN_CB || LOWORD (wparam) == IDC_WINDOW_CB || LOWORD (wparam) == IDC_REGION_CB))
@@ -888,9 +877,9 @@ INT_PTR CALLBACK HotkeysProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 					const DWORD window_idx = (DWORD)SendDlgItemMessage (hwnd, IDC_WINDOW_CB, CB_GETCURSEL, 0, 0);
 					const DWORD region_idx = (DWORD)SendDlgItemMessage (hwnd, IDC_REGION_CB, CB_GETCURSEL, 0, 0);
 
-					app.ConfigSet (L"HotkeyFullscreenEnabled", (fullscreen_idx > 0));
-					app.ConfigSet (L"HotkeyWindowEnabled", (window_idx > 0));
-					app.ConfigSet (L"HotkeyRegionEnabled", (region_idx > 0));
+					app.ConfigSet (L"HotkeyFullscreenEnabled", bool (fullscreen_idx > 0));
+					app.ConfigSet (L"HotkeyWindowEnabled", bool (window_idx > 0));
+					app.ConfigSet (L"HotkeyRegionEnabled", bool (region_idx > 0));
 
 					if (fullscreen_idx > 0)
 					{
@@ -940,6 +929,8 @@ INT_PTR CALLBACK HotkeysProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 						app.ConfigSet (L"HotkeyRegion", (DWORD)MAKEWORD (SendDlgItemMessage (hwnd, IDC_REGION_CB, CB_GETITEMDATA, region_idx, 0), modifiers));
 					}
 
+					_app_hotkeyinit (app.GetHWND ());
+
 					// without break;
 				}
 
@@ -960,6 +951,7 @@ INT_PTR CALLBACK HotkeysProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 
 void _app_initdropdownmenu (HMENU hmenu, bool is_button)
 {
+	app.LocaleMenu (hmenu, IDS_STARTMINIMIZED_CHK, IDM_STARTMINIMIZED_CHK, false, nullptr);
 	app.LocaleMenu (hmenu, IDS_LOADONSTARTUP_CHK, IDM_LOADONSTARTUP_CHK, false, nullptr);
 	app.LocaleMenu (hmenu, IDS_CHECKUPDATES_CHK, IDM_CHECKUPDATES_CHK, false, nullptr);
 	app.LocaleMenu (hmenu, IDS_COPYTOCLIPBOARD_CHK, IDM_COPYTOCLIPBOARD_CHK, false, nullptr);
@@ -970,6 +962,7 @@ void _app_initdropdownmenu (HMENU hmenu, bool is_button)
 	app.LocaleMenu (hmenu, IDS_IMAGEFORMAT, FORMAT_MENU, true, nullptr);
 	app.LocaleMenu (hmenu, IDS_HOTKEYS, IDM_HOTKEYS, false, is_button ? L"...\tF3" : nullptr);
 
+	CheckMenuItem (hmenu, IDM_STARTMINIMIZED_CHK, MF_BYCOMMAND | (app.ConfigGet (L"IsStartMinimized", false).AsBool () ? MF_CHECKED : MF_UNCHECKED));
 	CheckMenuItem (hmenu, IDM_LOADONSTARTUP_CHK, MF_BYCOMMAND | (app.AutorunIsEnabled () ? MF_CHECKED : MF_UNCHECKED));
 	CheckMenuItem (hmenu, IDM_CHECKUPDATES_CHK, MF_BYCOMMAND | (app.ConfigGet (L"CheckUpdates", true).AsBool () ? MF_CHECKED : MF_UNCHECKED));
 	CheckMenuItem (hmenu, IDM_COPYTOCLIPBOARD_CHK, MF_BYCOMMAND | (app.ConfigGet (L"CopyToClipboard", false).AsBool () ? MF_CHECKED : MF_UNCHECKED));
@@ -1222,6 +1215,14 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 					const bool new_val = !app.ConfigGet (L"ClassicUI", false).AsBool ();
 					CheckMenuItem (GetMenu (hwnd), IDM_CLASSICUI_CHK, MF_BYCOMMAND | (new_val ? MF_CHECKED : MF_UNCHECKED));
 					app.ConfigSet (L"ClassicUI", new_val);
+
+					break;
+				}
+
+				case IDM_STARTMINIMIZED_CHK:
+				{
+					const bool new_val = !app.ConfigGet (L"IsStartMinimized", false).AsBool ();
+					app.ConfigSet (L"IsStartMinimized", new_val);
 
 					break;
 				}

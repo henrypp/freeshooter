@@ -1,3 +1,8 @@
+v2.0.1 (28 January 2018)
+- revert "start minimized" option (issue #7)
+- fixed hotkeys initialization in some cases
+- fixed ui bugs
+
 v2.0 (27 January 2018)
 + code rewritten on c++
 + added clear window background feature (vista+)

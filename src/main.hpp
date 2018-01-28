@@ -13,7 +13,7 @@
 #define UID 1337
 #define LANG_MENU 4
 #define SETTINGS_MENU 6
-#define FORMAT_MENU 3
+#define FORMAT_MENU 4
 #define WND_SLEEP 150
 #define PEN_COLOR RGB(0,0,0)
 #define PEN_COLOR_BK RGB(255,255,255)
