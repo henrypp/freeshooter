@@ -1,3 +1,15 @@
+v2.0.2 (10 July 2018)
+- added filename date format
+- middle mouse click to cancel region selection
+- set jpeg quality to 100 by default
+- set classic ui by default
+- fixed directory names portability
+- fixed possible region selection duplicates
+- stability improvements
+- cosmetic fixes
+- fixed ui bugs
+- fixed bugs
+
 v2.0.1 (28 January 2018)
 - revert "start minimized" option (issue #7)
 - fixed hotkeys initialization in some cases
