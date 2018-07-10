@@ -12,10 +12,10 @@
 #define WM_TRAYICON WM_APP + 1
 #define UID 1337
 
-#define LANG_MENU 4
+#define LANG_MENU 6
 #define SETTINGS_MENU 6
-#define FILENAME_MENU 4
-#define FORMAT_MENU 5
+#define FILENAME_MENU 0
+#define FORMAT_MENU 1
 
 #define WND_SLEEP 150
 #define JPEG_QUALITY 100
@@ -23,10 +23,10 @@
 #define PEN_COLOR RGB(0,0,0)
 #define PEN_COLOR_BK RGB(255,255,255)
 
-#define FILE_FORMAT_NAME L"sshot"
-#define FILE_FORMAT_INDEX FILE_FORMAT_NAME L"_%03d"
-#define FILE_FORMAT_DATE L"yyyy-MM-dd"
-#define FILE_FORMAT_TIME L"HH-mm-ss"
+#define FILE_FORMAT_NAME_PREFIX L"sshot_"
+#define FILE_FORMAT_NAME_FORMAT L"%s%03d"
+#define FILE_FORMAT_DATE_FORMAT_1 L"yyyy-MM-dd"
+#define FILE_FORMAT_DATE_FORMAT_2 L"HH-mm-ss"
 
 #define HOTKEY_ID_FULLSCREEN 1
 #define HOTKEY_ID_WINDOW 2

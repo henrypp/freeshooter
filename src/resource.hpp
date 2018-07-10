@@ -148,6 +148,12 @@
 
 #define IDS_FILENAME 40
 
+#define IDS_UPDATE_ERROR 41
+#define IDS_UPDATE_DOWNLOAD 42
+#define IDS_UPDATE_DONE 43
+#define IDS_UPDATE_INIT 44
+#define IDS_UPDATE_INSTALL 45
+
 // Wav
 #define IDW_MAIN 1
 

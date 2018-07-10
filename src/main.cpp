@@ -19,14 +19,12 @@ std::vector<IMAGE_FORMAT> formats;
 
 rapp app (APP_NAME, APP_NAME_SHORT, APP_VERSION, APP_COPYRIGHT);
 
-EnumImageFormat _app_getimageformat ()
+size_t _app_getimageformat ()
 {
 	if (formats.empty ())
-		return FormatJpeg;
+		return 0;
 
-	const EnumImageFormat result = (EnumImageFormat)max (min (app.ConfigGet (L"ImageFormat", FormatJpeg).AsInt (), INT (formats.size () - 1)), 0);
-
-	return result;
+	return (size_t)max (min (app.ConfigGet (L"ImageFormat", FormatJpeg).AsInt (), INT (formats.size () - 1)), 0);
 }
 
 rstring _app_getdirectory ()
@@ -54,8 +52,8 @@ rstring _app_uniquefilename (LPCWSTR directory, EnumImageName name_type)
 		GetLocalTime (&st);
 
 		if (
-			GetDateFormat (LOCALE_SYSTEM_DEFAULT, 0, &st, FILE_FORMAT_DATE, date_format, _countof (date_format)) &&
-			GetTimeFormat (LOCALE_SYSTEM_DEFAULT, 0, &st, FILE_FORMAT_TIME, time_format, _countof (time_format))
+			GetDateFormat (LOCALE_SYSTEM_DEFAULT, 0, &st, FILE_FORMAT_DATE_FORMAT_1, date_format, _countof (date_format)) &&
+			GetTimeFormat (LOCALE_SYSTEM_DEFAULT, 0, &st, FILE_FORMAT_DATE_FORMAT_2, time_format, _countof (time_format))
 			)
 		{
 			StringCchPrintf (result, _countof (result), L"%s\\%s %s.%s", directory, date_format, time_format, fext.GetString ());
@@ -70,16 +68,19 @@ rstring _app_uniquefilename (LPCWSTR directory, EnumImageName name_type)
 	else
 	{
 		static const USHORT idx = 1;
+		const rstring name = app.ConfigGet (L"FilenamePrefix", FILE_FORMAT_NAME_PREFIX);
 
 		for (USHORT i = idx; i < USHRT_MAX; i++)
 		{
-			StringCchPrintf (result, _countof (result), L"%s\\" FILE_FORMAT_INDEX L".%s", directory, i, fext.GetString ());
+			StringCchPrintf (result, _countof (result), L"%s\\" FILE_FORMAT_NAME_FORMAT L".%s", directory, name.GetString (), i, fext.GetString ());
 
 			if (!_r_fs_exists (result))
 				return result;
 		}
 
-		if (PathYetAnotherMakeUniqueName (result, _r_fmt (L"%s\\%s.%s", directory, FILE_FORMAT_NAME, fext.GetString ()), nullptr, _r_fmt (L"%s.%s", FILE_FORMAT_NAME, fext.GetString ())))
+
+
+		if (PathYetAnotherMakeUniqueName (result, _r_fmt (L"%s\\%s.%s", directory, name.GetString (), fext.GetString ()), nullptr, _r_fmt (L"%s.%s", name.GetString (), fext.GetString ())))
 			return result;
 	}
 
@@ -843,20 +844,18 @@ INT_PTR CALLBACK HotkeysProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 
 void _app_initdropdownmenu (HMENU hmenu, bool is_button)
 {
-	app.LocaleMenu (hmenu, IDS_STARTMINIMIZED_CHK, IDM_STARTMINIMIZED_CHK, false, nullptr);
-	app.LocaleMenu (hmenu, IDS_LOADONSTARTUP_CHK, IDM_LOADONSTARTUP_CHK, false, nullptr);
-	app.LocaleMenu (hmenu, IDS_CHECKUPDATES_CHK, IDM_CHECKUPDATES_CHK, false, nullptr);
 	app.LocaleMenu (hmenu, IDS_COPYTOCLIPBOARD_CHK, IDM_COPYTOCLIPBOARD_CHK, false, nullptr);
 	app.LocaleMenu (hmenu, IDS_PLAYSOUNDS_CHK, IDM_PLAYSOUNDS_CHK, false, nullptr);
 	app.LocaleMenu (hmenu, IDS_INCLUDEMOUSECURSOR_CHK, IDM_INCLUDEMOUSECURSOR_CHK, false, nullptr);
+	app.LocaleMenu (hmenu, IDS_HIDEME_CHK, IDM_HIDEME_CHK, false, nullptr);
 	app.LocaleMenu (hmenu, IDS_CLEARBACKGROUND_CHK, IDM_CLEARBACKGROUND_CHK, false, L" (vista+)");
 	app.LocaleMenu (hmenu, IDS_DISABLEAEROONWND_CHK, IDM_DISABLEAEROONWND_CHK, false, L" (vista+)");
 	app.LocaleMenu (hmenu, IDS_FILENAME, FILENAME_MENU, true, nullptr);
 	app.LocaleMenu (hmenu, IDS_IMAGEFORMAT, FORMAT_MENU, true, nullptr);
 	app.LocaleMenu (hmenu, IDS_HOTKEYS, IDM_HOTKEYS, false, is_button ? L"...\tF3" : L"...");
 
-	app.LocaleMenu (hmenu, 0, IDM_FILENAME_INDEX, false, _r_fmt (L"Index (" FILE_FORMAT_INDEX L".jpg)", 1));
-	app.LocaleMenu (hmenu, 0, IDM_FILENAME_DATE, false, L"Date (" FILE_FORMAT_DATE L" " FILE_FORMAT_TIME L".jpg)");
+	app.LocaleMenu (hmenu, 0, IDM_FILENAME_INDEX, false, _r_fmt (L"1) " FILE_FORMAT_NAME_FORMAT L".jpg", app.ConfigGet (L"FilenamePrefix", FILE_FORMAT_NAME_PREFIX), 1));
+	app.LocaleMenu (hmenu, 0, IDM_FILENAME_DATE, false, L"2) " FILE_FORMAT_DATE_FORMAT_1 L" " FILE_FORMAT_DATE_FORMAT_2 L".jpg");
 
 	// initialize formats
 	{
@@ -867,14 +866,13 @@ void _app_initdropdownmenu (HMENU hmenu, bool is_button)
 			AppendMenu (submenu, MF_BYPOSITION, IDX_FORMATS + i, formats.at (i).ext);
 	}
 
-	CheckMenuItem (hmenu, IDM_STARTMINIMIZED_CHK, MF_BYCOMMAND | (app.ConfigGet (L"IsStartMinimized", false).AsBool () ? MF_CHECKED : MF_UNCHECKED));
-	CheckMenuItem (hmenu, IDM_LOADONSTARTUP_CHK, MF_BYCOMMAND | (app.AutorunIsEnabled () ? MF_CHECKED : MF_UNCHECKED));
-	CheckMenuItem (hmenu, IDM_CHECKUPDATES_CHK, MF_BYCOMMAND | (app.ConfigGet (L"CheckUpdates", true).AsBool () ? MF_CHECKED : MF_UNCHECKED));
 	CheckMenuItem (hmenu, IDM_COPYTOCLIPBOARD_CHK, MF_BYCOMMAND | (app.ConfigGet (L"CopyToClipboard", false).AsBool () ? MF_CHECKED : MF_UNCHECKED));
 	CheckMenuItem (hmenu, IDM_INCLUDEMOUSECURSOR_CHK, MF_BYCOMMAND | (app.ConfigGet (L"IsIncludeMouseCursor", false).AsBool () ? MF_CHECKED : MF_UNCHECKED));
 	CheckMenuItem (hmenu, IDM_PLAYSOUNDS_CHK, MF_BYCOMMAND | (app.ConfigGet (L"IsPlaySound", true).AsBool () ? MF_CHECKED : MF_UNCHECKED));
+	CheckMenuItem (hmenu, IDM_HIDEME_CHK, MF_BYCOMMAND | (app.ConfigGet (L"IsHideMe", true).AsBool () ? MF_CHECKED : MF_UNCHECKED));
 	CheckMenuItem (hmenu, IDM_CLEARBACKGROUND_CHK, MF_BYCOMMAND | (app.ConfigGet (L"IsClearBackground", true).AsBool () ? MF_CHECKED : MF_UNCHECKED));
 	CheckMenuItem (hmenu, IDM_DISABLEAEROONWND_CHK, MF_BYCOMMAND | (app.ConfigGet (L"IsDisableAeroOnWnd", false).AsBool () ? MF_CHECKED : MF_UNCHECKED));
+
 	CheckMenuRadioItem (hmenu, IDM_FILENAME_INDEX, IDM_FILENAME_DATE, IDM_FILENAME_INDEX + app.ConfigGet (L"FilenameType", NameIndex).AsUint (), MF_BYCOMMAND);
 	CheckMenuRadioItem (hmenu, IDX_FORMATS, IDX_FORMATS + UINT (formats.size ()), IDX_FORMATS + UINT (_app_getimageformat ()), MF_BYCOMMAND);
 
@@ -992,8 +990,11 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 
 			// configure menu
 			CheckMenuItem (GetMenu (hwnd), IDM_ALWAYSONTOP_CHK, MF_BYCOMMAND | (app.ConfigGet (L"AlwaysOnTop", false).AsBool () ? MF_CHECKED : MF_UNCHECKED));
-			CheckMenuItem (GetMenu (hwnd), IDM_HIDEME_CHK, MF_BYCOMMAND | (app.ConfigGet (L"IsHideMe", true).AsBool () ? MF_CHECKED : MF_UNCHECKED));
 			CheckMenuItem (GetMenu (hwnd), IDM_CLASSICUI_CHK, MF_BYCOMMAND | (app.ConfigGet (L"ClassicUI", _APP_CLASSICUI).AsBool () ? MF_CHECKED : MF_UNCHECKED));
+
+			CheckMenuItem (GetMenu (hwnd), IDM_STARTMINIMIZED_CHK, MF_BYCOMMAND | (app.ConfigGet (L"IsStartMinimized", false).AsBool () ? MF_CHECKED : MF_UNCHECKED));
+			CheckMenuItem (GetMenu (hwnd), IDM_LOADONSTARTUP_CHK, MF_BYCOMMAND | (app.AutorunIsEnabled () ? MF_CHECKED : MF_UNCHECKED));
+			CheckMenuItem (GetMenu (hwnd), IDM_CHECKUPDATES_CHK, MF_BYCOMMAND | (app.ConfigGet (L"CheckUpdates", true).AsBool () ? MF_CHECKED : MF_UNCHECKED));
 
 			if (!app.IsVistaOrLater ())
 				_r_ctrl_enable (hwnd, IDC_CLEARBACKGROUND_CHK, false);
@@ -1033,11 +1034,15 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 			app.LocaleMenu (menu, IDS_SCREENSHOT, IDM_TAKE_FULLSCREEN, false, _r_fmt (L": %s", app.LocaleString (IDS_MODE_FULLSCREEN, nullptr).ToLower ().GetString ()));
 			app.LocaleMenu (menu, IDS_SCREENSHOT, IDM_TAKE_WINDOW, false, _r_fmt (L": %s", app.LocaleString (IDS_MODE_WINDOW, nullptr).ToLower ().GetString ()));
 			app.LocaleMenu (menu, IDS_SCREENSHOT, IDM_TAKE_REGION, false, _r_fmt (L": %s", app.LocaleString (IDS_MODE_REGION, nullptr).ToLower ().GetString ()));
-			app.LocaleMenu (menu, IDS_EXIT, IDM_EXIT, false, nullptr);
+			app.LocaleMenu (menu, IDS_EXIT, IDM_EXIT, false, L"\tAlt+F4");
 			app.LocaleMenu (menu, IDS_VIEW, 1, true, nullptr);
 			app.LocaleMenu (menu, IDS_ALWAYSONTOP_CHK, IDM_ALWAYSONTOP_CHK, false, nullptr);
-			app.LocaleMenu (menu, IDS_HIDEME_CHK, IDM_HIDEME_CHK, false, nullptr);
 			app.LocaleMenu (menu, IDS_CLASSICUI_CHK, IDM_CLASSICUI_CHK, false, nullptr);
+
+			app.LocaleMenu (menu, IDS_STARTMINIMIZED_CHK, IDM_STARTMINIMIZED_CHK, false, nullptr);
+			app.LocaleMenu (menu, IDS_LOADONSTARTUP_CHK, IDM_LOADONSTARTUP_CHK, false, nullptr);
+			app.LocaleMenu (menu, IDS_CHECKUPDATES_CHK, IDM_CHECKUPDATES_CHK, false, nullptr);
+
 			app.LocaleMenu (GetSubMenu (menu, 1), IDS_LANGUAGE, LANG_MENU, true, L" (Language)");
 			app.LocaleMenu (menu, IDS_HELP, 2, true, nullptr);
 			app.LocaleMenu (menu, IDS_WEBSITE, IDM_WEBSITE, false, nullptr);
@@ -1081,27 +1086,13 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 		case WM_HOTKEY:
 		{
 			if (wparam == HOTKEY_ID_FULLSCREEN)
-			{
 				_app_takeshot (nullptr, ScreenshotFullscreen);
-			}
+
 			else if (wparam == HOTKEY_ID_WINDOW)
-			{
-				HWND hwindow = GetForegroundWindow ();
+				_app_takeshot (GetForegroundWindow (), ScreenshotWindow);
 
-				if (!_app_isnormalwindow (hwindow))
-				{
-					POINT pt = {0};
-					GetCursorPos (&pt);
-
-					hwindow = GetAncestor (WindowFromPoint (pt), GA_ROOT);
-				}
-
-				_app_takeshot (hwindow, ScreenshotWindow);
-			}
 			else if (wparam == HOTKEY_ID_REGION)
-			{
 				_app_takeshot (nullptr, ScreenshotRegion);
-			}
 
 			break;
 		}
@@ -1230,7 +1221,7 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 				{
 					const bool new_val = !app.ConfigGet (L"AlwaysOnTop", false).AsBool ();
 
-					CheckMenuItem (GetMenu (hwnd), IDM_ALWAYSONTOP_CHK, MF_BYCOMMAND | (new_val ? MF_CHECKED : MF_UNCHECKED));
+					CheckMenuItem (GetMenu (hwnd), LOWORD (wparam), MF_BYCOMMAND | (new_val ? MF_CHECKED : MF_UNCHECKED));
 					app.ConfigSet (L"AlwaysOnTop", new_val);
 
 					_r_wnd_top (hwnd, new_val);
@@ -1241,7 +1232,6 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 				case IDM_HIDEME_CHK:
 				{
 					const bool new_val = !app.ConfigGet (L"IsHideMe", true).AsBool ();
-					CheckMenuItem (GetMenu (hwnd), IDM_HIDEME_CHK, MF_BYCOMMAND | (new_val ? MF_CHECKED : MF_UNCHECKED));
 					app.ConfigSet (L"IsHideMe", new_val);
 
 					break;
@@ -1250,7 +1240,7 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 				case IDM_CLASSICUI_CHK:
 				{
 					const bool new_val = !app.ConfigGet (L"ClassicUI", _APP_CLASSICUI).AsBool ();
-					CheckMenuItem (GetMenu (hwnd), IDM_CLASSICUI_CHK, MF_BYCOMMAND | (new_val ? MF_CHECKED : MF_UNCHECKED));
+					CheckMenuItem (GetMenu (hwnd), LOWORD (wparam), MF_BYCOMMAND | (new_val ? MF_CHECKED : MF_UNCHECKED));
 					app.ConfigSet (L"ClassicUI", new_val);
 
 					break;
@@ -1259,6 +1249,7 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 				case IDM_STARTMINIMIZED_CHK:
 				{
 					const bool new_val = !app.ConfigGet (L"IsStartMinimized", false).AsBool ();
+					CheckMenuItem (GetMenu (hwnd), LOWORD (wparam), MF_BYCOMMAND | (new_val ? MF_CHECKED : MF_UNCHECKED));
 					app.ConfigSet (L"IsStartMinimized", new_val);
 
 					break;
@@ -1267,6 +1258,7 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 				case IDM_LOADONSTARTUP_CHK:
 				{
 					const bool new_val = !app.AutorunIsEnabled ();
+					CheckMenuItem (GetMenu (hwnd), LOWORD (wparam), MF_BYCOMMAND | (new_val ? MF_CHECKED : MF_UNCHECKED));
 					app.AutorunEnable (new_val);
 
 					break;
@@ -1275,6 +1267,7 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 				case IDM_CHECKUPDATES_CHK:
 				{
 					const bool new_val = !app.ConfigGet (L"CheckUpdates", true).AsBool ();
+					CheckMenuItem (GetMenu (hwnd), LOWORD (wparam), MF_BYCOMMAND | (new_val ? MF_CHECKED : MF_UNCHECKED));
 					app.ConfigSet (L"CheckUpdates", new_val);
 
 					break;
