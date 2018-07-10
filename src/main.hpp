@@ -23,6 +23,8 @@
 #define PEN_COLOR RGB(0,0,0)
 #define PEN_COLOR_BK RGB(255,255,255)
 
+#define FILE_FORMAT_NAME L"sshot"
+#define FILE_FORMAT_INDEX FILE_FORMAT_NAME L"_%03d"
 #define FILE_FORMAT_DATE L"yyyy-MM-dd"
 #define FILE_FORMAT_TIME L"HH-mm-ss"
 

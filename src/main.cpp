@@ -24,7 +24,7 @@ EnumImageFormat _app_getimageformat ()
 	if (formats.empty ())
 		return FormatJpeg;
 
-	EnumImageFormat result = (EnumImageFormat)max (min (formats.size () - 1, app.ConfigGet (L"ImageFormat", FormatJpeg).AsUint ()), 0);
+	const EnumImageFormat result = (EnumImageFormat)max (min (app.ConfigGet (L"ImageFormat", FormatJpeg).AsInt (), INT (formats.size () - 1)), 0);
 
 	return result;
 }
@@ -70,17 +70,16 @@ rstring _app_uniquefilename (LPCWSTR directory, EnumImageName name_type)
 	else
 	{
 		static const USHORT idx = 1;
-		static const LPCWSTR fname = L"sshot";
 
 		for (USHORT i = idx; i < USHRT_MAX; i++)
 		{
-			StringCchPrintf (result, _countof (result), L"%s\\%s_%03d.%s", directory, fname, i, fext.GetString ());
+			StringCchPrintf (result, _countof (result), L"%s\\" FILE_FORMAT_INDEX L".%s", directory, i, fext.GetString ());
 
 			if (!_r_fs_exists (result))
 				return result;
 		}
 
-		if (PathYetAnotherMakeUniqueName (result, _r_fmt (L"%s\\%s.%s", directory, fname, fext.GetString ()), nullptr, _r_fmt (L"%s.%s", fname, fext.GetString ())))
+		if (PathYetAnotherMakeUniqueName (result, _r_fmt (L"%s\\%s.%s", directory, FILE_FORMAT_NAME, fext.GetString ()), nullptr, _r_fmt (L"%s.%s", FILE_FORMAT_NAME, fext.GetString ())))
 			return result;
 	}
 
@@ -902,8 +901,8 @@ void _app_initdropdownmenu (HMENU hmenu, bool is_button)
 	app.LocaleMenu (hmenu, IDS_IMAGEFORMAT, FORMAT_MENU, true, nullptr);
 	app.LocaleMenu (hmenu, IDS_HOTKEYS, IDM_HOTKEYS, false, is_button ? L"...\tF3" : L"...");
 
-	app.LocaleMenu (hmenu, 0, IDM_FILENAME_INDEX, false, _r_path_extractfile (_app_uniquefilename (_app_getdirectory (), NameIndex)));
-	app.LocaleMenu (hmenu, 0, IDM_FILENAME_DATE, false, _r_path_extractfile (_app_uniquefilename (_app_getdirectory (), NameDate)));
+	app.LocaleMenu (hmenu, 0, IDM_FILENAME_INDEX, false, _r_fmt (L"Index (" FILE_FORMAT_INDEX L".jpg)", 1));
+	app.LocaleMenu (hmenu, 0, IDM_FILENAME_DATE, false, L"Date (" FILE_FORMAT_DATE L" " FILE_FORMAT_TIME L".jpg)");
 
 	// initialize formats
 	{
