@@ -268,78 +268,29 @@ void _app_getwindowrect (HWND hwnd, LPRECT lprect)
 		GetWindowRect (hwnd, lprect);
 }
 
-bool _app_islastwindow (HWND hwnd)
-{
-	if (!hwnd || !IsWindowVisible (hwnd))
-		return false;
-
-	HWND hwalk = nullptr;
-	HWND hwndTry = GetAncestor (hwnd, GA_ROOT);
-
-	while (hwndTry != hwalk)
-	{
-		hwalk = hwndTry;
-		hwndTry = GetLastActivePopup (hwalk);
-
-		if (IsWindowVisible (hwndTry))
-			break;
-	}
-
-	if (hwalk != hwnd)
-		return false;
-
-	// the following removes some task tray programs and "program manager"
-	TITLEBARINFO ti = {0};
-	ti.cbSize = sizeof (ti);
-
-	if (GetTitleBarInfo (hwnd, &ti))
-	{
-		if (ti.rgstate[0] & STATE_SYSTEM_INVISIBLE)
-			return false;
-	}
-
-	return true;
-}
-
 bool _app_isnormalwindow (HWND hwnd)
 {
 	return hwnd && IsWindowVisible (hwnd) && !IsIconic (hwnd) && hwnd != GetShellWindow () && hwnd != GetDesktopWindow ();
-}
-
-BOOL CALLBACK _app_enumcallback (HWND hwnd, LPARAM)
-{
-	if (!_app_isnormalwindow (hwnd))
-		return TRUE;
-
-	if (_app_islastwindow (hwnd) && GetAncestor (hwnd, GA_ROOT) != app.GetHWND ())
-	{
-		config.hactive = hwnd;
-
-		return FALSE;
-	}
-
-	return TRUE;
 }
 
 void _app_takeshot (HWND hwnd, EnumScreenshot mode)
 {
 	bool result = false;
 
+	const HWND myWindow = app.GetHWND ();
 	const bool is_includecursor = app.ConfigGet (L"IsIncludeMouseCursor", false).AsBool ();
 	const bool is_hideme = app.ConfigGet (L"IsHideMe", true).AsBool ();
-	const bool is_windowdisplayed = IsWindowVisible (app.GetHWND ()) && !IsIconic (app.GetHWND ());
+	const bool is_windowdisplayed = IsWindowVisible (myWindow) && !IsIconic (myWindow);
+	const HWND hActiveWindow = GetForegroundWindow ();
 
 	RECT prev_rect = {0};
 
 	if (is_hideme)
 	{
 		if (is_windowdisplayed)
-		{
-			GetWindowRect (app.GetHWND (), &prev_rect);
-			SetWindowPos (app.GetHWND (), nullptr, 0, 0, 0, 0, SWP_HIDEWINDOW | SWP_NOACTIVATE | SWP_FRAMECHANGED | SWP_NOREDRAW | SWP_NOZORDER | SWP_NOCOPYBITS | SWP_NOOWNERZORDER | SWP_NOSENDCHANGING);
-		}
+			ShowWindow (myWindow, SW_HIDE);
 
-		app.TrayToggle (app.GetHWND (), UID, nullptr, false);
+		app.TrayToggle (myWindow, UID, nullptr, false);
 	}
 
 	if (mode == ScreenshotFullscreen)
@@ -360,12 +311,12 @@ void _app_takeshot (HWND hwnd, EnumScreenshot mode)
 	}
 	else if (mode == ScreenshotWindow)
 	{
-		// find active window
-		if (!hwnd)
+		if (!hwnd || !_app_isnormalwindow (hwnd))
 		{
-			config.hactive = nullptr;
-			EnumWindows (&_app_enumcallback, 0);
-			hwnd = config.hactive;
+			POINT pt = {0};
+			GetCursorPos (&pt);
+
+			hwnd = GetAncestor (WindowFromPoint (pt), GA_ROOT);
 		}
 
 		if (_app_isnormalwindow (hwnd))
@@ -399,7 +350,7 @@ void _app_takeshot (HWND hwnd, EnumScreenshot mode)
 			if (is_clearbackground)
 			{
 				if (config.hdummy)
-					SetWindowPos (config.hdummy, app.GetHWND (), 0, 0, 0, 0, SWP_HIDEWINDOW | SWP_NOACTIVATE | SWP_NOCOPYBITS | SWP_FRAMECHANGED | SWP_NOSENDCHANGING);
+					SetWindowPos (config.hdummy, myWindow, 0, 0, 0, 0, SWP_HIDEWINDOW | SWP_NOACTIVATE | SWP_NOCOPYBITS | SWP_FRAMECHANGED | SWP_NOSENDCHANGING);
 			}
 		}
 	}
@@ -407,7 +358,7 @@ void _app_takeshot (HWND hwnd, EnumScreenshot mode)
 	{
 		if (WaitForSingleObjectEx (config.hregion_mutex, 0, FALSE) == WAIT_OBJECT_0)
 		{
-			config.hregion = CreateWindowEx (WS_EX_TOPMOST, REGION_CLASS_DLG, nullptr, WS_POPUP, 0, 0, 0, 0, app.GetHWND (), nullptr, app.GetHINSTANCE (), nullptr);
+			config.hregion = CreateWindowEx (WS_EX_TOPMOST, REGION_CLASS_DLG, nullptr, WS_POPUP, 0, 0, 0, 0, myWindow, nullptr, app.GetHINSTANCE (), nullptr);
 			SetWindowPos (config.hregion, HWND_TOPMOST, 0, 0, GetSystemMetrics (SM_CXVIRTUALSCREEN), GetSystemMetrics (SM_CYVIRTUALSCREEN), SWP_SHOWWINDOW | SWP_NOCOPYBITS | SWP_FRAMECHANGED | SWP_NOSENDCHANGING);
 		}
 	}
@@ -415,11 +366,14 @@ void _app_takeshot (HWND hwnd, EnumScreenshot mode)
 	if (is_hideme)
 	{
 		if (is_windowdisplayed)
-			SetWindowPos (app.GetHWND (), nullptr, prev_rect.left, prev_rect.top, _R_RECT_WIDTH (&prev_rect), _R_RECT_HEIGHT (&prev_rect), SWP_SHOWWINDOW | SWP_NOACTIVATE | SWP_FRAMECHANGED | SWP_NOZORDER | SWP_NOCOPYBITS | SWP_NOOWNERZORDER | SWP_NOSENDCHANGING);
+			ShowWindow (myWindow, SW_SHOWNA);
 
-		app.TrayToggle (app.GetHWND (), UID, nullptr, true);
-		app.TraySetInfo (app.GetHWND (), UID, nullptr, nullptr, APP_NAME);
+		app.TrayToggle (myWindow, UID, nullptr, true);
+		app.TraySetInfo (myWindow, UID, nullptr, nullptr, APP_NAME);
 	}
+
+	if (hActiveWindow)
+		SetForegroundWindow (hActiveWindow);
 }
 
 void _app_hotkeyinit (HWND hwnd)

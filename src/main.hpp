@@ -51,7 +51,6 @@ struct STATIC_DATA
 
 	HWND hdummy = nullptr;
 	HWND hregion = nullptr;
-	HWND hactive = nullptr;
 
 	HANDLE hregion_mutex = nullptr;
 };

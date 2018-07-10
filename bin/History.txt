@@ -1,12 +1,11 @@
 v2.0.2 (10 July 2018)
-- added filename date format
+- added date and time naming pattern (issue #12)
 - middle mouse click to cancel region selection
 - set jpeg quality to 100 by default
 - set classic ui by default
 - fixed directory names portability
 - fixed possible region selection duplicates
-- stability improvements
-- cosmetic fixes
+- fixed windows xp support
 - fixed ui bugs
 - fixed bugs
 
