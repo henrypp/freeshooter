@@ -228,6 +228,7 @@ STRINGTABLE
 
 	IDS_SAVE "OK"
 	IDS_CANCEL "Cancel"
+	IDS_CLOSE "Close"
 }
 
 //
