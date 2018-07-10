@@ -15,71 +15,87 @@
 STATIC_DATA config;
 ULONG_PTR gdiplusToken;
 
+std::vector<IMAGE_FORMAT> formats;
+
 rapp app (APP_NAME, APP_NAME_SHORT, APP_VERSION, APP_COPYRIGHT);
 
-EnumScreenshot _app_getmode ()
+EnumImageFormat _app_getimageformat ()
 {
-	return (EnumScreenshot)app.ConfigGet (L"Mode", 0).AsUint ();
-}
+	if (formats.empty ())
+		return FormatJpeg;
 
-rstring _app_getfolder ()
-{
-	return app.ConfigGet (L"Folder", config.default_folder);
-}
-
-rstring _app_getimageformat (EnumImageFormat imageType, bool is_exif)
-{
-	rstring result;
-
-	if (imageType == ImageJpeg)
-		result = is_exif ? L"image/jpeg" : L"jpg";
-
-	else if (imageType == ImagePng)
-		result = is_exif ? L"image/png" : L"png";
-
-	else if (imageType == ImageGif)
-		result = is_exif ? L"image/gif" : L"gif";
-
-	else if (imageType == ImageTiff)
-		result = is_exif ? L"image/tiff" : L"tiff";
-
-	else
-		result = is_exif ? L"image/bmp" : L"bmp";
+	EnumImageFormat result = (EnumImageFormat)max (min (formats.size () - 1, app.ConfigGet (L"ImageFormat", FormatJpeg).AsUint ()), 0);
 
 	return result;
 }
 
-rstring _app_uniquefilename (LPCWSTR path, EnumImageFormat imageType)
+rstring _app_getdirectory ()
 {
-	const ULONG idx = 1;
+	rstring result = _r_path_expand (app.ConfigGet (L"Folder", config.default_folder));
 
-	LPCWSTR fname = L"sshot";
-	rstring fext = _app_getimageformat (imageType, false);
+	if (!_r_fs_exists (result))
+		result = _r_path_expand (config.default_folder);
 
-	WCHAR buffer[MAX_PATH] = {0};
-
-	for (ULONG i = idx; i < 256; i++)
-	{
-		StringCchPrintf (buffer, _countof (buffer), L"%s\\%s_%d.%s", path, fname, i, fext);
-
-		if (!_r_fs_exists (buffer))
-			return buffer;
-	}
-
-	PathYetAnotherMakeUniqueName (buffer, _r_fmt (L"%s\\%s.%s", path, fname, fext), nullptr, _r_fmt (L"%s.%s", fname, fext));
-
-	return buffer;
+	return result;
 }
 
-bool GetEncoderClsid (LPCWSTR format, CLSID *pClsid)
+rstring _app_uniquefilename (LPCWSTR directory, EnumImageName name_type)
 {
-	unsigned int num = 0, size = 0;
-	const size_t len = wcslen (format);
+	const rstring fext = formats.at (_app_getimageformat ()).ext;
+
+	WCHAR result[MAX_PATH] = {0};
+
+	if (name_type == NameDate)
+	{
+		WCHAR date_format[MAX_PATH] = {0};
+		WCHAR time_format[MAX_PATH] = {0};
+
+		SYSTEMTIME st = {0};
+		GetLocalTime (&st);
+
+		if (
+			GetDateFormat (LOCALE_SYSTEM_DEFAULT, 0, &st, FILE_FORMAT_DATE, date_format, _countof (date_format)) &&
+			GetTimeFormat (LOCALE_SYSTEM_DEFAULT, 0, &st, FILE_FORMAT_TIME, time_format, _countof (time_format))
+			)
+		{
+			StringCchPrintf (result, _countof (result), L"%s\\%s %s.%s", directory, date_format, time_format, fext.GetString ());
+
+			if (!_r_fs_exists (result))
+				return result;
+
+			if (PathYetAnotherMakeUniqueName (result, _r_fmt (L"%s\\%s %s.%s", directory, date_format, time_format, fext.GetString ()), nullptr, _r_fmt (L"%s %s.%s", date_format, time_format, fext.GetString ())))
+				return result;
+		}
+	}
+	else
+	{
+		static const USHORT idx = 1;
+		static const LPCWSTR fname = L"sshot";
+
+		for (USHORT i = idx; i < USHRT_MAX; i++)
+		{
+			StringCchPrintf (result, _countof (result), L"%s\\%s_%03d.%s", directory, fname, i, fext.GetString ());
+
+			if (!_r_fs_exists (result))
+				return result;
+		}
+
+		if (PathYetAnotherMakeUniqueName (result, _r_fmt (L"%s\\%s.%s", directory, fname, fext.GetString ()), nullptr, _r_fmt (L"%s.%s", fname, fext.GetString ())))
+			return result;
+	}
+
+	return result;
+}
+
+bool GetEncoderClsid (LPCWSTR exif, CLSID *pClsid)
+{
+	UINT num = 0, size = 0;
+	const size_t len = wcslen (exif);
 	Gdiplus::GetImageEncodersSize (&num, &size);
 
 	if (size)
 	{
-		Gdiplus::ImageCodecInfo *pImageCodecInfo = (Gdiplus::ImageCodecInfo *)(malloc (size));
+		Gdiplus::ImageCodecInfo *pImageCodecInfo = (Gdiplus::ImageCodecInfo*)new BYTE[size];
 
 		if (pImageCodecInfo)
 		{
@@ -87,23 +103,23 @@ bool GetEncoderClsid (LPCWSTR format, CLSID *pClsid)
 
 			for (unsigned int j = 0; j < num; ++j)
 			{
-				if (_wcsnicmp (pImageCodecInfo[j].MimeType, format, len) == 0)
+				if (_wcsnicmp (pImageCodecInfo[j].MimeType, exif, len) == 0)
 				{
 					*pClsid = pImageCodecInfo[j].Clsid;
-					free (pImageCodecInfo);
+					delete[] pImageCodecInfo;
 
 					return true;
 				}
 			}
 
-			free (pImageCodecInfo);
+			delete[] pImageCodecInfo;
 		}
 	}
 
 	return false;
 }
 
-bool _app_savehbitmap (HBITMAP hbitmap, LPCWSTR filepath, EnumImageFormat imageType)
+bool _app_savehbitmap (HBITMAP hbitmap, LPCWSTR filepath)
 {
 	bool result = false;
 
@@ -111,8 +127,8 @@ bool _app_savehbitmap (HBITMAP hbitmap, LPCWSTR filepath, EnumImageFormat imageT
 
 	if (pScreenShot)
 	{
-		CLSID imageCLSID;
-		ULONG uQuality = app.ConfigGet (L"JPEGQuality", 90).AsUlong ();
+		CLSID* imageCLSID = &formats.at (_app_getimageformat ()).clsid;
+		ULONG uQuality = app.ConfigGet (L"JPEGQuality", JPEG_QUALITY).AsUlong ();
 
 		Gdiplus::EncoderParameters encoderParams = {0};
 
@@ -122,8 +138,7 @@ bool _app_savehbitmap (HBITMAP hbitmap, LPCWSTR filepath, EnumImageFormat imageT
 		encoderParams.Parameter[0].Type = Gdiplus::EncoderParameterValueTypeLong;
 		encoderParams.Parameter[0].Value = &uQuality;
 
-		if (GetEncoderClsid (_app_getimageformat (imageType, true), &imageCLSID))
-			result = (pScreenShot->Save (filepath, &imageCLSID, &encoderParams) == Gdiplus::Ok);
+		result = (pScreenShot->Save (filepath, imageCLSID, &encoderParams) == Gdiplus::Ok);
 
 		delete pScreenShot;
 	}
@@ -145,7 +160,7 @@ HBITMAP _app_createbitmap (HDC hdc, LONG width, LONG height)
 	return CreateDIBSection (hdc, &bmiCapture, DIB_PAL_COLORS, (LPVOID*)&lpCapture, nullptr, 0);
 }
 
-void _app_dofinishjob (HBITMAP hbitmap, INT width, INT height, EnumImageFormat imageType)
+void _app_dofinishjob (HBITMAP hbitmap, INT width, INT height)
 {
 	if (app.ConfigGet (L"IsPlaySound", true).AsBool ())
 		PlaySound (MAKEINTRESOURCE (IDW_MAIN), app.GetHINSTANCE (), SND_SENTRY | SND_RESOURCE | SND_ASYNC);
@@ -168,12 +183,12 @@ void _app_dofinishjob (HBITMAP hbitmap, INT width, INT height, EnumImageFormat i
 	}
 
 	WCHAR full_path[MAX_PATH] = {0};
-	StringCchCopy (full_path, _countof (full_path), _app_uniquefilename (_app_getfolder (), imageType));
+	StringCchCopy (full_path, _countof (full_path), _app_uniquefilename (_app_getdirectory (), (EnumImageName)app.ConfigGet (L"FilenameType", NameIndex).AsUint ()));
 
-	_app_savehbitmap (hbitmap, full_path, imageType);
+	_app_savehbitmap (hbitmap, full_path);
 }
 
-void _app_screenshot (INT x, INT y, INT width, INT height, bool is_cursor, EnumImageFormat imageType)
+void _app_screenshot (INT x, INT y, INT width, INT height, bool is_cursor)
 {
 	const HWND hwnd = GetDesktopWindow ();
 	const HDC hdc = GetDC (hwnd);
@@ -190,19 +205,24 @@ void _app_screenshot (INT x, INT y, INT width, INT height, bool is_cursor, EnumI
 		{
 			CURSORINFO cursorinfo = {0};
 			cursorinfo.cbSize = sizeof (cursorinfo);
-			GetCursorInfo (&cursorinfo);
 
-			const HICON hicon = CopyIcon (cursorinfo.hCursor);
+			if (GetCursorInfo (&cursorinfo))
+			{
+				const HICON hicon = CopyIcon (cursorinfo.hCursor);
 
-			ICONINFO iconinfo = {0};
-			GetIconInfo (hicon, &iconinfo);
+				if (hicon)
+				{
+					ICONINFO iconinfo = {0};
+					GetIconInfo (hicon, &iconinfo);
 
-			DrawIcon (hcapture, cursorinfo.ptScreenPos.x - iconinfo.xHotspot - x, cursorinfo.ptScreenPos.y - iconinfo.yHotspot - y, hicon);
+					DrawIcon (hcapture, cursorinfo.ptScreenPos.x - iconinfo.xHotspot - x, cursorinfo.ptScreenPos.y - iconinfo.yHotspot - y, hicon);
 
-			DestroyIcon (hicon);
+					DestroyIcon (hicon);
+				}
+			}
 		}
 
-		_app_dofinishjob (hbitmap, width, height, imageType);
+		_app_dofinishjob (hbitmap, width, height);
 
 		DeleteObject (hbitmap);
 	}
@@ -251,7 +271,7 @@ void _app_getwindowrect (HWND hwnd, LPRECT lprect)
 
 bool _app_islastwindow (HWND hwnd)
 {
-	if (!IsWindowVisible (hwnd))
+	if (!hwnd || !IsWindowVisible (hwnd))
 		return false;
 
 	HWND hwalk = nullptr;
@@ -309,7 +329,6 @@ void _app_takeshot (HWND hwnd, EnumScreenshot mode)
 	const bool is_includecursor = app.ConfigGet (L"IsIncludeMouseCursor", false).AsBool ();
 	const bool is_hideme = app.ConfigGet (L"IsHideMe", true).AsBool ();
 	const bool is_windowdisplayed = IsWindowVisible (app.GetHWND ()) && !IsIconic (app.GetHWND ());
-	const EnumImageFormat imageType = (EnumImageFormat)app.ConfigGet (L"ImageFormat", ImageJpeg).AsUint ();
 
 	RECT prev_rect = {0};
 
@@ -321,7 +340,7 @@ void _app_takeshot (HWND hwnd, EnumScreenshot mode)
 			SetWindowPos (app.GetHWND (), nullptr, 0, 0, 0, 0, SWP_HIDEWINDOW | SWP_NOACTIVATE | SWP_FRAMECHANGED | SWP_NOREDRAW | SWP_NOZORDER | SWP_NOCOPYBITS | SWP_NOOWNERZORDER | SWP_NOSENDCHANGING);
 		}
 
-		app.TrayToggle (UID, false);
+		app.TrayToggle (app.GetHWND (), UID, nullptr, false);
 	}
 
 	if (mode == ScreenshotFullscreen)
@@ -337,7 +356,7 @@ void _app_takeshot (HWND hwnd, EnumScreenshot mode)
 		if (GetMonitorInfo (hmonitor, &monitorInfo))
 		{
 			const LPRECT lprc = &monitorInfo.rcMonitor;
-			_app_screenshot (lprc->left, lprc->top, _R_RECT_WIDTH (lprc), _R_RECT_HEIGHT (lprc), is_includecursor, imageType);
+			_app_screenshot (lprc->left, lprc->top, _R_RECT_WIDTH (lprc), _R_RECT_HEIGHT (lprc), is_includecursor);
 		}
 	}
 	else if (mode == ScreenshotWindow)
@@ -373,7 +392,7 @@ void _app_takeshot (HWND hwnd, EnumScreenshot mode)
 			_r_sleep (WND_SLEEP);
 
 			//SetForegroundWindow (hwnd);
-			_app_screenshot (window_rect.left, window_rect.top, _R_RECT_WIDTH (&window_rect), _R_RECT_HEIGHT (&window_rect), is_includecursor, imageType);
+			_app_screenshot (window_rect.left, window_rect.top, _R_RECT_WIDTH (&window_rect), _R_RECT_HEIGHT (&window_rect), is_includecursor);
 
 			if (is_disableaeroonwnd)
 				_app_switchaeroonwnd (hwnd, false);
@@ -387,8 +406,11 @@ void _app_takeshot (HWND hwnd, EnumScreenshot mode)
 	}
 	else if (mode == ScreenshotRegion)
 	{
-		config.hregion = CreateWindowEx (WS_EX_TOPMOST, REGION_CLASS_DLG, nullptr, WS_POPUP, 0, 0, 0, 0, app.GetHWND (), nullptr, app.GetHINSTANCE (), nullptr);
-		SetWindowPos (config.hregion, HWND_TOPMOST, 0, 0, GetSystemMetrics (SM_CXVIRTUALSCREEN), GetSystemMetrics (SM_CYVIRTUALSCREEN), SWP_SHOWWINDOW | SWP_NOCOPYBITS | SWP_FRAMECHANGED | SWP_NOSENDCHANGING);
+		if (WaitForSingleObjectEx (config.hregion_mutex, 0, FALSE) == WAIT_OBJECT_0)
+		{
+			config.hregion = CreateWindowEx (WS_EX_TOPMOST, REGION_CLASS_DLG, nullptr, WS_POPUP, 0, 0, 0, 0, app.GetHWND (), nullptr, app.GetHINSTANCE (), nullptr);
+			SetWindowPos (config.hregion, HWND_TOPMOST, 0, 0, GetSystemMetrics (SM_CXVIRTUALSCREEN), GetSystemMetrics (SM_CYVIRTUALSCREEN), SWP_SHOWWINDOW | SWP_NOCOPYBITS | SWP_FRAMECHANGED | SWP_NOSENDCHANGING);
+		}
 	}
 
 	if (is_hideme)
@@ -396,8 +418,8 @@ void _app_takeshot (HWND hwnd, EnumScreenshot mode)
 		if (is_windowdisplayed)
 			SetWindowPos (app.GetHWND (), nullptr, prev_rect.left, prev_rect.top, _R_RECT_WIDTH (&prev_rect), _R_RECT_HEIGHT (&prev_rect), SWP_SHOWWINDOW | SWP_NOACTIVATE | SWP_FRAMECHANGED | SWP_NOZORDER | SWP_NOCOPYBITS | SWP_NOOWNERZORDER | SWP_NOSENDCHANGING);
 
-		app.TrayToggle (UID, true);
-		app.TraySetInfo (UID, nullptr, APP_NAME);
+		app.TrayToggle (app.GetHWND (), UID, nullptr, true);
+		app.TraySetInfo (app.GetHWND (), UID, nullptr, nullptr, APP_NAME);
 	}
 }
 
@@ -450,101 +472,16 @@ void _app_hotkeyinit (HWND hwnd)
 		rstring buffer;
 
 		if (is_nofullscreen)
-			buffer.AppendFormat (L"- %s\r\n", app.LocaleString (IDS_MODE_FULLSCREEN, nullptr));
+			buffer.AppendFormat (L"- %s\r\n", app.LocaleString (IDS_MODE_FULLSCREEN, nullptr).GetString ());
 
 		if (is_nowindow)
-			buffer.AppendFormat (L"- %s\r\n", app.LocaleString (IDS_MODE_WINDOW, nullptr));
+			buffer.AppendFormat (L"- %s\r\n", app.LocaleString (IDS_MODE_WINDOW, nullptr).GetString ());
 
 		if (is_noregion)
-			buffer.AppendFormat (L"- %s\r\n", app.LocaleString (IDS_MODE_REGION, nullptr));
+			buffer.AppendFormat (L"- %s\r\n", app.LocaleString (IDS_MODE_REGION, nullptr).GetString ());
 
 		app.ConfirmMessage (hwnd, app.LocaleString (IDS_WARNING_HOTKEYS, nullptr), buffer.Trim (L"\r\n"), L"IsWarnHotkeys");
 	}
-}
-
-BOOL initializer_callback (HWND hwnd, DWORD msg, LPVOID, LPVOID)
-{
-	switch (msg)
-	{
-		case _RM_INITIALIZE:
-		{
-			_app_hotkeyinit (hwnd);
-
-			SetDlgItemText (hwnd, IDC_FOLDER, _app_getfolder ());
-
-			CheckDlgButton (hwnd, IDC_INCLUDEMOUSECURSOR_CHK, app.ConfigGet (L"IsIncludeMouseCursor", false).AsBool () ? BST_CHECKED : BST_UNCHECKED);
-			CheckDlgButton (hwnd, IDC_PLAYSOUNDS_CHK, app.ConfigGet (L"IsPlaySound", true).AsBool () ? BST_CHECKED : BST_UNCHECKED);
-			CheckDlgButton (hwnd, IDC_CLEARBACKGROUND_CHK, app.ConfigGet (L"IsClearBackground", true).AsBool () ? BST_CHECKED : BST_UNCHECKED);
-
-			CheckRadioButton (hwnd, IDC_MODE_FULLSCREEN, IDC_MODE_REGION, IDC_MODE_FULLSCREEN + app.ConfigGet (L"Mode", 0).AsUint ());
-
-			app.TrayCreate (hwnd, UID, WM_TRAYICON, _r_loadicon (app.GetHINSTANCE (), MAKEINTRESOURCE (IDI_MAIN), GetSystemMetrics (SM_CXSMICON)), false);
-			app.TraySetInfo (UID, nullptr, APP_NAME);
-
-			// configure menu
-			CheckMenuItem (GetMenu (hwnd), IDM_ALWAYSONTOP_CHK, MF_BYCOMMAND | (app.ConfigGet (L"AlwaysOnTop", false).AsBool () ? MF_CHECKED : MF_UNCHECKED));
-			CheckMenuItem (GetMenu (hwnd), IDM_HIDEME_CHK, MF_BYCOMMAND | (app.ConfigGet (L"IsHideMe", true).AsBool () ? MF_CHECKED : MF_UNCHECKED));
-			CheckMenuItem (GetMenu (hwnd), IDM_CLASSICUI_CHK, MF_BYCOMMAND | (app.ConfigGet (L"ClassicUI", false).AsBool () ? MF_CHECKED : MF_UNCHECKED));
-
-			if (!app.IsVistaOrLater ())
-				_r_ctrl_enable (hwnd, IDC_CLEARBACKGROUND_CHK, false);
-
-			break;
-		}
-
-		case _RM_LOCALIZE:
-		{
-			// localize menu
-			const HMENU menu = GetMenu (hwnd);
-
-			app.LocaleMenu (menu, IDS_FILE, 0, true, nullptr);
-			app.LocaleMenu (menu, IDS_EXPLORE, IDM_EXPLORE, false, L"\tCtrl+E");
-			app.LocaleMenu (menu, IDS_EXIT, IDM_EXIT, false, nullptr);
-			app.LocaleMenu (menu, IDS_VIEW, 1, true, nullptr);
-			app.LocaleMenu (menu, IDS_ALWAYSONTOP_CHK, IDM_ALWAYSONTOP_CHK, false, nullptr);
-			app.LocaleMenu (menu, IDS_HIDEME_CHK, IDM_HIDEME_CHK, false, nullptr);
-			app.LocaleMenu (menu, IDS_CLASSICUI_CHK, IDM_CLASSICUI_CHK, false, nullptr);
-			app.LocaleMenu (GetSubMenu (menu, 1), IDS_LANGUAGE, LANG_MENU, true, L" (Language)");
-			app.LocaleMenu (menu, IDS_HELP, 2, true, nullptr);
-			app.LocaleMenu (menu, IDS_WEBSITE, IDM_WEBSITE, false, nullptr);
-			app.LocaleMenu (menu, IDS_CHECKUPDATES, IDM_CHECKUPDATES, false, nullptr);
-			app.LocaleMenu (menu, IDS_ABOUT, IDM_ABOUT, false, L"\tF1");
-
-			// configure button
-			SetDlgItemText (hwnd, IDC_TITLE_FOLDER, app.LocaleString (IDS_FOLDER, L":"));
-			SetDlgItemText (hwnd, IDC_TITLE_SETTINGS, app.LocaleString (IDS_QUICKSETTINGS, L":"));
-			SetDlgItemText (hwnd, IDC_TITLE_MODE, app.LocaleString (IDS_MODE, L":"));
-
-			SetDlgItemText (hwnd, IDC_PLAYSOUNDS_CHK, app.LocaleString (IDS_PLAYSOUNDS_CHK, nullptr));
-			SetDlgItemText (hwnd, IDC_INCLUDEMOUSECURSOR_CHK, app.LocaleString (IDS_INCLUDEMOUSECURSOR_CHK, nullptr));
-			SetDlgItemText (hwnd, IDC_CLEARBACKGROUND_CHK, app.LocaleString (IDS_CLEARBACKGROUND_CHK, nullptr));
-
-			SetDlgItemText (hwnd, IDC_MODE_FULLSCREEN, app.LocaleString (IDS_MODE_FULLSCREEN, nullptr));
-			SetDlgItemText (hwnd, IDC_MODE_WINDOW, app.LocaleString (IDS_MODE_WINDOW, nullptr));
-			SetDlgItemText (hwnd, IDC_MODE_REGION, app.LocaleString (IDS_MODE_REGION, nullptr));
-
-			SetDlgItemText (hwnd, IDC_SETTINGS, app.LocaleString (IDS_SETTINGS, nullptr));
-			SetDlgItemText (hwnd, IDC_SCREENSHOT, app.LocaleString (IDS_SCREENSHOT, nullptr));
-			SetDlgItemText (hwnd, IDC_EXIT, app.LocaleString (IDS_EXIT, nullptr));
-
-			_r_wnd_addstyle (hwnd, IDC_BROWSE_BTN, app.IsClassicUI () ? WS_EX_STATICEDGE : 0, WS_EX_STATICEDGE, GWL_EXSTYLE);
-			_r_wnd_addstyle (hwnd, IDC_SETTINGS, app.IsClassicUI () ? WS_EX_STATICEDGE : 0, WS_EX_STATICEDGE, GWL_EXSTYLE);
-			_r_wnd_addstyle (hwnd, IDC_SCREENSHOT, app.IsClassicUI () ? WS_EX_STATICEDGE : 0, WS_EX_STATICEDGE, GWL_EXSTYLE);
-			_r_wnd_addstyle (hwnd, IDC_EXIT, app.IsClassicUI () ? WS_EX_STATICEDGE : 0, WS_EX_STATICEDGE, GWL_EXSTYLE);
-
-			app.LocaleEnum ((HWND)GetSubMenu (menu, 1), LANG_MENU, true, IDX_LANGUAGE); // enum localizations
-
-			break;
-		}
-
-		case _RM_UNINITIALIZE:
-		{
-			app.TrayDestroy (UID);
-			break;
-		}
-	}
-
-	return FALSE;
 }
 
 LRESULT CALLBACK DummyProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
@@ -574,6 +511,8 @@ LRESULT CALLBACK RegionProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 	{
 		case WM_CREATE:
 		{
+			ResetEvent (config.hregion_mutex);
+
 			const INT width = GetSystemMetrics (SM_CXVIRTUALSCREEN);
 			const INT height = GetSystemMetrics (SM_CYVIRTUALSCREEN);
 
@@ -598,25 +537,18 @@ LRESULT CALLBACK RegionProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 
 		case WM_DESTROY:
 		{
+			SetEvent (config.hregion_mutex);
+
 			fDraw = false;
 
 			if (hpen)
-			{
 				DeleteObject (hpen);
-				hpen = nullptr;
-			}
 
 			if (hbitmap)
-			{
 				DeleteObject (hbitmap);
-				hbitmap = nullptr;
-			}
 
 			if (hcapture)
-			{
 				DeleteDC (hcapture);
-				hcapture = nullptr;
-			}
 
 			return TRUE;
 		}
@@ -645,8 +577,6 @@ LRESULT CALLBACK RegionProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 				if (x || y || width || height)
 				{
 					// save region to a file
-					const EnumImageFormat imageType = (EnumImageFormat)app.ConfigGet (L"ImageFormat", ImageJpeg).AsUint ();
-
 					const HDC hdc_finish = GetDC (GetDesktopWindow ());
 					const HDC hcapture_finish = CreateCompatibleDC (hdc_finish);
 
@@ -657,10 +587,10 @@ LRESULT CALLBACK RegionProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 						SelectObject (hcapture_finish, hbitmap_finish);
 						BitBlt (hcapture_finish, 0, 0, width, height, hcapture, x, y, SRCCOPY);
 
-						_app_dofinishjob (hbitmap_finish, width, height, imageType);
+						_app_dofinishjob (hbitmap_finish, width, height);
+						DeleteObject (hbitmap_finish);
 					}
 
-					DeleteObject (hbitmap_finish);
 					DeleteDC (hcapture_finish);
 					ReleaseDC (GetDesktopWindow (), hdc_finish);
 				}
@@ -673,7 +603,18 @@ LRESULT CALLBACK RegionProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 
 		case WM_MBUTTONDOWN:
 		{
-			DestroyWindow (hwnd);
+			if (fDraw)
+			{
+				fDraw = false;
+				ptStart.x = ptStart.y = ptEnd.x = ptEnd.y = 0;
+
+				InvalidateRect (hwnd, nullptr, true);
+			}
+			else
+			{
+				DestroyWindow (hwnd);
+			}
+
 			return TRUE;
 		}
 
@@ -761,8 +702,6 @@ INT_PTR CALLBACK HotkeysProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 			// configure window
 			_r_wnd_center (hwnd, GetParent (hwnd));
 
-			app.SetIcon (hwnd, 0, false);
-
 			// localize window
 			SetWindowText (hwnd, app.LocaleString (IDS_HOTKEYS, nullptr));
 
@@ -822,9 +761,9 @@ INT_PTR CALLBACK HotkeysProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 				SendDlgItemMessage (hwnd, IDC_WINDOW_CB, CB_INSERTSTRING, idx, (LPARAM)name);
 				SendDlgItemMessage (hwnd, IDC_REGION_CB, CB_INSERTSTRING, idx, (LPARAM)name);
 
-				SendDlgItemMessage (hwnd, IDC_FULLSCREEN_CB, CB_SETITEMDATA, idx, keys[i]);
-				SendDlgItemMessage (hwnd, IDC_WINDOW_CB, CB_SETITEMDATA, idx, keys[i]);
-				SendDlgItemMessage (hwnd, IDC_REGION_CB, CB_SETITEMDATA, idx, keys[i]);
+				SendDlgItemMessage (hwnd, IDC_FULLSCREEN_CB, CB_SETITEMDATA, idx, (LPARAM)keys[i]);
+				SendDlgItemMessage (hwnd, IDC_WINDOW_CB, CB_SETITEMDATA, idx, (LPARAM)keys[i]);
+				SendDlgItemMessage (hwnd, IDC_REGION_CB, CB_SETITEMDATA, idx, (LPARAM)keys[i]);
 
 				if (fullscreen_allowed && LOBYTE (fullscreen_code) == keys[i])
 					SendDlgItemMessage (hwnd, IDC_FULLSCREEN_CB, CB_SETCURSEL, idx, 0);
@@ -894,7 +833,7 @@ INT_PTR CALLBACK HotkeysProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 						if (IsDlgButtonChecked (hwnd, IDC_FULLSCREEN_ALT) == BST_CHECKED)
 							modifiers |= HOTKEYF_ALT;
 
-						app.ConfigSet (L"HotkeyFullscreen", (DWORD)MAKEWORD (SendDlgItemMessage (hwnd, IDC_FULLSCREEN_CB, CB_GETITEMDATA, fullscreen_idx, 0), modifiers));
+						app.ConfigSet (L"HotkeyFullscreen", (DWORD)MAKEWORD (SendDlgItemMessage (hwnd, IDC_FULLSCREEN_CB, CB_GETITEMDATA, (WPARAM)fullscreen_idx, 0), modifiers));
 					}
 
 					if (window_idx > 0)
@@ -910,7 +849,7 @@ INT_PTR CALLBACK HotkeysProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 						if (IsDlgButtonChecked (hwnd, IDC_WINDOW_ALT) == BST_CHECKED)
 							modifiers |= HOTKEYF_ALT;
 
-						app.ConfigSet (L"HotkeyWindow", (DWORD)MAKEWORD (SendDlgItemMessage (hwnd, IDC_WINDOW_CB, CB_GETITEMDATA, window_idx, 0), modifiers));
+						app.ConfigSet (L"HotkeyWindow", (DWORD)MAKEWORD (SendDlgItemMessage (hwnd, IDC_WINDOW_CB, CB_GETITEMDATA, (WPARAM)window_idx, 0), modifiers));
 					}
 
 					if (region_idx > 0)
@@ -926,7 +865,7 @@ INT_PTR CALLBACK HotkeysProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 						if (IsDlgButtonChecked (hwnd, IDC_REGION_ALT) == BST_CHECKED)
 							modifiers |= HOTKEYF_ALT;
 
-						app.ConfigSet (L"HotkeyRegion", (DWORD)MAKEWORD (SendDlgItemMessage (hwnd, IDC_REGION_CB, CB_GETITEMDATA, region_idx, 0), modifiers));
+						app.ConfigSet (L"HotkeyRegion", (DWORD)MAKEWORD (SendDlgItemMessage (hwnd, IDC_REGION_CB, CB_GETITEMDATA, (WPARAM)region_idx, 0), modifiers));
 					}
 
 					_app_hotkeyinit (app.GetHWND ());
@@ -959,8 +898,21 @@ void _app_initdropdownmenu (HMENU hmenu, bool is_button)
 	app.LocaleMenu (hmenu, IDS_INCLUDEMOUSECURSOR_CHK, IDM_INCLUDEMOUSECURSOR_CHK, false, nullptr);
 	app.LocaleMenu (hmenu, IDS_CLEARBACKGROUND_CHK, IDM_CLEARBACKGROUND_CHK, false, L" (vista+)");
 	app.LocaleMenu (hmenu, IDS_DISABLEAEROONWND_CHK, IDM_DISABLEAEROONWND_CHK, false, L" (vista+)");
+	app.LocaleMenu (hmenu, IDS_FILENAME, FILENAME_MENU, true, nullptr);
 	app.LocaleMenu (hmenu, IDS_IMAGEFORMAT, FORMAT_MENU, true, nullptr);
-	app.LocaleMenu (hmenu, IDS_HOTKEYS, IDM_HOTKEYS, false, is_button ? L"...\tF3" : nullptr);
+	app.LocaleMenu (hmenu, IDS_HOTKEYS, IDM_HOTKEYS, false, is_button ? L"...\tF3" : L"...");
+
+	app.LocaleMenu (hmenu, 0, IDM_FILENAME_INDEX, false, _r_path_extractfile (_app_uniquefilename (_app_getdirectory (), NameIndex)));
+	app.LocaleMenu (hmenu, 0, IDM_FILENAME_DATE, false, _r_path_extractfile (_app_uniquefilename (_app_getdirectory (), NameDate)));
+
+	// initialize formats
+	{
+		const HMENU submenu = GetSubMenu (hmenu, FORMAT_MENU);
+		DeleteMenu (submenu, 0, MF_BYPOSITION);
+
+		for (size_t i = 0; i < formats.size (); i++)
+			AppendMenu (submenu, MF_BYPOSITION, IDX_FORMATS + i, formats.at (i).ext);
+	}
 
 	CheckMenuItem (hmenu, IDM_STARTMINIMIZED_CHK, MF_BYCOMMAND | (app.ConfigGet (L"IsStartMinimized", false).AsBool () ? MF_CHECKED : MF_UNCHECKED));
 	CheckMenuItem (hmenu, IDM_LOADONSTARTUP_CHK, MF_BYCOMMAND | (app.AutorunIsEnabled () ? MF_CHECKED : MF_UNCHECKED));
@@ -970,7 +922,8 @@ void _app_initdropdownmenu (HMENU hmenu, bool is_button)
 	CheckMenuItem (hmenu, IDM_PLAYSOUNDS_CHK, MF_BYCOMMAND | (app.ConfigGet (L"IsPlaySound", true).AsBool () ? MF_CHECKED : MF_UNCHECKED));
 	CheckMenuItem (hmenu, IDM_CLEARBACKGROUND_CHK, MF_BYCOMMAND | (app.ConfigGet (L"IsClearBackground", true).AsBool () ? MF_CHECKED : MF_UNCHECKED));
 	CheckMenuItem (hmenu, IDM_DISABLEAEROONWND_CHK, MF_BYCOMMAND | (app.ConfigGet (L"IsDisableAeroOnWnd", false).AsBool () ? MF_CHECKED : MF_UNCHECKED));
-	CheckMenuRadioItem (hmenu, IDM_FORMAT_BMP, IDM_FORMAT_TIFF, IDM_FORMAT_BMP + app.ConfigGet (L"ImageFormat", ImageJpeg).AsUint (), MF_BYCOMMAND);
+	CheckMenuRadioItem (hmenu, IDM_FILENAME_INDEX, IDM_FILENAME_DATE, IDM_FILENAME_INDEX + app.ConfigGet (L"FilenameType", NameIndex).AsUint (), MF_BYCOMMAND);
+	CheckMenuRadioItem (hmenu, IDX_FORMATS, IDX_FORMATS + UINT (formats.size ()), IDX_FORMATS + UINT (_app_getimageformat ()), MF_BYCOMMAND);
 
 	if (!app.IsVistaOrLater ())
 	{
@@ -1015,22 +968,144 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 			SendDlgItemMessage (hwnd, IDC_FOLDER, EM_SETLIMITTEXT, MAX_PATH, 0);
 
 			// set default folder
-			if (SHGetFolderPath (hwnd, CSIDL_DESKTOPDIRECTORY, nullptr, SHGFP_TYPE_CURRENT | SHGFP_TYPE_DEFAULT, config.default_folder) != S_OK)
-				StringCchCopy (config.default_folder, _countof (config.default_folder), app.GetDirectory ());
+			{
+				if (SHGetFolderPath (hwnd, CSIDL_DESKTOPDIRECTORY, nullptr, SHGFP_TYPE_CURRENT | SHGFP_TYPE_DEFAULT, config.default_folder) != S_OK &&
+					SHGetFolderPath (hwnd, CSIDL_MYPICTURES, nullptr, SHGFP_TYPE_CURRENT | SHGFP_TYPE_DEFAULT, config.default_folder) != S_OK)
+				{
+					StringCchCopy (config.default_folder, _countof (config.default_folder), DEFAULT_DIRECTORY);
+				}
+
+				app.ConfigSet (L"Folder", _r_path_unexpand (_app_getdirectory ()));
+			}
 
 			// add splitbutton style (vista+)
 			if (app.IsVistaOrLater ())
 				_r_wnd_addstyle (hwnd, IDC_SETTINGS, BS_SPLITBUTTON, BS_SPLITBUTTON, GWL_STYLE);
 
+			config.hregion_mutex = CreateEvent (nullptr, TRUE, TRUE, nullptr);
+
 			// initialize gdi+
 			Gdiplus::GdiplusStartupInput gdiplusStartupInput;
 			Gdiplus::GdiplusStartup (&gdiplusToken, &gdiplusStartupInput, nullptr);
 
+			// initialization
+			{
+				static LPCWSTR szexif[] = {
+					L"image/bmp",
+					L"image/jpeg",
+					L"image/png",
+					L"image/gif",
+					L"image/tiff"
+				};
+
+				static LPCWSTR szext[] = {
+					L"bmp",
+					L"jpg",
+					L"png",
+					L"gif",
+					L"tiff"
+				};
+
+				for (size_t i = 0; i < _countof (szexif); i++)
+				{
+					IMAGE_FORMAT tagImage = {0};
+
+					if (GetEncoderClsid (szexif[i], &tagImage.clsid))
+					{
+						StringCchCopy (tagImage.ext, _countof (tagImage.ext), szext[i]);
+
+						formats.push_back (tagImage);
+					}
+				}
+			}
+
+			break;
+		}
+
+		case RM_INITIALIZE:
+		{
+			_app_hotkeyinit (hwnd);
+
+			SetDlgItemText (hwnd, IDC_FOLDER, _app_getdirectory ());
+
+			CheckDlgButton (hwnd, IDC_INCLUDEMOUSECURSOR_CHK, app.ConfigGet (L"IsIncludeMouseCursor", false).AsBool () ? BST_CHECKED : BST_UNCHECKED);
+			CheckDlgButton (hwnd, IDC_PLAYSOUNDS_CHK, app.ConfigGet (L"IsPlaySound", true).AsBool () ? BST_CHECKED : BST_UNCHECKED);
+			CheckDlgButton (hwnd, IDC_CLEARBACKGROUND_CHK, app.ConfigGet (L"IsClearBackground", true).AsBool () ? BST_CHECKED : BST_UNCHECKED);
+
+			CheckRadioButton (hwnd, IDC_MODE_FULLSCREEN, IDC_MODE_REGION, IDC_MODE_FULLSCREEN + app.ConfigGet (L"Mode", 0).AsUint ());
+
+			app.TrayCreate (hwnd, UID, nullptr, WM_TRAYICON, _r_loadicon (app.GetHINSTANCE (), MAKEINTRESOURCE (IDI_MAIN), GetSystemMetrics (SM_CXSMICON)), false);
+			app.TraySetInfo (hwnd, UID, nullptr, nullptr, APP_NAME);
+
+			// configure menu
+			CheckMenuItem (GetMenu (hwnd), IDM_ALWAYSONTOP_CHK, MF_BYCOMMAND | (app.ConfigGet (L"AlwaysOnTop", false).AsBool () ? MF_CHECKED : MF_UNCHECKED));
+			CheckMenuItem (GetMenu (hwnd), IDM_HIDEME_CHK, MF_BYCOMMAND | (app.ConfigGet (L"IsHideMe", true).AsBool () ? MF_CHECKED : MF_UNCHECKED));
+			CheckMenuItem (GetMenu (hwnd), IDM_CLASSICUI_CHK, MF_BYCOMMAND | (app.ConfigGet (L"ClassicUI", _APP_CLASSICUI).AsBool () ? MF_CHECKED : MF_UNCHECKED));
+
+			if (!app.IsVistaOrLater ())
+				_r_ctrl_enable (hwnd, IDC_CLEARBACKGROUND_CHK, false);
+
+			break;
+		}
+
+		case RM_LOCALIZE:
+		{
+			// configure button
+			SetDlgItemText (hwnd, IDC_TITLE_FOLDER, app.LocaleString (IDS_FOLDER, L":"));
+			SetDlgItemText (hwnd, IDC_TITLE_SETTINGS, app.LocaleString (IDS_QUICKSETTINGS, L":"));
+			SetDlgItemText (hwnd, IDC_TITLE_MODE, app.LocaleString (IDS_MODE, L":"));
+
+			SetDlgItemText (hwnd, IDC_PLAYSOUNDS_CHK, app.LocaleString (IDS_PLAYSOUNDS_CHK, nullptr));
+			SetDlgItemText (hwnd, IDC_INCLUDEMOUSECURSOR_CHK, app.LocaleString (IDS_INCLUDEMOUSECURSOR_CHK, nullptr));
+			SetDlgItemText (hwnd, IDC_CLEARBACKGROUND_CHK, app.LocaleString (IDS_CLEARBACKGROUND_CHK, nullptr));
+
+			SetDlgItemText (hwnd, IDC_MODE_FULLSCREEN, app.LocaleString (IDS_MODE_FULLSCREEN, nullptr));
+			SetDlgItemText (hwnd, IDC_MODE_WINDOW, app.LocaleString (IDS_MODE_WINDOW, nullptr));
+			SetDlgItemText (hwnd, IDC_MODE_REGION, app.LocaleString (IDS_MODE_REGION, nullptr));
+
+			SetDlgItemText (hwnd, IDC_SETTINGS, app.LocaleString (IDS_SETTINGS, nullptr));
+			SetDlgItemText (hwnd, IDC_SCREENSHOT, app.LocaleString (IDS_SCREENSHOT, nullptr));
+			SetDlgItemText (hwnd, IDC_EXIT, app.LocaleString (IDS_EXIT, nullptr));
+
+			_r_wnd_addstyle (hwnd, IDC_BROWSE_BTN, app.IsClassicUI () ? WS_EX_STATICEDGE : 0, WS_EX_STATICEDGE, GWL_EXSTYLE);
+			_r_wnd_addstyle (hwnd, IDC_SETTINGS, app.IsClassicUI () ? WS_EX_STATICEDGE : 0, WS_EX_STATICEDGE, GWL_EXSTYLE);
+			_r_wnd_addstyle (hwnd, IDC_SCREENSHOT, app.IsClassicUI () ? WS_EX_STATICEDGE : 0, WS_EX_STATICEDGE, GWL_EXSTYLE);
+			_r_wnd_addstyle (hwnd, IDC_EXIT, app.IsClassicUI () ? WS_EX_STATICEDGE : 0, WS_EX_STATICEDGE, GWL_EXSTYLE);
+
+			// localize menu
+			const HMENU menu = GetMenu (hwnd);
+
+			app.LocaleMenu (menu, IDS_FILE, 0, true, nullptr);
+			app.LocaleMenu (menu, IDS_EXPLORE, IDM_EXPLORE, false, L"...\tCtrl+E");
+			app.LocaleMenu (menu, IDS_SCREENSHOT, IDM_TAKE_FULLSCREEN, false, _r_fmt (L": %s", app.LocaleString (IDS_MODE_FULLSCREEN, nullptr).ToLower ().GetString ()));
+			app.LocaleMenu (menu, IDS_SCREENSHOT, IDM_TAKE_WINDOW, false, _r_fmt (L": %s", app.LocaleString (IDS_MODE_WINDOW, nullptr).ToLower ().GetString ()));
+			app.LocaleMenu (menu, IDS_SCREENSHOT, IDM_TAKE_REGION, false, _r_fmt (L": %s", app.LocaleString (IDS_MODE_REGION, nullptr).ToLower ().GetString ()));
+			app.LocaleMenu (menu, IDS_EXIT, IDM_EXIT, false, nullptr);
+			app.LocaleMenu (menu, IDS_VIEW, 1, true, nullptr);
+			app.LocaleMenu (menu, IDS_ALWAYSONTOP_CHK, IDM_ALWAYSONTOP_CHK, false, nullptr);
+			app.LocaleMenu (menu, IDS_HIDEME_CHK, IDM_HIDEME_CHK, false, nullptr);
+			app.LocaleMenu (menu, IDS_CLASSICUI_CHK, IDM_CLASSICUI_CHK, false, nullptr);
+			app.LocaleMenu (GetSubMenu (menu, 1), IDS_LANGUAGE, LANG_MENU, true, L" (Language)");
+			app.LocaleMenu (menu, IDS_HELP, 2, true, nullptr);
+			app.LocaleMenu (menu, IDS_WEBSITE, IDM_WEBSITE, false, nullptr);
+			app.LocaleMenu (menu, IDS_CHECKUPDATES, IDM_CHECKUPDATES, false, nullptr);
+			app.LocaleMenu (menu, IDS_ABOUT, IDM_ABOUT, false, L"\tF1");
+
+			app.LocaleEnum ((HWND)GetSubMenu (menu, 1), LANG_MENU, true, IDX_LANGUAGE); // enum localizations
+
+			break;
+		}
+
+		case RM_UNINITIALIZE:
+		{
+			app.TrayDestroy (hwnd, UID, nullptr);
 			break;
 		}
 
 		case WM_DESTROY:
 		{
+			CloseHandle (config.hregion_mutex);
+
 			UnregisterClass (DUMMY_CLASS_DLG, app.GetHINSTANCE ());
 			UnregisterClass (REGION_CLASS_DLG, app.GetHINSTANCE ());
 
@@ -1082,19 +1157,19 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 		{
 			switch (LOWORD (lparam))
 			{
-				case WM_LBUTTONUP:
-				{
-					SetForegroundWindow (hwnd);
-					break;
-				}
-
 				case WM_LBUTTONDBLCLK:
 				{
 					_r_wnd_toggle (hwnd, false);
 					break;
 				}
 
-				case WM_MBUTTONDOWN:
+				case WM_LBUTTONUP:
+				{
+					SetForegroundWindow (hwnd);
+					break;
+				}
+
+				case WM_MBUTTONUP:
 				{
 					SendMessage (hwnd, WM_COMMAND, IDM_EXPLORE, 0);
 					break;
@@ -1110,9 +1185,9 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 
 					// localize
 					app.LocaleMenu (hsubmenu, IDS_TRAY_SHOW, IDM_TRAY_SHOW, false, nullptr);
-					app.LocaleMenu (hsubmenu, IDS_MODE_FULLSCREEN, IDM_TRAY_TAKE_FULLSCREEN, false, nullptr);
-					app.LocaleMenu (hsubmenu, IDS_MODE_WINDOW, IDM_TRAY_TAKE_WINDOW, false, nullptr);
-					app.LocaleMenu (hsubmenu, IDS_MODE_REGION, IDM_TRAY_TAKE_REGION, false, nullptr);
+					app.LocaleMenu (hsubmenu, IDS_SCREENSHOT, IDM_TRAY_TAKE_FULLSCREEN, false, _r_fmt (L": %s", app.LocaleString (IDS_MODE_FULLSCREEN, nullptr).ToLower ().GetString ()));
+					app.LocaleMenu (hsubmenu, IDS_SCREENSHOT, IDM_TRAY_TAKE_WINDOW, false, _r_fmt (L": %s", app.LocaleString (IDS_MODE_WINDOW, nullptr).ToLower ().GetString ()));
+					app.LocaleMenu (hsubmenu, IDS_SCREENSHOT, IDM_TRAY_TAKE_REGION, false, _r_fmt (L": %s", app.LocaleString (IDS_MODE_REGION, nullptr).ToLower ().GetString ()));
 					app.LocaleMenu (hsubmenu, IDS_SETTINGS, SETTINGS_MENU, true, nullptr);
 					app.LocaleMenu (hsubmenu, IDS_WEBSITE, IDM_TRAY_WEBSITE, false, nullptr);
 					app.LocaleMenu (hsubmenu, IDS_ABOUT, IDM_TRAY_ABOUT, false, nullptr);
@@ -1126,6 +1201,7 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 						_app_initdropdownmenu (hsubmenu_settings, false);
 
 						MENUITEMINFO menuinfo = {0};
+
 						menuinfo.cbSize = sizeof (menuinfo);
 						menuinfo.fMask = MIIM_SUBMENU;
 						menuinfo.hSubMenu = hsubmenu_settings;
@@ -1180,12 +1256,20 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 				app.LocaleApplyFromMenu (GetSubMenu (GetSubMenu (GetMenu (hwnd), 1), LANG_MENU), LOWORD (wparam), IDX_LANGUAGE);
 				return FALSE;
 			}
+			else if ((LOWORD (wparam) >= IDX_FORMATS && LOWORD (wparam) <= IDX_FORMATS + formats.size ()))
+			{
+				const size_t idx = (LOWORD (wparam) - IDX_FORMATS);
+
+				app.ConfigSet (L"ImageFormat", (LONGLONG)idx);
+
+				return FALSE;
+			}
 
 			switch (LOWORD (wparam))
 			{
 				case IDM_EXPLORE:
 				{
-					ShellExecute (hwnd, nullptr, _app_getfolder (), nullptr, nullptr, SW_SHOWDEFAULT);
+					ShellExecute (hwnd, nullptr, _app_getdirectory (), nullptr, nullptr, SW_SHOWDEFAULT);
 					break;
 				}
 
@@ -1212,7 +1296,7 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 
 				case IDM_CLASSICUI_CHK:
 				{
-					const bool new_val = !app.ConfigGet (L"ClassicUI", false).AsBool ();
+					const bool new_val = !app.ConfigGet (L"ClassicUI", _APP_CLASSICUI).AsBool ();
 					CheckMenuItem (GetMenu (hwnd), IDM_CLASSICUI_CHK, MF_BYCOMMAND | (new_val ? MF_CHECKED : MF_UNCHECKED));
 					app.ConfigSet (L"ClassicUI", new_val);
 
@@ -1261,29 +1345,30 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 
 				case IDC_BROWSE_BTN:
 				{
-					CoInitialize (nullptr);
-
-					BROWSEINFO browseInfo = {0};
-
-					browseInfo.hwndOwner = hwnd;
-					browseInfo.ulFlags = BIF_RETURNONLYFSDIRS | BIF_USENEWUI | BIF_VALIDATE;
-
-					LPITEMIDLIST pidl = SHBrowseForFolder (&browseInfo);
-
-					if (pidl)
+					if (SUCCEEDED (CoInitialize (nullptr)))
 					{
-						WCHAR buffer[MAX_PATH] = {0};
+						BROWSEINFO browseInfo = {0};
 
-						if (SHGetPathFromIDList (pidl, buffer))
+						browseInfo.hwndOwner = hwnd;
+						browseInfo.ulFlags = BIF_RETURNONLYFSDIRS | BIF_USENEWUI | BIF_VALIDATE;
+
+						LPITEMIDLIST pidl = SHBrowseForFolder (&browseInfo);
+
+						if (pidl)
 						{
-							app.ConfigSet (L"Folder", buffer);
-							SetDlgItemText (hwnd, IDC_FOLDER, buffer);
+							WCHAR buffer[MAX_PATH] = {0};
+
+							if (SHGetPathFromIDList (pidl, buffer))
+							{
+								app.ConfigSet (L"Folder", _r_path_unexpand (buffer));
+								SetDlgItemText (hwnd, IDC_FOLDER, buffer);
+							}
+
+							CoTaskMemFree (pidl);
 						}
 
-						CoTaskMemFree (pidl);
+						CoUninitialize ();
 					}
-
-					CoUninitialize ();
 
 					break;
 				}
@@ -1340,46 +1425,35 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 					break;
 				}
 
-				case IDM_FORMAT_BMP:
-				case IDM_FORMAT_JPG:
-				case IDM_FORMAT_PNG:
-				case IDM_FORMAT_GIF:
-				case IDM_FORMAT_TIFF:
+				case IDM_FILENAME_INDEX:
+				case IDM_FILENAME_DATE:
 				{
-					EnumImageFormat val;
+					EnumImageName val;
 
-					if (LOWORD (wparam) == IDM_FORMAT_JPG)
-						val = ImageJpeg;
-
-					else if (LOWORD (wparam) == IDM_FORMAT_PNG)
-						val = ImagePng;
-
-					else if (LOWORD (wparam) == IDM_FORMAT_GIF)
-						val = ImageGif;
-
-					else if (LOWORD (wparam) == IDM_FORMAT_TIFF)
-						val = ImageTiff;
+					if (LOWORD (wparam) == IDM_FILENAME_DATE)
+						val = NameDate;
 
 					else
-						val = ImageBitmap;
+						val = NameIndex;
 
-					app.ConfigSet (L"ImageFormat", (LONGLONG)val);
-
-					CheckMenuRadioItem (GetMenu (hwnd), IDM_FORMAT_BMP, IDM_FORMAT_TIFF, IDM_FORMAT_BMP + val, MF_BYCOMMAND);
+					app.ConfigSet (L"FilenameType", (LONGLONG)val);
 
 					break;
 				}
 
+				case IDM_TAKE_FULLSCREEN:
+				case IDM_TAKE_WINDOW:
+				case IDM_TAKE_REGION:
 				case IDM_TRAY_TAKE_FULLSCREEN:
 				case IDM_TRAY_TAKE_WINDOW:
 				case IDM_TRAY_TAKE_REGION:
 				{
 					EnumScreenshot val;
 
-					if (LOWORD (wparam) == IDM_TRAY_TAKE_WINDOW)
+					if (LOWORD (wparam) == IDM_TRAY_TAKE_WINDOW || LOWORD (wparam) == IDM_TAKE_WINDOW)
 						val = ScreenshotWindow;
 
-					else if (LOWORD (wparam) == IDM_TRAY_TAKE_REGION)
+					else if (LOWORD (wparam) == IDM_TRAY_TAKE_REGION || LOWORD (wparam) == IDM_TAKE_REGION)
 						val = ScreenshotRegion;
 
 					else
@@ -1428,10 +1502,9 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 					break;
 				}
 
-				case IDOK: // process Enter key
 				case IDC_SCREENSHOT:
 				{
-					_app_takeshot (nullptr, _app_getmode ());
+					_app_takeshot (nullptr, (EnumScreenshot)app.ConfigGet (L"Mode", 0).AsUint ());
 					break;
 				}
 
@@ -1444,14 +1517,14 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 
 				case IDM_CHECKUPDATES:
 				{
-					app.CheckForUpdates (false);
+					app.UpdateCheck (true);
 					break;
 				}
 
 				case IDM_ABOUT:
 				case IDM_TRAY_ABOUT:
 				{
-					app.CreateAboutWindow (hwnd, app.LocaleString (IDS_DONATE, nullptr));
+					app.CreateAboutWindow (hwnd);
 					break;
 				}
 			}
@@ -1467,24 +1540,25 @@ INT APIENTRY wWinMain (HINSTANCE, HINSTANCE, LPWSTR, INT)
 {
 	MSG msg = {0};
 
-	if (app.CreateMainWindow (IDD_MAIN, IDI_MAIN, &DlgProc, &initializer_callback))
+	if (app.CreateMainWindow (IDD_MAIN, IDI_MAIN, &DlgProc))
 	{
 		const HACCEL haccel = LoadAccelerators (app.GetHINSTANCE (), MAKEINTRESOURCE (IDA_MAIN));
 
-		while (GetMessage (&msg, nullptr, 0, 0) > 0)
+		if (haccel)
 		{
-			if (haccel)
+			while (GetMessage (&msg, nullptr, 0, 0) > 0)
+			{
 				TranslateAccelerator (app.GetHWND (), haccel, &msg);
 
-			if (!IsDialogMessage (app.GetHWND (), &msg))
-			{
-				TranslateMessage (&msg);
-				DispatchMessage (&msg);
+				if (!IsDialogMessage (app.GetHWND (), &msg))
+				{
+					TranslateMessage (&msg);
+					DispatchMessage (&msg);
+				}
 			}
-		}
 
-		if (haccel)
 			DestroyAcceleratorTable (haccel);
+		}
 	}
 
 	return (INT)msg.wParam;
