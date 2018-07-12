@@ -1,6 +1,6 @@
 ## Free Shooter
 
-![Free Shooter](https://www.henrypp.org/images/freeshooter.png?cache)
+![Free Shooter](https://www.henrypp.org/images/freeshooter.png?cachefix)
 
 ### Description:
 This is old-school tool for taking screenshots without bloatware features, simple as life, light as air.<br />
