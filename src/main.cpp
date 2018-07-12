@@ -19,12 +19,29 @@ std::vector<IMAGE_FORMAT> formats;
 
 rapp app (APP_NAME, APP_NAME_SHORT, APP_VERSION, APP_COPYRIGHT);
 
+//void dump_wnd_info (HWND hwnd)
+//{
+//	WCHAR title[100] = {0};
+//	GetWindowText (hwnd, title, _countof (title));
+//
+//	RECT rc = {0};
+//	_app_getwindowrect (hwnd, &rc);
+//
+//	if (!title[0])
+//		StringCchCopy (title, _countof (title), L"n/a");
+//
+//	RDBG (L"0x%08x | % 20s | left: %.4d, top: %.4d, width: %.4d, height: %.4d", hwnd, title, rc.left, rc.top, _R_RECT_WIDTH (&rc), _R_RECT_HEIGHT (&rc));
+//}
+
 size_t _app_getimageformat ()
 {
 	if (formats.empty ())
 		return 0;
 
-	return (size_t)max (min (app.ConfigGet (L"ImageFormat", FormatJpeg).AsInt (), INT (formats.size () - 1)), 0);
+	const INT size = (INT)formats.size ();
+	const INT current = app.ConfigGet (L"ImageFormat", FormatJpeg).AsInt ();
+
+	return (max (min (current, size - 1), 0));
 }
 
 rstring _app_getdirectory ()
@@ -274,15 +291,123 @@ bool _app_isnormalwindow (HWND hwnd)
 	return hwnd && IsWindowVisible (hwnd) && !IsIconic (hwnd) && hwnd != GetShellWindow () && hwnd != GetDesktopWindow ();
 }
 
+int _app_getwindowzorder (HWND hwnd)
+{
+	int z = 0;
+
+	for (HWND h = hwnd; h != nullptr; h = GetWindow (h, GW_HWNDPREV)) z++;
+
+	return z;
+}
+
+bool _app_iswndoverlapped (HWND hwnd, LPRECT lprect)
+{
+	RECT rc = {0};
+	_app_getwindowrect (hwnd, &rc);
+
+	POINT pt = {0};
+
+	pt.x = rc.left;
+	pt.y = rc.top;
+
+	if (PtInRect (lprect, pt))
+		return true;
+
+	pt.x = rc.left;
+	pt.y = rc.bottom;
+
+	if (PtInRect (lprect, pt))
+		return true;
+
+	pt.x = rc.right;
+	pt.y = rc.top;
+
+	if (PtInRect (lprect, pt))
+		return true;
+
+	pt.x = rc.bottom;
+	pt.y = rc.right;
+
+	if (PtInRect (lprect, pt))
+		return true;
+
+	return false;
+}
+
+BOOL CalculateChildsRect (HWND hwnd, LPARAM lparam)
+{
+	ENUM_INFO* enum_info = (ENUM_INFO*)lparam;
+
+	if (
+		!enum_info || (enum_info->hroot == hwnd) ||
+		!IsWindow (hwnd) ||
+		!IsWindowVisible (hwnd) ||
+		IsIconic (hwnd)
+		)
+	{
+		return TRUE;
+	}
+
+	if (!_app_iswndoverlapped (hwnd, enum_info->lprect) || _app_getwindowzorder (hwnd) > _app_getwindowzorder (enum_info->hroot))
+		return TRUE;
+
+	RECT rc = {0};
+	_app_getwindowrect (hwnd, &rc);
+
+	if (rc.left < enum_info->lprect->left)
+		enum_info->lprect->left -= (enum_info->lprect->left - rc.left);
+
+	if (rc.top < enum_info->lprect->top)
+		enum_info->lprect->top -= (enum_info->lprect->top - rc.top);
+
+	if (rc.bottom > enum_info->lprect->bottom)
+		enum_info->lprect->bottom += (rc.bottom - enum_info->lprect->bottom);
+
+	if (rc.right > enum_info->lprect->right)
+		enum_info->lprect->right += (rc.right - enum_info->lprect->right);
+
+	return TRUE;
+}
+
+void _app_getshadowsize (PINT px, PINT py)
+{
+	if (!px || !py)
+		return;
+
+	INT shadowX, shadowY;
+	const INT fallbackX = GetSystemMetrics (SM_CXSIZEFRAME) * 2;
+	const INT fallbackY = GetSystemMetrics (SM_CYSIZEFRAME) * 2;
+
+	if (app.ConfigGet (L"IsCustomShadow", false).AsBool ())
+	{
+		shadowX = app.GetDPI (app.ConfigGet (L"CustomShadowX", fallbackX).AsInt ());
+		shadowY = app.GetDPI (app.ConfigGet (L"CustomShadowY", fallbackY).AsInt ());
+	}
+	else
+	{
+		shadowX = fallbackX;
+		shadowY = fallbackY;
+	}
+
+	if (!shadowX)
+		shadowX = fallbackX;
+
+	if (!shadowY)
+		shadowY = fallbackY;
+
+	*px = max (shadowX, 0);
+	*py = max (shadowY, 0);
+}
+
 void _app_takeshot (HWND hwnd, EnumScreenshot mode)
 {
 	bool result = false;
 
 	const HWND myWindow = app.GetHWND ();
+
 	const bool is_includecursor = app.ConfigGet (L"IsIncludeMouseCursor", false).AsBool ();
 	const bool is_hideme = app.ConfigGet (L"IsHideMe", true).AsBool ();
 	const bool is_windowdisplayed = IsWindowVisible (myWindow) && !IsIconic (myWindow);
-	const HWND hActiveWindow = GetForegroundWindow ();
 
 	RECT prev_rect = {0};
 
@@ -322,8 +447,11 @@ void _app_takeshot (HWND hwnd, EnumScreenshot mode)
 
 		if (_app_isnormalwindow (hwnd))
 		{
+			HWND hdummy = nullptr;
+
+			const bool is_includewindowshadow = app.ConfigGet (L"IsIncludeWindowShadow", true).AsBool ();
+			const bool is_clearbackground = app.ConfigGet (L"IsClearBackground", true).AsBool ();
 			const bool is_disableaeroonwnd = app.IsVistaOrLater () && app.ConfigGet (L"IsDisableAeroOnWnd", false).AsBool ();
-			const bool is_clearbackground = app.IsVistaOrLater () && app.ConfigGet (L"IsClearBackground", true).AsBool ();
 
 			if (is_disableaeroonwnd)
 				_app_switchaeroonwnd (hwnd, true);
@@ -331,18 +459,44 @@ void _app_takeshot (HWND hwnd, EnumScreenshot mode)
 			RECT window_rect = {0};
 			_app_getwindowrect (hwnd, &window_rect);
 
-			if (is_clearbackground)
+			// calculate window rectangle and all overlapped windows
 			{
-				if (config.hdummy)
-					SetWindowPos (config.hdummy, hwnd, window_rect.left, window_rect.top, _R_RECT_WIDTH (&window_rect), _R_RECT_HEIGHT (&window_rect), SWP_SHOWWINDOW | SWP_NOACTIVATE | SWP_NOCOPYBITS | SWP_FRAMECHANGED | SWP_NOSENDCHANGING);
+				ENUM_INFO enuminfo = {0};
+
+				enuminfo.hroot = hwnd;
+				enuminfo.lprect = &window_rect;
+
+				EnumWindows (&CalculateChildsRect, (LPARAM)&enuminfo);
 			}
 
-			SetForegroundWindow (hwnd);
-			SwitchToThisWindow (hwnd, TRUE);
+			// calculate shadow padding
+			if (is_includewindowshadow)
+			{
+				int shadowX, shadowY;
+				_app_getshadowsize (&shadowX, &shadowY);
+
+				window_rect.left -= shadowX;
+				window_rect.right += shadowX;
+
+				window_rect.top -= shadowY;
+				window_rect.bottom += shadowY;
+			}
+
+			if (is_clearbackground)
+			{
+				hdummy = CreateWindowEx (0, DUMMY_CLASS_DLG, APP_NAME, WS_POPUP | WS_OVERLAPPED, 0, 0, 0, 0, nullptr, nullptr, app.GetHINSTANCE (), nullptr);
+
+				if (hdummy)
+				{
+					if (!SetWindowPos (hdummy, hwnd, window_rect.left, window_rect.top, _R_RECT_WIDTH (&window_rect), _R_RECT_HEIGHT (&window_rect), SWP_SHOWWINDOW | SWP_NOACTIVATE | SWP_NOCOPYBITS | SWP_FRAMECHANGED | SWP_NOSENDCHANGING))
+					{
+						// fucked uipi-fix
+						SetWindowPos (hdummy, HWND_BOTTOM, window_rect.left, window_rect.top, _R_RECT_WIDTH (&window_rect), _R_RECT_HEIGHT (&window_rect), SWP_SHOWWINDOW | SWP_NOACTIVATE | SWP_NOCOPYBITS | SWP_FRAMECHANGED | SWP_NOSENDCHANGING);
+					}
+				}
+			}
 
 			_r_sleep (WND_SLEEP);
-
-			//SetForegroundWindow (hwnd);
 			_app_screenshot (window_rect.left, window_rect.top, _R_RECT_WIDTH (&window_rect), _R_RECT_HEIGHT (&window_rect), is_includecursor);
 
 			if (is_disableaeroonwnd)
@@ -350,8 +504,8 @@ void _app_takeshot (HWND hwnd, EnumScreenshot mode)
 
 			if (is_clearbackground)
 			{
-				if (config.hdummy)
-					SetWindowPos (config.hdummy, myWindow, 0, 0, 0, 0, SWP_HIDEWINDOW | SWP_NOACTIVATE | SWP_NOCOPYBITS | SWP_FRAMECHANGED | SWP_NOSENDCHANGING);
+				if (hdummy)
+					DestroyWindow (hdummy);
 			}
 		}
 	}
@@ -359,7 +513,7 @@ void _app_takeshot (HWND hwnd, EnumScreenshot mode)
 	{
 		if (WaitForSingleObjectEx (config.hregion_mutex, 0, FALSE) == WAIT_OBJECT_0)
 		{
-			config.hregion = CreateWindowEx (WS_EX_TOPMOST, REGION_CLASS_DLG, nullptr, WS_POPUP, 0, 0, 0, 0, myWindow, nullptr, app.GetHINSTANCE (), nullptr);
+			config.hregion = CreateWindowEx (WS_EX_TOPMOST, REGION_CLASS_DLG, APP_NAME, WS_POPUP, 0, 0, 0, 0, myWindow, nullptr, app.GetHINSTANCE (), nullptr);
 			SetWindowPos (config.hregion, HWND_TOPMOST, 0, 0, GetSystemMetrics (SM_CXVIRTUALSCREEN), GetSystemMetrics (SM_CYVIRTUALSCREEN), SWP_SHOWWINDOW | SWP_NOCOPYBITS | SWP_FRAMECHANGED | SWP_NOSENDCHANGING);
 		}
 	}
@@ -372,9 +526,6 @@ void _app_takeshot (HWND hwnd, EnumScreenshot mode)
 		app.TrayToggle (myWindow, UID, nullptr, true);
 		app.TraySetInfo (myWindow, UID, nullptr, nullptr, APP_NAME);
 	}
-
-	if (hActiveWindow)
-		SetForegroundWindow (hActiveWindow);
 }
 
 void _app_hotkeyinit (HWND hwnd)
@@ -440,14 +591,6 @@ void _app_hotkeyinit (HWND hwnd)
 
 LRESULT CALLBACK DummyProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 {
-	//switch (msg)
-	//{
-	//	case WM_CTLCOLORDLG:
-	//	{
-	//		return (LRESULT)GetSysColorBrush (COLOR_WINDOW);
-	//	}
-	//}
-
 	return DefWindowProc (hwnd, msg, wparam, lparam);
 }
 
@@ -848,13 +991,14 @@ void _app_initdropdownmenu (HMENU hmenu, bool is_button)
 	app.LocaleMenu (hmenu, IDS_PLAYSOUNDS_CHK, IDM_PLAYSOUNDS_CHK, false, nullptr);
 	app.LocaleMenu (hmenu, IDS_INCLUDEMOUSECURSOR_CHK, IDM_INCLUDEMOUSECURSOR_CHK, false, nullptr);
 	app.LocaleMenu (hmenu, IDS_HIDEME_CHK, IDM_HIDEME_CHK, false, nullptr);
-	app.LocaleMenu (hmenu, IDS_CLEARBACKGROUND_CHK, IDM_CLEARBACKGROUND_CHK, false, L" (vista+)");
+	app.LocaleMenu (hmenu, IDS_INCLUDEWINDOWSHADOW_CHK, IDM_INCLUDEWINDOWSHADOW_CHK, false, nullptr);
+	app.LocaleMenu (hmenu, IDS_CLEARBACKGROUND_CHK, IDM_CLEARBACKGROUND_CHK, false, nullptr);
 	app.LocaleMenu (hmenu, IDS_DISABLEAEROONWND_CHK, IDM_DISABLEAEROONWND_CHK, false, L" (vista+)");
 	app.LocaleMenu (hmenu, IDS_FILENAME, FILENAME_MENU, true, nullptr);
 	app.LocaleMenu (hmenu, IDS_IMAGEFORMAT, FORMAT_MENU, true, nullptr);
 	app.LocaleMenu (hmenu, IDS_HOTKEYS, IDM_HOTKEYS, false, is_button ? L"...\tF3" : L"...");
 
-	app.LocaleMenu (hmenu, 0, IDM_FILENAME_INDEX, false, _r_fmt (L"1) " FILE_FORMAT_NAME_FORMAT L".jpg", app.ConfigGet (L"FilenamePrefix", FILE_FORMAT_NAME_PREFIX), 1));
+	app.LocaleMenu (hmenu, 0, IDM_FILENAME_INDEX, false, _r_fmt (L"1) " FILE_FORMAT_NAME_FORMAT L".jpg", app.ConfigGet (L"FilenamePrefix", FILE_FORMAT_NAME_PREFIX).GetString (), 1));
 	app.LocaleMenu (hmenu, 0, IDM_FILENAME_DATE, false, L"2) " FILE_FORMAT_DATE_FORMAT_1 L" " FILE_FORMAT_DATE_FORMAT_2 L".jpg");
 
 	// initialize formats
@@ -870,6 +1014,7 @@ void _app_initdropdownmenu (HMENU hmenu, bool is_button)
 	CheckMenuItem (hmenu, IDM_INCLUDEMOUSECURSOR_CHK, MF_BYCOMMAND | (app.ConfigGet (L"IsIncludeMouseCursor", false).AsBool () ? MF_CHECKED : MF_UNCHECKED));
 	CheckMenuItem (hmenu, IDM_PLAYSOUNDS_CHK, MF_BYCOMMAND | (app.ConfigGet (L"IsPlaySound", true).AsBool () ? MF_CHECKED : MF_UNCHECKED));
 	CheckMenuItem (hmenu, IDM_HIDEME_CHK, MF_BYCOMMAND | (app.ConfigGet (L"IsHideMe", true).AsBool () ? MF_CHECKED : MF_UNCHECKED));
+	CheckMenuItem (hmenu, IDM_INCLUDEWINDOWSHADOW_CHK, MF_BYCOMMAND | (app.ConfigGet (L"IsIncludeWindowShadow", true).AsBool () ? MF_CHECKED : MF_UNCHECKED));
 	CheckMenuItem (hmenu, IDM_CLEARBACKGROUND_CHK, MF_BYCOMMAND | (app.ConfigGet (L"IsClearBackground", true).AsBool () ? MF_CHECKED : MF_UNCHECKED));
 	CheckMenuItem (hmenu, IDM_DISABLEAEROONWND_CHK, MF_BYCOMMAND | (app.ConfigGet (L"IsDisableAeroOnWnd", false).AsBool () ? MF_CHECKED : MF_UNCHECKED));
 
@@ -877,10 +1022,7 @@ void _app_initdropdownmenu (HMENU hmenu, bool is_button)
 	CheckMenuRadioItem (hmenu, IDX_FORMATS, IDX_FORMATS + UINT (formats.size ()), IDX_FORMATS + UINT (_app_getimageformat ()), MF_BYCOMMAND);
 
 	if (!app.IsVistaOrLater ())
-	{
-		EnableMenuItem (hmenu, IDM_CLEARBACKGROUND_CHK, MF_BYCOMMAND | MF_DISABLED | MF_GRAYED);
 		EnableMenuItem (hmenu, IDM_DISABLEAEROONWND_CHK, MF_BYCOMMAND | MF_DISABLED | MF_GRAYED);
-	}
 }
 
 INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
@@ -912,8 +1054,6 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 				wcex.hCursor = LoadCursor (app.GetHINSTANCE (), MAKEINTRESOURCE (IDI_MAIN));
 
 				RegisterClassEx (&wcex);
-
-				config.hdummy = CreateWindow (DUMMY_CLASS_DLG, nullptr, WS_POPUP, 0, 0, 0, 0, hwnd, nullptr, wcex.hInstance, nullptr);
 			}
 
 			SendDlgItemMessage (hwnd, IDC_FOLDER, EM_SETLIMITTEXT, MAX_PATH, 0);
@@ -980,7 +1120,7 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 			SetDlgItemText (hwnd, IDC_FOLDER, _app_getdirectory ());
 
 			CheckDlgButton (hwnd, IDC_INCLUDEMOUSECURSOR_CHK, app.ConfigGet (L"IsIncludeMouseCursor", false).AsBool () ? BST_CHECKED : BST_UNCHECKED);
-			CheckDlgButton (hwnd, IDC_PLAYSOUNDS_CHK, app.ConfigGet (L"IsPlaySound", true).AsBool () ? BST_CHECKED : BST_UNCHECKED);
+			CheckDlgButton (hwnd, IDC_INCLUDEWINDOWSHADOW_CHK, app.ConfigGet (L"IsIncludeWindowShadow", true).AsBool () ? BST_CHECKED : BST_UNCHECKED);
 			CheckDlgButton (hwnd, IDC_CLEARBACKGROUND_CHK, app.ConfigGet (L"IsClearBackground", true).AsBool () ? BST_CHECKED : BST_UNCHECKED);
 
 			CheckRadioButton (hwnd, IDC_MODE_FULLSCREEN, IDC_MODE_REGION, IDC_MODE_FULLSCREEN + app.ConfigGet (L"Mode", 0).AsUint ());
@@ -996,9 +1136,6 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 			CheckMenuItem (GetMenu (hwnd), IDM_LOADONSTARTUP_CHK, MF_BYCOMMAND | (app.AutorunIsEnabled () ? MF_CHECKED : MF_UNCHECKED));
 			CheckMenuItem (GetMenu (hwnd), IDM_CHECKUPDATES_CHK, MF_BYCOMMAND | (app.ConfigGet (L"CheckUpdates", true).AsBool () ? MF_CHECKED : MF_UNCHECKED));
 
-			if (!app.IsVistaOrLater ())
-				_r_ctrl_enable (hwnd, IDC_CLEARBACKGROUND_CHK, false);
-
 			break;
 		}
 
@@ -1009,8 +1146,8 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 			SetDlgItemText (hwnd, IDC_TITLE_SETTINGS, app.LocaleString (IDS_QUICKSETTINGS, L":"));
 			SetDlgItemText (hwnd, IDC_TITLE_MODE, app.LocaleString (IDS_MODE, L":"));
 
-			SetDlgItemText (hwnd, IDC_PLAYSOUNDS_CHK, app.LocaleString (IDS_PLAYSOUNDS_CHK, nullptr));
 			SetDlgItemText (hwnd, IDC_INCLUDEMOUSECURSOR_CHK, app.LocaleString (IDS_INCLUDEMOUSECURSOR_CHK, nullptr));
+			SetDlgItemText (hwnd, IDC_INCLUDEWINDOWSHADOW_CHK, app.LocaleString (IDS_INCLUDEWINDOWSHADOW_CHK, nullptr));
 			SetDlgItemText (hwnd, IDC_CLEARBACKGROUND_CHK, app.LocaleString (IDS_CLEARBACKGROUND_CHK, nullptr));
 
 			SetDlgItemText (hwnd, IDC_MODE_FULLSCREEN, app.LocaleString (IDS_MODE_FULLSCREEN, nullptr));
@@ -1029,11 +1166,16 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 			// localize menu
 			const HMENU menu = GetMenu (hwnd);
 
+			// fucked compiler
+			rstring mode_fullscreen = app.LocaleString (IDS_MODE_FULLSCREEN, nullptr).GetString ();
+			rstring mode_window = app.LocaleString (IDS_MODE_WINDOW, nullptr).GetString ();
+			rstring mode_region = app.LocaleString (IDS_MODE_REGION, nullptr).GetString ();
+
 			app.LocaleMenu (menu, IDS_FILE, 0, true, nullptr);
 			app.LocaleMenu (menu, IDS_EXPLORE, IDM_EXPLORE, false, L"...\tCtrl+E");
-			app.LocaleMenu (menu, IDS_SCREENSHOT, IDM_TAKE_FULLSCREEN, false, _r_fmt (L": %s", app.LocaleString (IDS_MODE_FULLSCREEN, nullptr).ToLower ().GetString ()));
-			app.LocaleMenu (menu, IDS_SCREENSHOT, IDM_TAKE_WINDOW, false, _r_fmt (L": %s", app.LocaleString (IDS_MODE_WINDOW, nullptr).ToLower ().GetString ()));
-			app.LocaleMenu (menu, IDS_SCREENSHOT, IDM_TAKE_REGION, false, _r_fmt (L": %s", app.LocaleString (IDS_MODE_REGION, nullptr).ToLower ().GetString ()));
+			app.LocaleMenu (menu, IDS_SCREENSHOT, IDM_TAKE_FULLSCREEN, false, _r_fmt (L": %s", mode_fullscreen.ToLower ().GetString ()));
+			app.LocaleMenu (menu, IDS_SCREENSHOT, IDM_TAKE_WINDOW, false, _r_fmt (L": %s", mode_window.ToLower ().GetString ()));
+			app.LocaleMenu (menu, IDS_SCREENSHOT, IDM_TAKE_REGION, false, _r_fmt (L": %s", mode_region.ToLower ().GetString ()));
 			app.LocaleMenu (menu, IDS_EXIT, IDM_EXIT, false, L"\tAlt+F4");
 			app.LocaleMenu (menu, IDS_VIEW, 1, true, nullptr);
 			app.LocaleMenu (menu, IDS_ALWAYSONTOP_CHK, IDM_ALWAYSONTOP_CHK, false, nullptr);
@@ -1089,7 +1231,8 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 				_app_takeshot (nullptr, ScreenshotFullscreen);
 
 			else if (wparam == HOTKEY_ID_WINDOW)
-				_app_takeshot (GetForegroundWindow (), ScreenshotWindow);
+				//_app_takeshot (GetForegroundWindow (), ScreenshotWindow);
+				_app_takeshot (nullptr, ScreenshotWindow);
 
 			else if (wparam == HOTKEY_ID_REGION)
 				_app_takeshot (nullptr, ScreenshotRegion);
@@ -1127,11 +1270,16 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 					const HMENU hsubmenu = GetSubMenu (hmenu, 0);
 					HMENU hmenu_settings = nullptr;
 
+					// fucked compiler
+					rstring mode_fullscreen = app.LocaleString (IDS_MODE_FULLSCREEN, nullptr).GetString ();
+					rstring mode_window = app.LocaleString (IDS_MODE_WINDOW, nullptr).GetString ();
+					rstring mode_region = app.LocaleString (IDS_MODE_REGION, nullptr).GetString ();
+
 					// localize
 					app.LocaleMenu (hsubmenu, IDS_TRAY_SHOW, IDM_TRAY_SHOW, false, nullptr);
-					app.LocaleMenu (hsubmenu, IDS_SCREENSHOT, IDM_TRAY_TAKE_FULLSCREEN, false, _r_fmt (L": %s", app.LocaleString (IDS_MODE_FULLSCREEN, nullptr).ToLower ().GetString ()));
-					app.LocaleMenu (hsubmenu, IDS_SCREENSHOT, IDM_TRAY_TAKE_WINDOW, false, _r_fmt (L": %s", app.LocaleString (IDS_MODE_WINDOW, nullptr).ToLower ().GetString ()));
-					app.LocaleMenu (hsubmenu, IDS_SCREENSHOT, IDM_TRAY_TAKE_REGION, false, _r_fmt (L": %s", app.LocaleString (IDS_MODE_REGION, nullptr).ToLower ().GetString ()));
+					app.LocaleMenu (hsubmenu, IDS_SCREENSHOT, IDM_TRAY_TAKE_FULLSCREEN, false, _r_fmt (L": %s", mode_fullscreen.ToLower ().GetString ()));
+					app.LocaleMenu (hsubmenu, IDS_SCREENSHOT, IDM_TRAY_TAKE_WINDOW, false, _r_fmt (L": %s", mode_window.ToLower ().GetString ()));
+					app.LocaleMenu (hsubmenu, IDS_SCREENSHOT, IDM_TRAY_TAKE_REGION, false, _r_fmt (L": %s", mode_region.ToLower ().GetString ()));
 					app.LocaleMenu (hsubmenu, IDS_SETTINGS, SETTINGS_MENU, true, nullptr);
 					app.LocaleMenu (hsubmenu, IDS_WEBSITE, IDM_TRAY_WEBSITE, false, nullptr);
 					app.LocaleMenu (hsubmenu, IDS_ABOUT, IDM_TRAY_ABOUT, false, nullptr);
@@ -1320,12 +1468,9 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 				}
 
 				case IDM_PLAYSOUNDS_CHK:
-				case IDC_PLAYSOUNDS_CHK:
 				{
 					const bool new_val = !app.ConfigGet (L"IsPlaySound", true).AsBool ();
-
 					app.ConfigSet (L"IsPlaySound", new_val);
-					CheckDlgButton (hwnd, IDC_PLAYSOUNDS_CHK, new_val ? BST_CHECKED : BST_UNCHECKED);
 
 					break;
 				}
@@ -1348,6 +1493,17 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 
 					app.ConfigSet (L"IsClearBackground", new_val);
 					CheckDlgButton (hwnd, IDC_CLEARBACKGROUND_CHK, new_val ? BST_CHECKED : BST_UNCHECKED);
+
+					break;
+				}
+
+				case IDM_INCLUDEWINDOWSHADOW_CHK:
+				case IDC_INCLUDEWINDOWSHADOW_CHK:
+				{
+					const bool new_val = !app.ConfigGet (L"IsIncludeWindowShadow", true).AsBool ();
+
+					app.ConfigSet (L"IsIncludeWindowShadow", new_val);
+					CheckDlgButton (hwnd, IDC_INCLUDEWINDOWSHADOW_CHK, new_val ? BST_CHECKED : BST_UNCHECKED);
 
 					break;
 				}
@@ -1388,24 +1544,45 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 				}
 
 				case IDM_TAKE_FULLSCREEN:
-				case IDM_TAKE_WINDOW:
-				case IDM_TAKE_REGION:
 				case IDM_TRAY_TAKE_FULLSCREEN:
+				case IDM_TAKE_WINDOW:
 				case IDM_TRAY_TAKE_WINDOW:
+				case IDM_TAKE_REGION:
 				case IDM_TRAY_TAKE_REGION:
+				case IDC_SCREENSHOT:
 				{
-					EnumScreenshot val;
+					const UINT ctrl_id = LOWORD (wparam);
 
-					if (LOWORD (wparam) == IDM_TRAY_TAKE_WINDOW || LOWORD (wparam) == IDM_TAKE_WINDOW)
-						val = ScreenshotWindow;
+					EnumScreenshot mode;
+					HWND hwindow = nullptr;
 
-					else if (LOWORD (wparam) == IDM_TRAY_TAKE_REGION || LOWORD (wparam) == IDM_TAKE_REGION)
-						val = ScreenshotRegion;
-
+					if (
+						ctrl_id == IDM_TRAY_TAKE_WINDOW ||
+						ctrl_id == IDM_TAKE_WINDOW
+						)
+					{
+						mode = ScreenshotWindow;
+					}
+					else if (
+						ctrl_id == IDM_TRAY_TAKE_REGION ||
+						ctrl_id == IDM_TAKE_REGION
+						)
+					{
+						mode = ScreenshotRegion;
+					}
+					else if (
+						ctrl_id == IDM_TAKE_FULLSCREEN ||
+						ctrl_id == IDM_TRAY_TAKE_FULLSCREEN
+						)
+					{
+						mode = ScreenshotFullscreen;
+					}
 					else
-						val = ScreenshotFullscreen;
+					{
+						mode = (EnumScreenshot)app.ConfigGet (L"Mode", 0).AsUint ();
+					}
 
-					_app_takeshot (nullptr, val);
+					_app_takeshot (hwindow, mode);
 
 					break;
 				}
@@ -1445,12 +1622,6 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 				case IDM_TRAY_SHOW:
 				{
 					_r_wnd_toggle (hwnd, false);
-					break;
-				}
-
-				case IDC_SCREENSHOT:
-				{
-					_app_takeshot (nullptr, (EnumScreenshot)app.ConfigGet (L"Mode", 0).AsUint ());
 					break;
 				}
 

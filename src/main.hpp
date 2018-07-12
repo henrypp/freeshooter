@@ -49,7 +49,6 @@ struct STATIC_DATA
 {
 	WCHAR default_folder[MAX_PATH] = {0};
 
-	HWND hdummy = nullptr;
 	HWND hregion = nullptr;
 
 	HANDLE hregion_mutex = nullptr;
@@ -60,6 +59,12 @@ struct IMAGE_FORMAT
 	WCHAR ext[16] = {0};
 
 	CLSID clsid = {0};
+};
+
+struct ENUM_INFO
+{
+	HWND hroot = nullptr;
+	LPRECT lprect = nullptr;
 };
 
 enum EnumScreenshot
@@ -82,6 +87,7 @@ enum EnumImageFormat
 	FormatPng,
 	FormatGif,
 	FormatTiff,
+	FormatMax,
 };
 
 typedef HRESULT (WINAPI *DWMGWA) (HWND, DWORD, PVOID, DWORD); // DwmGetWindowAttribute
