@@ -189,8 +189,6 @@ void _app_dofinishjob (HBITMAP hbitmap, INT width, INT height)
 				HBITMAP hbitmap_copy = (HBITMAP)CopyImage (hbitmap, IMAGE_BITMAP, width, height, 0);
 
 				SetClipboardData (CF_BITMAP, hbitmap_copy);
-
-				CloseClipboard ();
 			}
 
 			CloseClipboard ();
@@ -205,8 +203,7 @@ void _app_dofinishjob (HBITMAP hbitmap, INT width, INT height)
 
 void _app_screenshot (INT x, INT y, INT width, INT height, bool is_cursor)
 {
-	const HWND hdesktop = GetDesktopWindow ();
-	const HDC hdc = GetDC (hdesktop);
+	const HDC hdc = GetDC (nullptr);
 	const HDC hcapture = CreateCompatibleDC (hdc);
 
 	const HBITMAP hbitmap = _app_createbitmap (hdc, width, height);
@@ -243,7 +240,7 @@ void _app_screenshot (INT x, INT y, INT width, INT height, bool is_cursor)
 	}
 
 	DeleteDC (hcapture);
-	ReleaseDC (hdesktop, hdc);
+	ReleaseDC (nullptr, hdc);
 }
 
 void _app_switchaeroonwnd (HWND hwnd, bool is_disable)
@@ -514,13 +511,14 @@ void _app_takeshot (HWND hwnd, EnumScreenshot mode)
 		{
 			config.hregion = CreateWindowEx (WS_EX_TOPMOST, REGION_CLASS_DLG, APP_NAME, WS_POPUP | WS_OVERLAPPED, 0, 0, 0, 0, myWindow, nullptr, app.GetHINSTANCE (), nullptr);
 
-			if (!config.hregion)
+			if (config.hregion)
 			{
-				SetEvent (config.hregion_mutex);
+				SetWindowPos (config.hregion, HWND_TOPMOST, 0, 0, GetSystemMetrics (SM_CXVIRTUALSCREEN), GetSystemMetrics (SM_CYVIRTUALSCREEN), SWP_SHOWWINDOW | SWP_NOCOPYBITS | SWP_FRAMECHANGED | SWP_NOSENDCHANGING);
+				WaitForSingleObjectEx (config.hregion, INFINITE, FALSE);
 			}
 			else
 			{
-				SetWindowPos (config.hregion, HWND_TOPMOST, 0, 0, GetSystemMetrics (SM_CXVIRTUALSCREEN), GetSystemMetrics (SM_CYVIRTUALSCREEN), SWP_SHOWWINDOW | SWP_NOCOPYBITS | SWP_FRAMECHANGED | SWP_NOSENDCHANGING);
+				SetEvent (config.hregion_mutex);
 			}
 		}
 	}
@@ -631,6 +629,7 @@ LRESULT CALLBACK RegionProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 	static HBITMAP hbitmap_mask = nullptr;
 
 	static HPEN hpen = nullptr;
+	static HPEN hpen_draw = nullptr;
 
 	static RECT wndRect = {0};
 
@@ -645,30 +644,30 @@ LRESULT CALLBACK RegionProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 		{
 			ResetEvent (config.hregion_mutex);
 
+			wndRect.left = wndRect.top = 0;
 			wndRect.right = GetSystemMetrics (SM_CXVIRTUALSCREEN);
 			wndRect.bottom = GetSystemMetrics (SM_CYVIRTUALSCREEN);
 
-			const HWND hdesktop = GetDesktopWindow ();
-			const HDC hdc = GetDC (hdesktop);
+			const HDC hdc = GetDC (nullptr);
 
-			hpen = CreatePen (PS_SOLID, app.GetDPI (REGION_PEN_SIZE), REGION_PEN_COLOR);
-
-			hbitmap = _app_createbitmap (hdc, wndRect.right, wndRect.bottom);
-			hbitmap_mask = _app_createbitmap (hdc, wndRect.right, wndRect.bottom);
-
-			if (hbitmap)
+			if (hdc)
 			{
+				hpen = CreatePen (PS_SOLID, app.GetDPI (REGION_PEN_SIZE), REGION_PEN_COLOR);
+				hpen_draw = CreatePen (PS_SOLID, app.GetDPI (REGION_PEN_SIZE), REGION_PEN_DRAW_COLOR);
+
 				hcapture = CreateCompatibleDC (hdc);
-
-				SelectObject (hcapture, hbitmap);
-				BitBlt (hcapture, 0, 0, wndRect.right, wndRect.bottom, hdc, 0, 0, SRCCOPY);
-			}
-
-			if (hbitmap_mask)
-			{
 				hcapture_mask = CreateCompatibleDC (hdc);
 
-				if (hcapture_mask)
+				hbitmap = _app_createbitmap (hdc, wndRect.right, wndRect.bottom);
+				hbitmap_mask = _app_createbitmap (hdc, wndRect.right, wndRect.bottom);
+
+				if (hbitmap && hcapture)
+				{
+					SelectObject (hcapture, hbitmap);
+					BitBlt (hcapture, wndRect.left, wndRect.top, wndRect.right, wndRect.bottom, hdc, wndRect.left, wndRect.top, SRCCOPY);
+				}
+
+				if (hbitmap_mask && hcapture_mask)
 				{
 					SelectObject (hcapture_mask, hbitmap_mask);
 
@@ -677,14 +676,20 @@ LRESULT CALLBACK RegionProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 
 					_r_dc_fillrect (hcapture_mask, &wndRect, REGION_COLOR_BK);
 
-					BLENDFUNCTION blend = {AC_SRC_OVER, 0, (BYTE)REGION_BLEND, 0};
-					AlphaBlend (hdc, wndRect.left, wndRect.top, wndRect.right, wndRect.bottom, hcapture_mask, wndRect.left, wndRect.top, wndRect.right, wndRect.bottom, blend);
+					{
+						BLENDFUNCTION bf = {0};
 
-					BitBlt (hcapture_mask, 0, 0, wndRect.right, wndRect.bottom, hdc, 0, 0, SRCCOPY);
+						bf.BlendOp = AC_SRC_OVER;
+						bf.SourceConstantAlpha = REGION_BLEND;
+
+						AlphaBlend (hdc, wndRect.left, wndRect.top, wndRect.right, wndRect.bottom, hcapture_mask, wndRect.left, wndRect.top, wndRect.right, wndRect.bottom, bf);
+					}
+
+					BitBlt (hcapture_mask, wndRect.left, wndRect.top, wndRect.right, wndRect.bottom, hdc, wndRect.left, wndRect.top, SRCCOPY);
 				}
-			}
 
-			ReleaseDC (hdesktop, hdc);
+				ReleaseDC (nullptr, hdc);
+			}
 
 			break;
 		}
@@ -696,19 +701,40 @@ LRESULT CALLBACK RegionProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 			fDraw = false;
 
 			if (hpen)
+			{
 				DeleteObject (hpen);
+				hpen = nullptr;
+			}
+
+			if (hpen_draw)
+			{
+				DeleteObject (hpen_draw);
+				hpen_draw = nullptr;
+			}
 
 			if (hbitmap)
+			{
 				DeleteObject (hbitmap);
+				hbitmap = nullptr;
+			}
 
 			if (hbitmap_mask)
+			{
 				DeleteObject (hbitmap_mask);
+				hbitmap_mask = nullptr;
+			}
 
 			if (hcapture)
+			{
 				DeleteDC (hcapture);
+				hcapture = nullptr;
+			}
 
 			if (hcapture_mask)
+			{
 				DeleteDC (hcapture_mask);
+				hcapture_mask = nullptr;
+			}
 
 			return TRUE;
 		}
@@ -721,6 +747,8 @@ LRESULT CALLBACK RegionProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 
 				ptStart.x = LOWORD (lparam);
 				ptStart.y = HIWORD (lparam);
+
+				InvalidateRect (hwnd, nullptr, TRUE);
 			}
 			else
 			{
@@ -737,9 +765,7 @@ LRESULT CALLBACK RegionProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 				if (width && height)
 				{
 					// save region to a file
-					const HWND hdesktop = GetDesktopWindow ();
-
-					const HDC hdc = GetDC (hdesktop);
+					const HDC hdc = GetDC (nullptr);
 					const HDC hcapture_finish = CreateCompatibleDC (hdc);
 
 					if (hcapture_finish)
@@ -762,7 +788,7 @@ LRESULT CALLBACK RegionProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 						DeleteDC (hcapture_finish);
 					}
 
-					ReleaseDC (hdesktop, hdc);
+					ReleaseDC (nullptr, hdc);
 					DestroyWindow (hwnd);
 				}
 			}
@@ -802,14 +828,13 @@ LRESULT CALLBACK RegionProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 
 			BitBlt (hdc, wndRect.left, wndRect.top, _R_RECT_WIDTH (&wndRect), _R_RECT_HEIGHT (&wndRect), hcapture_mask, wndRect.left, wndRect.top, SRCCOPY);
 
-			const HPEN old_pen = (HPEN)SelectObject (hdc, hpen);
+			const HPEN old_pen = (HPEN)SelectObject (hdc, fDraw ? hpen_draw : hpen);
 			const HGDIOBJ old_brush = SelectObject (hdc, GetStockObject (NULL_BRUSH));
 
-			if (fDraw)
+			if (fDraw && pt.x != ptStart.x && pt.y != ptStart.y)
 			{
 				// draw region rectangle
 				BitBlt (hdc, min (ptStart.x, pt.x), min (ptStart.y, pt.y), max (ptStart.x, pt.x) - min (ptStart.x, pt.x), max (ptStart.y, pt.y) - min (ptStart.y, pt.y), hcapture, min (ptStart.x, pt.x), min (ptStart.y, pt.y), SRCCOPY);
-
 				Rectangle (hdc, ptStart.x, ptStart.y, pt.x, pt.y);
 			}
 			else
@@ -1314,7 +1339,6 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 				_app_takeshot (nullptr, ScreenshotFullscreen);
 
 			else if (wparam == HOTKEY_ID_WINDOW)
-				//_app_takeshot (GetForegroundWindow (), ScreenshotWindow);
 				_app_takeshot (nullptr, ScreenshotWindow);
 
 			else if (wparam == HOTKEY_ID_REGION)

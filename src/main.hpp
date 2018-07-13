@@ -22,6 +22,7 @@
 
 #define REGION_PEN_SIZE (GetSystemMetrics (SM_CXBORDER) * 2)
 #define REGION_PEN_COLOR RGB(255,0,0)
+#define REGION_PEN_DRAW_COLOR RGB(0,255,0)
 #define REGION_COLOR_BK RGB(0,0,0)
 #define REGION_BLEND 90
 
