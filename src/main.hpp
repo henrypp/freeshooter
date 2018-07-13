@@ -18,10 +18,12 @@
 #define FORMAT_MENU 1
 
 #define WND_SLEEP 150
-#define JPEG_QUALITY 100
+#define JPEG_QUALITY 95
 
-#define PEN_COLOR RGB(0,0,0)
-#define PEN_COLOR_BK RGB(255,255,255)
+#define REGION_PEN_SIZE (GetSystemMetrics (SM_CXBORDER) * 2)
+#define REGION_PEN_COLOR RGB(255,0,0)
+#define REGION_COLOR_BK RGB(0,0,0)
+#define REGION_BLEND 90
 
 #define FILE_FORMAT_NAME_PREFIX L"sshot_"
 #define FILE_FORMAT_NAME_FORMAT L"%s%03d"
@@ -44,12 +46,14 @@
 // libs
 #pragma comment(lib, "gdiplus.lib")
 #pragma comment(lib, "winmm.lib")
+#pragma comment(lib, "msimg32.lib")
 
 struct STATIC_DATA
 {
 	WCHAR default_folder[MAX_PATH] = {0};
 
 	HWND hregion = nullptr;
+	HWND hregion_tran = nullptr;
 
 	HANDLE hregion_mutex = nullptr;
 };

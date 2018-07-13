@@ -165,23 +165,23 @@ bool _app_savehbitmap (HBITMAP hbitmap, LPCWSTR filepath)
 
 HBITMAP _app_createbitmap (HDC hdc, LONG width, LONG height)
 {
-	BITMAPINFO bmiCapture = {0};
-	bmiCapture.bmiHeader.biSize = sizeof (BITMAPINFOHEADER);
-	bmiCapture.bmiHeader.biWidth = width;
-	bmiCapture.bmiHeader.biHeight = height;
-	bmiCapture.bmiHeader.biPlanes = 1;
-	bmiCapture.bmiHeader.biBitCount = GetDeviceCaps (hdc, BITSPIXEL);
+	BITMAPINFO bmi = {0};
 
-	LPBYTE lpCapture = nullptr;
+	bmi.bmiHeader.biSize = sizeof (BITMAPINFOHEADER);
+	bmi.bmiHeader.biWidth = width;
+	bmi.bmiHeader.biHeight = height;
+	bmi.bmiHeader.biPlanes = 1;
+	bmi.bmiHeader.biCompression = BI_RGB;
+	bmi.bmiHeader.biBitCount = 32; // four 8-bit components
+	bmi.bmiHeader.biSizeImage = (width * height) * 4;
 
-	return CreateDIBSection (hdc, &bmiCapture, DIB_PAL_COLORS, (LPVOID*)&lpCapture, nullptr, 0);
+	//LPBYTE lpCapture = nullptr;
+
+	return CreateDIBSection (hdc, &bmi, DIB_RGB_COLORS, nullptr /*(LPVOID*)&lpCapture*/, nullptr, 0);
 }
 
 void _app_dofinishjob (HBITMAP hbitmap, INT width, INT height)
 {
-	if (app.ConfigGet (L"IsPlaySound", true).AsBool ())
-		PlaySound (MAKEINTRESOURCE (IDW_MAIN), app.GetHINSTANCE (), SND_SENTRY | SND_RESOURCE | SND_ASYNC);
-
 	if (app.ConfigGet (L"CopyToClipboard", false).AsBool ())
 	{
 		if (OpenClipboard (app.GetHWND ()))
@@ -417,6 +417,9 @@ void _app_takeshot (HWND hwnd, EnumScreenshot mode)
 		app.TrayToggle (myWindow, UID, nullptr, false);
 	}
 
+	if (mode != ScreenshotRegion && app.ConfigGet (L"IsPlaySound", true).AsBool ())
+		PlaySound (MAKEINTRESOURCE (IDW_MAIN), app.GetHINSTANCE (), SND_SENTRY | SND_RESOURCE | SND_ASYNC);
+
 	if (mode == ScreenshotFullscreen)
 	{
 		POINT pt = {0};
@@ -555,14 +558,11 @@ rstring _app_key2string (UINT key)
 	}
 	else
 	{
-		const UINT scan_code = MapVirtualKeyW (LOBYTE (key), MAPVK_VK_TO_VSC);
-		const LONG lparam = (scan_code << 16);
-		GetKeyNameText (lparam, name, _countof (name));
+		const UINT scan_code = MapVirtualKey (LOBYTE (key), MAPVK_VK_TO_VSC);
+		GetKeyNameText ((scan_code << 16), name, _countof (name));
 	}
 
-	result.Append (name);
-
-	return result;
+	return result.Append (name);
 }
 
 void _app_hotkeyinit (HWND hwnd)
@@ -626,12 +626,19 @@ void _app_hotkeyinit (HWND hwnd)
 
 LRESULT CALLBACK RegionProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 {
-	static HBITMAP hbitmap = nullptr;
 	static HDC hcapture = nullptr;
+	static HDC hcapture_mask = nullptr;
+
+	static HBITMAP hbitmap = nullptr;
+	static HBITMAP hbitmap_mask = nullptr;
+
 	static HPEN hpen = nullptr;
+
+	static RECT wndRect = {0};
 
 	static POINT ptStart = {0};
 	static POINT ptEnd = {0};
+
 	static bool fDraw = false;
 
 	switch (msg)
@@ -640,24 +647,46 @@ LRESULT CALLBACK RegionProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 		{
 			ResetEvent (config.hregion_mutex);
 
-			const INT width = GetSystemMetrics (SM_CXVIRTUALSCREEN);
-			const INT height = GetSystemMetrics (SM_CYVIRTUALSCREEN);
+			wndRect.right = GetSystemMetrics (SM_CXVIRTUALSCREEN);
+			wndRect.bottom = GetSystemMetrics (SM_CYVIRTUALSCREEN);
 
 			const HWND hdesktop = GetDesktopWindow ();
 			const HDC hdc = GetDC (hdesktop);
 
-			hcapture = CreateCompatibleDC (hdc);
-			hbitmap = _app_createbitmap (hdc, width, height);
+			hpen = CreatePen (PS_SOLID, app.GetDPI (REGION_PEN_SIZE), REGION_PEN_COLOR);
+
+			hbitmap = _app_createbitmap (hdc, wndRect.right, wndRect.bottom);
+			hbitmap_mask = _app_createbitmap (hdc, wndRect.right, wndRect.bottom);
 
 			if (hbitmap)
 			{
+				hcapture = CreateCompatibleDC (hdc);
+
 				SelectObject (hcapture, hbitmap);
-				BitBlt (hcapture, 0, 0, width, height, hdc, 0, 0, SRCCOPY);
+				BitBlt (hcapture, 0, 0, wndRect.right, wndRect.bottom, hdc, 0, 0, SRCCOPY);
+			}
+
+			if (hbitmap_mask)
+			{
+				hcapture_mask = CreateCompatibleDC (hdc);
+
+				if (hcapture_mask)
+				{
+					SelectObject (hcapture_mask, hbitmap_mask);
+
+					SetDCPenColor (hcapture_mask, REGION_COLOR_BK);
+					SetDCBrushColor (hcapture_mask, REGION_COLOR_BK);
+
+					_r_dc_fillrect (hcapture_mask, &wndRect, REGION_COLOR_BK);
+
+					BLENDFUNCTION blend = {AC_SRC_OVER, 0, (BYTE)REGION_BLEND, 0};
+					AlphaBlend (hdc, wndRect.left, wndRect.top, wndRect.right, wndRect.bottom, hcapture_mask, wndRect.left, wndRect.top, wndRect.right, wndRect.bottom, blend);
+
+					BitBlt (hcapture_mask, 0, 0, wndRect.right, wndRect.bottom, hdc, 0, 0, SRCCOPY);
+				}
 			}
 
 			ReleaseDC (hdesktop, hdc);
-
-			hpen = CreatePen (PS_DASHDOT, GetSystemMetrics (SM_CXBORDER), PEN_COLOR);
 
 			break;
 		}
@@ -674,8 +703,14 @@ LRESULT CALLBACK RegionProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 			if (hbitmap)
 				DeleteObject (hbitmap);
 
+			if (hbitmap_mask)
+				DeleteObject (hbitmap_mask);
+
 			if (hcapture)
 				DeleteDC (hcapture);
+
+			if (hcapture_mask)
+				DeleteDC (hcapture_mask);
 
 			return TRUE;
 		}
@@ -701,29 +736,37 @@ LRESULT CALLBACK RegionProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 				const INT width = max (ptStart.x, ptEnd.x) - x;
 				const INT height = max (ptStart.y, ptEnd.y) - y;
 
-				if (x || y || width || height)
+				if (width && height)
 				{
 					// save region to a file
 					const HWND hdesktop = GetDesktopWindow ();
-					const HDC hdc_finish = GetDC (hdesktop);
-					const HDC hcapture_finish = CreateCompatibleDC (hdc_finish);
 
-					const HBITMAP hbitmap_finish = _app_createbitmap (hdc_finish, width, height);
+					const HDC hdc = GetDC (hdesktop);
+					const HDC hcapture_finish = CreateCompatibleDC (hdc);
 
-					if (hbitmap_finish)
+					if (hcapture_finish)
 					{
-						SelectObject (hcapture_finish, hbitmap_finish);
-						BitBlt (hcapture_finish, 0, 0, width, height, hcapture, x, y, SRCCOPY);
+						const HBITMAP hbitmap_finish = _app_createbitmap (hdc, width, height);
 
-						_app_dofinishjob (hbitmap_finish, width, height);
-						DeleteObject (hbitmap_finish);
+						if (hbitmap_finish)
+						{
+							SelectObject (hcapture_finish, hbitmap_finish);
+							BitBlt (hcapture_finish, 0, 0, width, height, hcapture, x, y, SRCCOPY);
+
+							if (app.ConfigGet (L"IsPlaySound", true).AsBool ())
+								PlaySound (MAKEINTRESOURCE (IDW_MAIN), app.GetHINSTANCE (), SND_SENTRY | SND_RESOURCE | SND_ASYNC);
+
+							_app_dofinishjob (hbitmap_finish, width, height);
+
+							DeleteObject (hbitmap_finish);
+						}
+
+						DeleteDC (hcapture_finish);
 					}
 
-					DeleteDC (hcapture_finish);
-					ReleaseDC (hdesktop, hdc_finish);
+					ReleaseDC (hdesktop, hdc);
+					DestroyWindow (hwnd);
 				}
-
-				DestroyWindow (hwnd);
 			}
 
 			return TRUE;
@@ -736,7 +779,7 @@ LRESULT CALLBACK RegionProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 				fDraw = false;
 				ptStart.x = ptStart.y = ptEnd.x = ptEnd.y = 0;
 
-				InvalidateRect (hwnd, nullptr, true);
+				InvalidateRect (hwnd, nullptr, TRUE);
 			}
 			else
 			{
@@ -748,7 +791,7 @@ LRESULT CALLBACK RegionProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 
 		case WM_MOUSEMOVE:
 		{
-			InvalidateRect (hwnd, nullptr, true);
+			InvalidateRect (hwnd, nullptr, TRUE);
 			return TRUE;
 		}
 
@@ -756,27 +799,24 @@ LRESULT CALLBACK RegionProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 		{
 			const HDC hdc = (HDC)wparam;
 
-			RECT rc = {0};
-			GetClientRect (hwnd, &rc);
-
 			POINT pt = {0};
 			GetCursorPos (&pt);
 
-			BitBlt (hdc, 0, 0, _R_RECT_WIDTH (&rc), _R_RECT_HEIGHT (&rc), hcapture, rc.left, rc.top, SRCCOPY);
+			BitBlt (hdc, wndRect.left, wndRect.top, _R_RECT_WIDTH (&wndRect), _R_RECT_HEIGHT (&wndRect), hcapture_mask, wndRect.left, wndRect.top, SRCCOPY);
 
 			const HPEN old_pen = (HPEN)SelectObject (hdc, hpen);
 			const HGDIOBJ old_brush = SelectObject (hdc, GetStockObject (NULL_BRUSH));
 
-			SetBkColor (hdc, PEN_COLOR_BK);
-
 			if (fDraw)
 			{
 				// draw region rectangle
+				BitBlt (hdc, min (ptStart.x, pt.x), min (ptStart.y, pt.y), max (ptStart.x, pt.x) - min (ptStart.x, pt.x), max (ptStart.y, pt.y) - min (ptStart.y, pt.y), hcapture, min (ptStart.x, pt.x), min (ptStart.y, pt.y), SRCCOPY);
+
 				Rectangle (hdc, ptStart.x, ptStart.y, pt.x, pt.y);
 			}
 			else
 			{
-				LPRECT lpcrosshairRect = &rc;
+				LPRECT lpcrosshairRect = &wndRect;
 
 				// draw cursor crosshair
 				MoveToEx (hdc, pt.x, lpcrosshairRect->top, nullptr);
@@ -786,8 +826,8 @@ LRESULT CALLBACK RegionProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 				LineTo (hdc, _R_RECT_WIDTH (lpcrosshairRect), pt.y);
 			}
 
-			SelectObject (hdc, old_pen);
 			SelectObject (hdc, old_brush);
+			SelectObject (hdc, old_pen);
 
 			return TRUE;
 		}
@@ -838,7 +878,7 @@ INT_PTR CALLBACK HotkeysProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 			SetDlgItemText (hwnd, IDC_TITLE_REGION, app.LocaleString (IDS_MODE_REGION, L":"));
 
 			SetDlgItemText (hwnd, IDC_SAVE, app.LocaleString (IDS_SAVE, nullptr));
-			SetDlgItemText (hwnd, IDC_CANCEL, app.LocaleString (IDS_CANCEL, nullptr));
+			SetDlgItemText (hwnd, IDC_CLOSE, app.LocaleString (IDS_CLOSE, nullptr));
 
 			SendDlgItemMessage (hwnd, IDC_FULLSCREEN_CB, CB_INSERTSTRING, 0, (LPARAM)app.LocaleString (IDS_DISABLE, nullptr).GetString ());
 			SendDlgItemMessage (hwnd, IDC_WINDOW_CB, CB_INSERTSTRING, 0, (LPARAM)app.LocaleString (IDS_DISABLE, nullptr).GetString ());
@@ -918,7 +958,7 @@ INT_PTR CALLBACK HotkeysProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 				SendDlgItemMessage (hwnd, IDC_REGION_CB, CB_SETCURSEL, 0, 0);
 
 			_r_wnd_addstyle (hwnd, IDC_SAVE, app.IsClassicUI () ? WS_EX_STATICEDGE : 0, WS_EX_STATICEDGE, GWL_EXSTYLE);
-			_r_wnd_addstyle (hwnd, IDC_CANCEL, app.IsClassicUI () ? WS_EX_STATICEDGE : 0, WS_EX_STATICEDGE, GWL_EXSTYLE);
+			_r_wnd_addstyle (hwnd, IDC_CLOSE, app.IsClassicUI () ? WS_EX_STATICEDGE : 0, WS_EX_STATICEDGE, GWL_EXSTYLE);
 
 			PostMessage (hwnd, WM_COMMAND, MAKEWPARAM (IDC_FULLSCREEN_CB, CBN_SELCHANGE), 0);
 			PostMessage (hwnd, WM_COMMAND, MAKEWPARAM (IDC_WINDOW_CB, CBN_SELCHANGE), 0);
@@ -1005,7 +1045,7 @@ INT_PTR CALLBACK HotkeysProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 				}
 
 				case IDCANCEL: // process Esc key
-				case IDC_CANCEL:
+				case IDC_CLOSE:
 				{
 					_app_hotkeyinit (app.GetHWND ());
 					EndDialog (hwnd, 0);
@@ -1034,8 +1074,8 @@ void _app_initdropdownmenu (HMENU hmenu, bool is_button)
 	app.LocaleMenu (hmenu, IDS_IMAGEFORMAT, FORMAT_MENU, true, nullptr);
 	app.LocaleMenu (hmenu, IDS_HOTKEYS, IDM_HOTKEYS, false, is_button ? L"...\tF3" : L"...");
 
-	app.LocaleMenu (hmenu, 0, IDM_FILENAME_INDEX, false, _r_fmt (L"1) " FILE_FORMAT_NAME_FORMAT L".jpg", app.ConfigGet (L"FilenamePrefix", FILE_FORMAT_NAME_PREFIX).GetString (), 1));
-	app.LocaleMenu (hmenu, 0, IDM_FILENAME_DATE, false, L"2) " FILE_FORMAT_DATE_FORMAT_1 L" " FILE_FORMAT_DATE_FORMAT_2 L".jpg");
+	app.LocaleMenu (hmenu, 0, IDM_FILENAME_INDEX, false, _r_fmt (FILE_FORMAT_NAME_FORMAT L".%s", app.ConfigGet (L"FilenamePrefix", FILE_FORMAT_NAME_PREFIX).GetString (), 1, formats.at (_app_getimageformat ()).ext));
+	app.LocaleMenu (hmenu, 0, IDM_FILENAME_DATE, false, _r_fmt (FILE_FORMAT_DATE_FORMAT_1 L" " FILE_FORMAT_DATE_FORMAT_2 L".%s", formats.at (_app_getimageformat ()).ext));
 
 	// initialize formats
 	{
