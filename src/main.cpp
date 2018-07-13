@@ -407,7 +407,10 @@ void _app_takeshot (HWND hwnd, EnumScreenshot mode)
 	if (is_hideme)
 	{
 		if (is_windowdisplayed)
-			ShowWindow (myWindow, SW_HIDE);
+		{
+			GetWindowRect (myWindow, &prev_rect);
+			SetWindowPos (myWindow, nullptr, -GetSystemMetrics (SM_CXVIRTUALSCREEN), -GetSystemMetrics (SM_CYVIRTUALSCREEN), 0, 0, SWP_HIDEWINDOW | SWP_NOSIZE | SWP_NOZORDER | SWP_NOOWNERZORDER | SWP_NOCOPYBITS | SWP_DEFERERASE | SWP_NOSENDCHANGING);
+		}
 
 		app.TrayToggle (myWindow, UID, nullptr, false);
 	}
@@ -513,7 +516,7 @@ void _app_takeshot (HWND hwnd, EnumScreenshot mode)
 
 			if (config.hregion)
 			{
-				SetWindowPos (config.hregion, HWND_TOPMOST, 0, 0, GetSystemMetrics (SM_CXVIRTUALSCREEN), GetSystemMetrics (SM_CYVIRTUALSCREEN), SWP_SHOWWINDOW | SWP_NOCOPYBITS | SWP_FRAMECHANGED | SWP_NOSENDCHANGING);
+				SetWindowPos (config.hregion, HWND_TOPMOST, 0, 0, GetSystemMetrics (SM_CXVIRTUALSCREEN), GetSystemMetrics (SM_CYVIRTUALSCREEN), SWP_SHOWWINDOW | SWP_DEFERERASE | SWP_NOSENDCHANGING);
 				WaitForSingleObjectEx (config.hregion, INFINITE, FALSE);
 			}
 			else
@@ -526,7 +529,7 @@ void _app_takeshot (HWND hwnd, EnumScreenshot mode)
 	if (is_hideme)
 	{
 		if (is_windowdisplayed)
-			ShowWindow (myWindow, SW_SHOWNA);
+			SetWindowPos (myWindow, nullptr, prev_rect.left, prev_rect.top, _R_RECT_WIDTH (&prev_rect), _R_RECT_HEIGHT (&prev_rect), SWP_SHOWWINDOW | SWP_NOACTIVATE | SWP_FRAMECHANGED | SWP_NOZORDER | SWP_NOCOPYBITS | SWP_NOOWNERZORDER | SWP_NOSENDCHANGING);
 
 		app.TrayToggle (myWindow, UID, nullptr, true);
 		app.TraySetInfo (myWindow, UID, nullptr, nullptr, APP_NAME);
@@ -1149,7 +1152,7 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 				// region class
 				wcex.lpszClassName = REGION_CLASS_DLG;
 				wcex.lpfnWndProc = &RegionProc;
-				wcex.hbrBackground = (HBRUSH)GetStockObject (DKGRAY_BRUSH);
+				//wcex.hbrBackground = (HBRUSH)GetStockObject (DKGRAY_BRUSH);
 				wcex.hCursor = LoadCursor (app.GetHINSTANCE (), MAKEINTRESOURCE (IDI_MAIN));
 
 				RegisterClassEx (&wcex);
