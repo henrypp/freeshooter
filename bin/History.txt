@@ -1,5 +1,5 @@
 v2.0.3 (13 July 2018)
-- added include all overlapped windows in result image in window mode
+- added include all overlapped windows in result image for window mode
 - added shadow for window screenshot (issue #13)
 - added global hotkeys indicators for tray menu
 - new region selection window
