@@ -54,7 +54,7 @@
 #define IDC_REGION_CB 131
 
 #define IDC_SAVE 132
-#define IDC_CANCEL 133
+#define IDC_CLOSE 133
 
 // Main Menu
 #define IDM_TAKE_FULLSCREEN 134
