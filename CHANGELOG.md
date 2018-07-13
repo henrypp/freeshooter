@@ -1,9 +1,12 @@
-v2.0.3 (x July 2018)
+v2.0.3 (13 July 2018)
 - added include all overlapped windows in result image in window mode
 - added shadow for window screenshot (issue #13)
+- added global hotkeys indicators for tray menu
+- new region selection window
 - improved clear window background
+- changed shutter sound
 - fixed taking shots of uipi windows
-- cosmetic fixes
+- fixed sound synchronization
 - fixed ui bugs
 - fixed bugs
 
