@@ -173,11 +173,9 @@ HBITMAP _app_createbitmap (HDC hdc, LONG width, LONG height)
 	bmi.bmiHeader.biPlanes = 1;
 	bmi.bmiHeader.biCompression = BI_RGB;
 	bmi.bmiHeader.biBitCount = 32; // four 8-bit components
-	bmi.bmiHeader.biSizeImage = (width * height) * 4;
+	bmi.bmiHeader.biSizeImage = (width * height) * 4; // rgba
 
-	//LPBYTE lpCapture = nullptr;
-
-	return CreateDIBSection (hdc, &bmi, DIB_RGB_COLORS, nullptr /*(LPVOID*)&lpCapture*/, nullptr, 0);
+	return CreateDIBSection (hdc, &bmi, DIB_RGB_COLORS, nullptr, nullptr, 0);
 }
 
 void _app_dofinishjob (HBITMAP hbitmap, INT width, INT height)
