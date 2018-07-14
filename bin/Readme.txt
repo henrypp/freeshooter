@@ -7,7 +7,7 @@ It is my first application, written in AutoIt3 and now rewritten on C++. I love 
 
 Features:
 - Simple interface without useless features
-- Take screenshots including all overlapped windosw
+- Take screenshots including all overlapped windows
 - Clear window transparency
 - Disable Aero effect for captured window (vista+)
 - Free and open source
