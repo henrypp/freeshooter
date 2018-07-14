@@ -325,7 +325,7 @@ bool _app_iswndoverlapped (HWND hwnd, LPRECT lprect)
 	return false;
 }
 
-BOOL CalculateChildsRect (HWND hwnd, LPARAM lparam)
+BOOL CALLBACK CalculateChildsRect (HWND hwnd, LPARAM lparam)
 {
 	ENUM_INFO* enum_info = (ENUM_INFO*)lparam;
 
