@@ -43,7 +43,7 @@ size_t _app_getimageformat ()
 	const INT size = (INT)formats.size ();
 	const INT current = app.ConfigGet (L"ImageFormat", FormatJpeg).AsInt ();
 
-	return (max (min (current, size - 1), 0));
+	return size_t (max (min (current, size - 1), 0));
 }
 
 rstring _app_getdirectory ()
@@ -382,7 +382,8 @@ void _app_getshadowsize (PINT px, PINT py)
 	if (!px || !py)
 		return;
 
-	INT shadowX, shadowY;
+	INT shadowX = 0, shadowY = 0;
+
 	const INT fallbackX = GetSystemMetrics (SM_CXSIZEFRAME) * 2;
 	const INT fallbackY = GetSystemMetrics (SM_CYSIZEFRAME) * 2;
 
@@ -555,24 +556,27 @@ rstring _app_key2string (UINT key)
 {
 	rstring result;
 
-	if ((HIBYTE (key) & HOTKEYF_CONTROL) != 0)
+	const UINT vk_code = LOBYTE (key);
+	const UINT modifiers = HIBYTE (key);
+
+	if ((modifiers & HOTKEYF_CONTROL) != 0)
 		result.Append (L"Ctrl+");
 
-	if ((HIBYTE (key) & HOTKEYF_ALT) != 0)
+	if ((modifiers & HOTKEYF_ALT) != 0)
 		result.Append (L"Alt+");
 
-	if ((HIBYTE (key) & HOTKEYF_SHIFT) != 0)
+	if ((modifiers & HOTKEYF_SHIFT) != 0)
 		result.Append (L"Shift+");
 
 	WCHAR name[64] = {0};
 
-	if (LOBYTE (key) == VK_SNAPSHOT)
+	if (vk_code == VK_SNAPSHOT)
 	{
 		StringCchCopy (name, _countof (name), L"Prnt scrn");
 	}
 	else
 	{
-		const UINT scan_code = MapVirtualKey (LOBYTE (key), MAPVK_VK_TO_VSC);
+		const UINT scan_code = MapVirtualKey (vk_code, MAPVK_VK_TO_VSC);
 		GetKeyNameText ((scan_code << 16), name, _countof (name));
 	}
 
@@ -648,7 +652,7 @@ bool _app_hotkeyinit (HWND hwnd, HWND hwnd_hotkey)
 	return !(is_nofullscreen || is_nowindow || is_noregion);
 }
 
-HPAINTBUFFER beginpaint (HDC hdc, LPRECT lprect, HDC* lphdc)
+HPAINTBUFFER _app_beginbufferedpaint (HDC hdc, LPRECT lprect, HDC* lphdc)
 {
 	*lphdc = nullptr;
 
@@ -661,7 +665,7 @@ HPAINTBUFFER beginpaint (HDC hdc, LPRECT lprect, HDC* lphdc)
 
 	if (hlib)
 	{
-		typedef HPAINTBUFFER (WINAPI *BBP) (HDC, const RECT*, BP_BUFFERFORMAT, BP_PAINTPARAMS*, HDC *); // BeginBufferedPaint
+		typedef HPAINTBUFFER (WINAPI *BBP) (HDC, const LPRECT, BP_BUFFERFORMAT, PBP_PAINTPARAMS, HDC *); // BeginBufferedPaint
 		const BBP _BeginBufferedPaint = (BBP)GetProcAddress (hlib, "BeginBufferedPaint");
 
 		if (_BeginBufferedPaint)
@@ -678,11 +682,8 @@ HPAINTBUFFER beginpaint (HDC hdc, LPRECT lprect, HDC* lphdc)
 	return nullptr;
 }
 
-VOID endpaint (HPAINTBUFFER hpbuff)
+VOID _app_endbufferedpaint (HPAINTBUFFER hpbuff)
 {
-	if (!hpbuff)
-		return;
-
 	const HINSTANCE hlib = GetModuleHandle (L"uxtheme.dll");
 
 	if (hlib)
@@ -697,21 +698,13 @@ VOID endpaint (HPAINTBUFFER hpbuff)
 
 LRESULT CALLBACK RegionProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 {
-	static HDC hcapture = nullptr;
-	static HDC hcapture_mask = nullptr;
-
-	static HBITMAP hbitmap = nullptr;
-	static HBITMAP hbitmap_mask = nullptr;
-
-	static HPEN hpen = nullptr;
-	static HPEN hpen_draw = nullptr;
-
-	static RECT wndRect = {0};
-
-	static POINT ptStart = {0};
-	static POINT ptEnd = {0};
-
 	static bool fDraw = false;
+
+	static HDC hcapture = nullptr, hcapture_mask = nullptr;
+	static HBITMAP hbitmap = nullptr, hbitmap_mask = nullptr;
+	static HPEN hpen = nullptr, hpen_draw = nullptr;
+	static RECT wndRect = {0};
+	static POINT ptStart = {0}, ptEnd = {0};
 
 	switch (msg)
 	{
@@ -764,8 +757,6 @@ LRESULT CALLBACK RegionProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 				}
 
 				ReleaseDC (nullptr, hdc);
-
-				InvalidateRect (hwnd, nullptr, TRUE);
 			}
 
 			break;
@@ -817,9 +808,8 @@ LRESULT CALLBACK RegionProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 		}
 
 		case WM_LBUTTONDOWN:
-		case WM_RBUTTONDOWN:
 		{
-			if (!fDraw && (msg == WM_LBUTTONDOWN))
+			if (!fDraw)
 			{
 				fDraw = true;
 
@@ -867,17 +857,7 @@ LRESULT CALLBACK RegionProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 					}
 
 					ReleaseDC (nullptr, hdc);
-
-					if (msg == WM_LBUTTONDOWN)
-					{
-						DestroyWindow (hwnd);
-					}
-					else
-					{
-						ptStart.x = ptStart.y = ptEnd.x = ptEnd.y = 0;
-
-						InvalidateRect (hwnd, nullptr, TRUE);
-					}
+					DestroyWindow (hwnd);
 				}
 			}
 
@@ -915,42 +895,41 @@ LRESULT CALLBACK RegionProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 			POINT pt = {0};
 			GetCursorPos (&pt);
 
-			HPAINTBUFFER hdpaint = beginpaint (hdc, &wndRect, &hdc_buffered);
+			const HPAINTBUFFER hdpaint = _app_beginbufferedpaint (hdc, &wndRect, &hdc_buffered);
 
 			BitBlt (hdc_buffered, wndRect.left, wndRect.top, _R_RECT_WIDTH (&wndRect), _R_RECT_HEIGHT (&wndRect), hcapture_mask, wndRect.left, wndRect.top, SRCCOPY);
 
-			const HPEN old_pen = (HPEN)SelectObject (hdc_buffered, fDraw ? hpen_draw : hpen);
+			const HGDIOBJ old_pen = SelectObject (hdc_buffered, fDraw ? hpen_draw : hpen);
 			const HGDIOBJ old_brush = SelectObject (hdc_buffered, GetStockObject (NULL_BRUSH));
 
-			if (fDraw && pt.x != ptStart.x && pt.y != ptStart.y)
+			if (fDraw && (pt.x != ptStart.x) && (pt.y != ptStart.y))
 			{
 				// draw region rectangle
 				RECT rectTarget = {0};
 
 				rectTarget.left = min (ptStart.x, pt.x);
 				rectTarget.top = min (ptStart.y, pt.y);
-				rectTarget.right = rectTarget.left + max (ptStart.x, pt.x) - min (ptStart.x, pt.x);
-				rectTarget.bottom = rectTarget.top + max (ptStart.y, pt.y) - min (ptStart.y, pt.y);
+				rectTarget.right = max (ptStart.x, pt.x);
+				rectTarget.bottom = max (ptStart.y, pt.y);
 
 				BitBlt (hdc_buffered, rectTarget.left, rectTarget.top, _R_RECT_WIDTH (&rectTarget), _R_RECT_HEIGHT (&rectTarget), hcapture, rectTarget.left, rectTarget.top, SRCCOPY);
 				Rectangle (hdc_buffered, ptStart.x, ptStart.y, pt.x, pt.y);
 			}
 			else
 			{
-				LPRECT lpcrosshairRect = &wndRect;
-
 				// draw cursor crosshair
-				MoveToEx (hdc_buffered, pt.x, lpcrosshairRect->top, nullptr);
-				LineTo (hdc_buffered, pt.x, _R_RECT_HEIGHT (lpcrosshairRect));
+				MoveToEx (hdc_buffered, pt.x, wndRect.top, nullptr);
+				LineTo (hdc_buffered, pt.x, _R_RECT_HEIGHT (&wndRect));
 
-				MoveToEx (hdc_buffered, lpcrosshairRect->left, pt.y, nullptr);
-				LineTo (hdc_buffered, _R_RECT_WIDTH (lpcrosshairRect), pt.y);
+				MoveToEx (hdc_buffered, wndRect.left, pt.y, nullptr);
+				LineTo (hdc_buffered, _R_RECT_WIDTH (&wndRect), pt.y);
 			}
 
 			SelectObject (hdc_buffered, old_brush);
 			SelectObject (hdc_buffered, old_pen);
 
-			endpaint (hdpaint);
+			if (hdpaint)
+				_app_endbufferedpaint (hdpaint);
 
 			return TRUE;
 		}
@@ -982,6 +961,38 @@ LRESULT CALLBACK RegionProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 	}
 
 	return DefWindowProc (hwnd, msg, wparam, lparam);
+}
+
+void generate_keys_array (UINT* keys, size_t count)
+{
+	static const UINT predefined_keys[] = {
+		VK_BACK,
+		VK_TAB,
+		VK_RETURN,
+		VK_SPACE,
+		VK_DELETE,
+		VK_SNAPSHOT,
+	};
+
+	size_t idx = 0;
+
+	for (UINT i = 'A'; i <= 'Z'; i++)
+		keys[idx++] = MAKEWORD (i, 0);
+
+	for (UINT i = '0'; i <= '9'; i++)
+		keys[idx++] = MAKEWORD (i, 0);
+
+	for (UINT i = VK_F1; i <= VK_F12; i++)
+	{
+		keys[idx++] = MAKEWORD (i, 0);
+	}
+
+	for (UINT i = 0; i < _countof (predefined_keys); i++)
+	{
+		keys[idx++] = MAKEWORD (predefined_keys[i], 0);
+	}
+
+	keys[idx] = 0;
 }
 
 INT_PTR CALLBACK HotkeysProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
@@ -1028,46 +1039,36 @@ INT_PTR CALLBACK HotkeysProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 			CheckDlgButton (hwnd, IDC_REGION_CTRL, ((HIBYTE (region_code) & HOTKEYF_CONTROL) != 0) ? BST_CHECKED : BST_UNCHECKED);
 			CheckDlgButton (hwnd, IDC_REGION_ALT, ((HIBYTE (region_code) & HOTKEYF_ALT) != 0) ? BST_CHECKED : BST_UNCHECKED);
 
-			static const UINT keys[] = {
-				VK_SNAPSHOT,
-				VK_SPACE,
-				VK_RETURN,
-				VK_F1,
-				VK_F2,
-				VK_F3,
-				VK_F4,
-				VK_F5,
-				VK_F6,
-				VK_F7,
-				VK_F8,
-				VK_F9,
-				VK_F10,
-				VK_F11,
-				VK_F12
-			};
+			static UINT keys[64] = {0};
+			generate_keys_array (keys, _countof (keys));
 
-			for (INT i = 0; i < _countof (keys); i++)
+			for (UINT i = 0; i < _countof (keys); i++)
 			{
-				WCHAR name[64] = {0};
-				StringCchCopy (name, _countof (name), _app_key2string (MAKEWORD (keys[i], 0)));
+				const UINT key_code = keys[i];
+
+				if (!key_code)
+					break;
+
+				WCHAR key_name[64] = {0};
+				StringCchCopy (key_name, _countof (key_name), _app_key2string (MAKEWORD (key_code, 0)));
 
 				const UINT idx = i + 1;
 
-				SendDlgItemMessage (hwnd, IDC_FULLSCREEN_CB, CB_INSERTSTRING, idx, (LPARAM)name);
-				SendDlgItemMessage (hwnd, IDC_WINDOW_CB, CB_INSERTSTRING, idx, (LPARAM)name);
-				SendDlgItemMessage (hwnd, IDC_REGION_CB, CB_INSERTSTRING, idx, (LPARAM)name);
+				SendDlgItemMessage (hwnd, IDC_FULLSCREEN_CB, CB_INSERTSTRING, idx, (LPARAM)key_name);
+				SendDlgItemMessage (hwnd, IDC_WINDOW_CB, CB_INSERTSTRING, idx, (LPARAM)key_name);
+				SendDlgItemMessage (hwnd, IDC_REGION_CB, CB_INSERTSTRING, idx, (LPARAM)key_name);
 
-				SendDlgItemMessage (hwnd, IDC_FULLSCREEN_CB, CB_SETITEMDATA, idx, (LPARAM)keys[i]);
-				SendDlgItemMessage (hwnd, IDC_WINDOW_CB, CB_SETITEMDATA, idx, (LPARAM)keys[i]);
-				SendDlgItemMessage (hwnd, IDC_REGION_CB, CB_SETITEMDATA, idx, (LPARAM)keys[i]);
+				SendDlgItemMessage (hwnd, IDC_FULLSCREEN_CB, CB_SETITEMDATA, idx, (LPARAM)key_code);
+				SendDlgItemMessage (hwnd, IDC_WINDOW_CB, CB_SETITEMDATA, idx, (LPARAM)key_code);
+				SendDlgItemMessage (hwnd, IDC_REGION_CB, CB_SETITEMDATA, idx, (LPARAM)key_code);
 
-				if (fullscreen_allowed && LOBYTE (fullscreen_code) == keys[i])
+				if (fullscreen_allowed && LOBYTE (fullscreen_code) == key_code)
 					SendDlgItemMessage (hwnd, IDC_FULLSCREEN_CB, CB_SETCURSEL, idx, 0);
 
-				if (window_allowed && LOBYTE (window_code) == keys[i])
+				if (window_allowed && LOBYTE (window_code) == key_code)
 					SendDlgItemMessage (hwnd, IDC_WINDOW_CB, CB_SETCURSEL, idx, 0);
 
-				if (region_allowed && LOBYTE (region_code) == keys[i])
+				if (region_allowed && LOBYTE (region_code) == key_code)
 					SendDlgItemMessage (hwnd, IDC_REGION_CB, CB_SETCURSEL, idx, 0);
 			}
 
