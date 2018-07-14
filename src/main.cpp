@@ -186,9 +186,9 @@ void _app_dofinishjob (HBITMAP hbitmap, INT width, INT height)
 		{
 			if (EmptyClipboard ())
 			{
-				HBITMAP hbitmap_copy = (HBITMAP)CopyImage (hbitmap, IMAGE_BITMAP, width, height, 0);
+				//HBITMAP hbitmap_copy = (HBITMAP)CopyImage (hbitmap, IMAGE_BITMAP, width, height, 0);
 
-				SetClipboardData (CF_BITMAP, hbitmap_copy);
+				SetClipboardData (CF_BITMAP, hbitmap);
 			}
 
 			CloseClipboard ();
