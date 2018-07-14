@@ -819,7 +819,7 @@ LRESULT CALLBACK RegionProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 		case WM_LBUTTONDOWN:
 		case WM_RBUTTONDOWN:
 		{
-			if (!fDraw)
+			if (!fDraw && (msg == WM_LBUTTONDOWN))
 			{
 				fDraw = true;
 
