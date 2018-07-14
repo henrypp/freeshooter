@@ -817,6 +817,7 @@ LRESULT CALLBACK RegionProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 		}
 
 		case WM_LBUTTONDOWN:
+		case WM_RBUTTONDOWN:
 		{
 			if (!fDraw)
 			{
@@ -866,7 +867,17 @@ LRESULT CALLBACK RegionProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 					}
 
 					ReleaseDC (nullptr, hdc);
-					DestroyWindow (hwnd);
+
+					if (msg == WM_LBUTTONDOWN)
+					{
+						DestroyWindow (hwnd);
+					}
+					else
+					{
+						ptStart.x = ptStart.y = ptEnd.x = ptEnd.y = 0;
+
+						InvalidateRect (hwnd, nullptr, TRUE);
+					}
 				}
 			}
 
