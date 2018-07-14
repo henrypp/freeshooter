@@ -19,6 +19,8 @@ std::vector<IMAGE_FORMAT> formats;
 
 rapp app (APP_NAME, APP_NAME_SHORT, APP_VERSION, APP_COPYRIGHT);
 
+INT_PTR CALLBACK HotkeysProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam);
+
 //void dump_wnd_info (HWND hwnd)
 //{
 //	WCHAR title[100] = {0};
@@ -279,7 +281,7 @@ void _app_getwindowrect (HWND hwnd, LPRECT lprect)
 
 bool _app_isnormalwindow (HWND hwnd)
 {
-	return hwnd && IsWindowVisible (hwnd) && !IsIconic (hwnd) && hwnd != GetShellWindow () && hwnd != GetDesktopWindow ();
+	return hwnd && IsWindow (hwnd) && IsWindowVisible (hwnd) && !IsIconic (hwnd) && hwnd != GetShellWindow () && hwnd != GetDesktopWindow ();
 }
 
 int _app_getwindowzorder (HWND hwnd)
@@ -356,6 +358,23 @@ BOOL CALLBACK CalculateChildsRect (HWND hwnd, LPARAM lparam)
 		enum_info->lprect->right += (rc.right - enum_info->lprect->right);
 
 	return TRUE;
+}
+
+BOOL CALLBACK FindTopWindow (HWND hwnd, LPARAM lparam)
+{
+	HWND* lpresult = (HWND*)lparam;
+
+	if (
+		!_app_isnormalwindow (hwnd) || // exclude shell windows
+		((GetWindowLongPtr (hwnd, GWL_STYLE) & WS_SYSMENU) == 0) // exclude controls
+		)
+	{
+		return TRUE;
+	}
+
+	*lpresult = hwnd;
+
+	return FALSE;
 }
 
 void _app_getshadowsize (PINT px, PINT py)
@@ -560,7 +579,7 @@ rstring _app_key2string (UINT key)
 	return result.Append (name);
 }
 
-void _app_hotkeyinit (HWND hwnd)
+bool _app_hotkeyinit (HWND hwnd, HWND hwnd_hotkey)
 {
 	bool is_nofullscreen = false;
 	bool is_nowindow = false;
@@ -615,8 +634,18 @@ void _app_hotkeyinit (HWND hwnd)
 		if (is_noregion)
 			buffer.AppendFormat (L"%s [%s]\r\n", app.LocaleString (IDS_MODE_REGION, nullptr).GetString (), _app_key2string (hk_region).GetString ());
 
-		app.ConfirmMessage (hwnd, app.LocaleString (IDS_WARNING_HOTKEYS, nullptr), buffer.Trim (L"\r\n"), L"IsWarnHotkeys");
+		if (_r_msg (hwnd_hotkey ? hwnd_hotkey : hwnd, MB_YESNO | MB_ICONWARNING | MB_TOPMOST, APP_NAME, app.LocaleString (IDS_WARNING_HOTKEYS, nullptr), buffer.Trim (L"\r\n")) == IDYES)
+		{
+			if (!hwnd_hotkey)
+				DialogBox (nullptr, MAKEINTRESOURCE (IDD_HOTKEYS), hwnd, &HotkeysProc);
+		}
+		else
+		{
+			return true;
+		}
 	}
+
+	return !(is_nofullscreen || is_nowindow || is_noregion);
 }
 
 HPAINTBUFFER beginpaint (HDC hdc, LPRECT lprect, HDC* lphdc)
@@ -1124,15 +1153,16 @@ INT_PTR CALLBACK HotkeysProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 						app.ConfigSet (L"HotkeyRegion", (DWORD)MAKEWORD (SendDlgItemMessage (hwnd, IDC_REGION_CB, CB_GETITEMDATA, (WPARAM)region_idx, 0), modifiers));
 					}
 
+					if (!_app_hotkeyinit (app.GetHWND (), hwnd))
+						break;
+
 					// without break;
 				}
 
 				case IDCANCEL: // process Esc key
 				case IDC_CLOSE:
 				{
-					_app_hotkeyinit (app.GetHWND ());
 					EndDialog (hwnd, 0);
-
 					break;
 				}
 			}
@@ -1269,7 +1299,7 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 				}
 			}
 
-			_app_hotkeyinit (hwnd);
+			_app_hotkeyinit (hwnd, nullptr);
 
 			break;
 		}
@@ -1688,18 +1718,18 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 				case IDC_MODE_WINDOW:
 				case IDC_MODE_REGION:
 				{
-					EnumScreenshot val;
+					EnumScreenshot mode;
 
 					if (LOWORD (wparam) == IDC_MODE_WINDOW)
-						val = ScreenshotWindow;
+						mode = ScreenshotWindow;
 
 					else if (LOWORD (wparam) == IDC_MODE_REGION)
+						mode = ScreenshotRegion;
 
-						val = ScreenshotRegion;
 					else
-						val = ScreenshotFullscreen;
+						mode = ScreenshotFullscreen;
 
-					app.ConfigSet (L"Mode", (LONGLONG)val);
+					app.ConfigSet (L"Mode", (LONGLONG)mode);
 					break;
 				}
 
@@ -1756,6 +1786,14 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 					else
 					{
 						mode = (EnumScreenshot)app.ConfigGet (L"Mode", 0).AsUint ();
+					}
+
+					if (mode == ScreenshotWindow)
+					{
+						EnumWindows (&FindTopWindow, (LPARAM)&hwindow);
+
+						if (hwindow)
+							_r_wnd_toggle (hwindow, true);
 					}
 
 					_app_takeshot (hwindow, mode);
