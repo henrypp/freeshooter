@@ -623,6 +623,53 @@ void _app_hotkeyinit (HWND hwnd)
 	}
 }
 
+HPAINTBUFFER beginpaint (HDC hdc, LPRECT lprect, HDC* lphdc)
+{
+	*lphdc = nullptr;
+
+	BP_PAINTPARAMS bpp = {0};
+
+	bpp.cbSize = sizeof (bpp);
+	bpp.dwFlags = BPPF_NOCLIP;
+
+	const HINSTANCE hlib = GetModuleHandle (L"uxtheme.dll");
+
+	if (hlib)
+	{
+		typedef HPAINTBUFFER (WINAPI *BBP) (HDC, const RECT*, BP_BUFFERFORMAT, BP_PAINTPARAMS*, HDC *); // BeginBufferedPaint
+		const BBP _BeginBufferedPaint = (BBP)GetProcAddress (hlib, "BeginBufferedPaint");
+
+		if (_BeginBufferedPaint)
+		{
+			HPAINTBUFFER hdpaint = _BeginBufferedPaint (hdc, lprect, BPBF_TOPDOWNDIB, &bpp, lphdc);
+
+			if (hdpaint)
+				return hdpaint;
+		}
+	}
+
+	*lphdc = hdc;
+
+	return nullptr;
+}
+
+VOID endpaint (HPAINTBUFFER hpbuff)
+{
+	if (!hpbuff)
+		return;
+
+	const HINSTANCE hlib = GetModuleHandle (L"uxtheme.dll");
+
+	if (hlib)
+	{
+		typedef HRESULT (WINAPI *EBP) (HPAINTBUFFER, BOOL); // EndBufferedPaint
+		const EBP _EndBufferedPaint = (EBP)GetProcAddress (hlib, "EndBufferedPaint");
+
+		if (_EndBufferedPaint)
+			_EndBufferedPaint (hpbuff, TRUE);
+	}
+}
+
 LRESULT CALLBACK RegionProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 {
 	static HDC hcapture = nullptr;
@@ -661,13 +708,13 @@ LRESULT CALLBACK RegionProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 				hcapture = CreateCompatibleDC (hdc);
 				hcapture_mask = CreateCompatibleDC (hdc);
 
-				hbitmap = _app_createbitmap (hdc, wndRect.right, wndRect.bottom);
-				hbitmap_mask = _app_createbitmap (hdc, wndRect.right, wndRect.bottom);
+				hbitmap = _app_createbitmap (hdc, _R_RECT_WIDTH (&wndRect), _R_RECT_HEIGHT (&wndRect));
+				hbitmap_mask = _app_createbitmap (hdc, _R_RECT_WIDTH (&wndRect), _R_RECT_HEIGHT (&wndRect));
 
 				if (hbitmap && hcapture)
 				{
 					SelectObject (hcapture, hbitmap);
-					BitBlt (hcapture, wndRect.left, wndRect.top, wndRect.right, wndRect.bottom, hdc, wndRect.left, wndRect.top, SRCCOPY);
+					BitBlt (hcapture, wndRect.left, wndRect.top, _R_RECT_WIDTH (&wndRect), _R_RECT_HEIGHT (&wndRect), hdc, wndRect.left, wndRect.top, SRCCOPY);
 				}
 
 				if (hbitmap_mask && hcapture_mask)
@@ -685,13 +732,15 @@ LRESULT CALLBACK RegionProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 						bf.BlendOp = AC_SRC_OVER;
 						bf.SourceConstantAlpha = REGION_BLEND;
 
-						AlphaBlend (hdc, wndRect.left, wndRect.top, wndRect.right, wndRect.bottom, hcapture_mask, wndRect.left, wndRect.top, wndRect.right, wndRect.bottom, bf);
+						AlphaBlend (hdc, wndRect.left, wndRect.top, _R_RECT_WIDTH (&wndRect), _R_RECT_HEIGHT (&wndRect), hcapture_mask, wndRect.left, wndRect.top, wndRect.right, wndRect.bottom, bf);
 					}
 
-					BitBlt (hcapture_mask, wndRect.left, wndRect.top, wndRect.right, wndRect.bottom, hdc, wndRect.left, wndRect.top, SRCCOPY);
+					BitBlt (hcapture_mask, wndRect.left, wndRect.top, _R_RECT_WIDTH (&wndRect), _R_RECT_HEIGHT (&wndRect), hdc, wndRect.left, wndRect.top, SRCCOPY);
 				}
 
 				ReleaseDC (nullptr, hdc);
+
+				InvalidateRect (hwnd, nullptr, TRUE);
 			}
 
 			break;
@@ -825,35 +874,47 @@ LRESULT CALLBACK RegionProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 		case WM_ERASEBKGND:
 		{
 			const HDC hdc = (HDC)wparam;
+			HDC hdc_buffered = nullptr;
 
 			POINT pt = {0};
 			GetCursorPos (&pt);
 
-			BitBlt (hdc, wndRect.left, wndRect.top, _R_RECT_WIDTH (&wndRect), _R_RECT_HEIGHT (&wndRect), hcapture_mask, wndRect.left, wndRect.top, SRCCOPY);
+			HPAINTBUFFER hdpaint = beginpaint (hdc, &wndRect, &hdc_buffered);
 
-			const HPEN old_pen = (HPEN)SelectObject (hdc, fDraw ? hpen_draw : hpen);
-			const HGDIOBJ old_brush = SelectObject (hdc, GetStockObject (NULL_BRUSH));
+			BitBlt (hdc_buffered, wndRect.left, wndRect.top, _R_RECT_WIDTH (&wndRect), _R_RECT_HEIGHT (&wndRect), hcapture_mask, wndRect.left, wndRect.top, SRCCOPY);
+
+			const HPEN old_pen = (HPEN)SelectObject (hdc_buffered, fDraw ? hpen_draw : hpen);
+			const HGDIOBJ old_brush = SelectObject (hdc_buffered, GetStockObject (NULL_BRUSH));
 
 			if (fDraw && pt.x != ptStart.x && pt.y != ptStart.y)
 			{
 				// draw region rectangle
-				BitBlt (hdc, min (ptStart.x, pt.x), min (ptStart.y, pt.y), max (ptStart.x, pt.x) - min (ptStart.x, pt.x), max (ptStart.y, pt.y) - min (ptStart.y, pt.y), hcapture, min (ptStart.x, pt.x), min (ptStart.y, pt.y), SRCCOPY);
-				Rectangle (hdc, ptStart.x, ptStart.y, pt.x, pt.y);
+				RECT rectTarget = {0};
+
+				rectTarget.left = min (ptStart.x, pt.x);
+				rectTarget.top = min (ptStart.y, pt.y);
+				rectTarget.right = rectTarget.left + max (ptStart.x, pt.x) - min (ptStart.x, pt.x);
+				rectTarget.bottom = rectTarget.top + max (ptStart.y, pt.y) - min (ptStart.y, pt.y);
+
+				BitBlt (hdc_buffered, rectTarget.left, rectTarget.top, _R_RECT_WIDTH (&rectTarget), _R_RECT_HEIGHT (&rectTarget), hcapture, rectTarget.left, rectTarget.top, SRCCOPY);
+				Rectangle (hdc_buffered, ptStart.x, ptStart.y, pt.x, pt.y);
 			}
 			else
 			{
 				LPRECT lpcrosshairRect = &wndRect;
 
 				// draw cursor crosshair
-				MoveToEx (hdc, pt.x, lpcrosshairRect->top, nullptr);
-				LineTo (hdc, pt.x, _R_RECT_HEIGHT (lpcrosshairRect));
+				MoveToEx (hdc_buffered, pt.x, lpcrosshairRect->top, nullptr);
+				LineTo (hdc_buffered, pt.x, _R_RECT_HEIGHT (lpcrosshairRect));
 
-				MoveToEx (hdc, lpcrosshairRect->left, pt.y, nullptr);
-				LineTo (hdc, _R_RECT_WIDTH (lpcrosshairRect), pt.y);
+				MoveToEx (hdc_buffered, lpcrosshairRect->left, pt.y, nullptr);
+				LineTo (hdc_buffered, _R_RECT_WIDTH (lpcrosshairRect), pt.y);
 			}
 
-			SelectObject (hdc, old_brush);
-			SelectObject (hdc, old_pen);
+			SelectObject (hdc_buffered, old_brush);
+			SelectObject (hdc_buffered, old_pen);
+
+			endpaint (hdpaint);
 
 			return TRUE;
 		}
