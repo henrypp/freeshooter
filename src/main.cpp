@@ -114,24 +114,24 @@ bool GetEncoderClsid (LPCWSTR exif, CLSID *pClsid)
 
 	if (size)
 	{
-		Gdiplus::ImageCodecInfo *pImageCodecInfo = (Gdiplus::ImageCodecInfo*)new BYTE[size];
+		Gdiplus::ImageCodecInfo* pImageCodecInfo = (Gdiplus::ImageCodecInfo*)malloc(size);
 
 		if (pImageCodecInfo)
 		{
-			GetImageEncoders (num, size, pImageCodecInfo);
+			Gdiplus::GetImageEncoders (num, size, pImageCodecInfo);
 
-			for (unsigned int j = 0; j < num; ++j)
+			for (UINT i = 0; i < num; ++i)
 			{
-				if (_wcsnicmp (pImageCodecInfo[j].MimeType, exif, len) == 0)
+				if (_wcsnicmp (pImageCodecInfo[i].MimeType, exif, len) == 0)
 				{
-					*pClsid = pImageCodecInfo[j].Clsid;
-					delete[] pImageCodecInfo;
+					*pClsid = pImageCodecInfo[i].Clsid;
+					free(pImageCodecInfo);
 
 					return true;
 				}
 			}
 
-			delete[] pImageCodecInfo;
+			free (pImageCodecInfo);
 		}
 	}
 
