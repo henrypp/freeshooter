@@ -8,10 +8,14 @@ It is my first application, written in AutoIt3 and now rewritten on C++. I love 
 
 ### Features:
 - Simple interface without useless features
-- Clear window transparency (vista+)
+- Take screenshots including all overlapped windosw
+- Clear window transparency
 - Disable Aero effect for captured window (vista+)
 - Free and open source
+- Fast and furious
 - Localization support
+
+![Free Shooter](https://www.henrypp.org/images/freeshooter_feature.png?cachefix)
 
 ```
 To activate portable mode, create "freeshooter.ini" in application folder, or move it from "%APPDATA%\Henry++\Free Shooter".
