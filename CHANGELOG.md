@@ -1,3 +1,10 @@
+v2.0.4 (17 July 2018)
+- added buffered paint to avoid flickering (vista+)
+- changed hotkeys error behaviour
+- changed hotkeys set (issue #17)
+- fixed possible clipboard memory leak
+- fixed find active window
+
 v2.0.3 (13 July 2018)
 - added include all overlapped windows in result image for window mode
 - added shadow for window screenshot (issue #13)
