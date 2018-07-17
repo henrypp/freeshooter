@@ -26,9 +26,9 @@
 #define REGION_COLOR_BK RGB(0,0,0)
 #define REGION_BLEND 90
 
-#define FILE_FORMAT_NAME_PREFIX L"sshot_"
+#define FILE_FORMAT_NAME_PREFIX L"sshot-"
 #define FILE_FORMAT_NAME_FORMAT L"%s%03d"
-#define FILE_FORMAT_DATE_FORMAT_1 L"yyyy-MM-dd"
+#define FILE_FORMAT_DATE_FORMAT_1 L"%syyyy-MM-dd"
 #define FILE_FORMAT_DATE_FORMAT_2 L"HH-mm-ss"
 
 #define HOTKEY_ID_FULLSCREEN 1

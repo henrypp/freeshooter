@@ -61,6 +61,7 @@ rstring _app_uniquefilename (LPCWSTR directory, EnumImageName name_type)
 	const rstring fext = formats.at (_app_getimageformat ()).ext;
 
 	WCHAR result[MAX_PATH] = {0};
+	const rstring name_prefix = app.ConfigGet (L"FilenamePrefix", FILE_FORMAT_NAME_PREFIX);
 
 	if (name_type == NameDate)
 	{
@@ -75,31 +76,28 @@ rstring _app_uniquefilename (LPCWSTR directory, EnumImageName name_type)
 			GetTimeFormat (LOCALE_SYSTEM_DEFAULT, 0, &st, FILE_FORMAT_DATE_FORMAT_2, time_format, _countof (time_format))
 			)
 		{
-			StringCchPrintf (result, _countof (result), L"%s\\%s %s.%s", directory, date_format, time_format, fext.GetString ());
+			StringCchPrintf (result, _countof (result), L"%s\\%s%s-%s.%s", directory, name_prefix.GetString (), date_format, time_format, fext.GetString ());
 
 			if (!_r_fs_exists (result))
 				return result;
 
-			if (PathYetAnotherMakeUniqueName (result, _r_fmt (L"%s\\%s %s.%s", directory, date_format, time_format, fext.GetString ()), nullptr, _r_fmt (L"%s %s.%s", date_format, time_format, fext.GetString ())))
+			if (PathYetAnotherMakeUniqueName (result, _r_fmt (L"%s\\%s%s-%s.%s", directory, name_prefix.GetString (), date_format, time_format, fext.GetString ()), nullptr, _r_fmt (L"%s%s %s.%s", name_prefix.GetString (), date_format, time_format, fext.GetString ())))
 				return result;
 		}
 	}
 	else
 	{
 		static const USHORT idx = 1;
-		const rstring name = app.ConfigGet (L"FilenamePrefix", FILE_FORMAT_NAME_PREFIX);
 
 		for (USHORT i = idx; i < USHRT_MAX; i++)
 		{
-			StringCchPrintf (result, _countof (result), L"%s\\" FILE_FORMAT_NAME_FORMAT L".%s", directory, name.GetString (), i, fext.GetString ());
+			StringCchPrintf (result, _countof (result), L"%s\\" FILE_FORMAT_NAME_FORMAT L".%s", directory, name_prefix.GetString (), i, fext.GetString ());
 
 			if (!_r_fs_exists (result))
 				return result;
 		}
 
-
-
-		if (PathYetAnotherMakeUniqueName (result, _r_fmt (L"%s\\%s.%s", directory, name.GetString (), fext.GetString ()), nullptr, _r_fmt (L"%s.%s", name.GetString (), fext.GetString ())))
+		if (PathYetAnotherMakeUniqueName (result, _r_fmt (L"%s\\%s.%s", directory, name_prefix.GetString (), fext.GetString ()), nullptr, _r_fmt (L"%s.%s", name_prefix.GetString (), fext.GetString ())))
 			return result;
 	}
 
@@ -114,7 +112,7 @@ bool GetEncoderClsid (LPCWSTR exif, CLSID *pClsid)
 
 	if (size)
 	{
-		Gdiplus::ImageCodecInfo* pImageCodecInfo = (Gdiplus::ImageCodecInfo*)malloc(size);
+		Gdiplus::ImageCodecInfo* pImageCodecInfo = (Gdiplus::ImageCodecInfo*)malloc (size);
 
 		if (pImageCodecInfo)
 		{
@@ -125,7 +123,7 @@ bool GetEncoderClsid (LPCWSTR exif, CLSID *pClsid)
 				if (_wcsnicmp (pImageCodecInfo[i].MimeType, exif, len) == 0)
 				{
 					*pClsid = pImageCodecInfo[i].Clsid;
-					free(pImageCodecInfo);
+					free (pImageCodecInfo);
 
 					return true;
 				}
@@ -1200,7 +1198,7 @@ void _app_initdropdownmenu (HMENU hmenu, bool is_button)
 	app.LocaleMenu (hmenu, IDS_HOTKEYS, IDM_HOTKEYS, false, is_button ? L"...\tF3" : L"...");
 
 	app.LocaleMenu (hmenu, 0, IDM_FILENAME_INDEX, false, _r_fmt (FILE_FORMAT_NAME_FORMAT L".%s", app.ConfigGet (L"FilenamePrefix", FILE_FORMAT_NAME_PREFIX).GetString (), 1, formats.at (_app_getimageformat ()).ext));
-	app.LocaleMenu (hmenu, 0, IDM_FILENAME_DATE, false, _r_fmt (FILE_FORMAT_DATE_FORMAT_1 L" " FILE_FORMAT_DATE_FORMAT_2 L".%s", formats.at (_app_getimageformat ()).ext));
+	app.LocaleMenu (hmenu, 0, IDM_FILENAME_DATE, false, _r_fmt (FILE_FORMAT_DATE_FORMAT_1 L"-" FILE_FORMAT_DATE_FORMAT_2 L".%s", app.ConfigGet (L"FilenamePrefix", FILE_FORMAT_NAME_PREFIX).GetString (), formats.at (_app_getimageformat ()).ext));
 
 	// initialize formats
 	{
