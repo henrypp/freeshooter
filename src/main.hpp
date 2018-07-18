@@ -19,6 +19,7 @@
 
 #define WND_SLEEP 150
 #define JPEG_QUALITY 95
+#define START_IDX 1
 
 #define REGION_PEN_SIZE (GetSystemMetrics (SM_CXBORDER) * 2)
 #define REGION_PEN_COLOR RGB(255,0,0)

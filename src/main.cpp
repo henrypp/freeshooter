@@ -80,14 +80,14 @@ rstring _app_uniquefilename (LPCWSTR directory, EnumImageName name_type)
 
 			if (!_r_fs_exists (result))
 				return result;
-
-			if (PathYetAnotherMakeUniqueName (result, _r_fmt (L"%s\\%s%s-%s.%s", directory, name_prefix.GetString (), date_format, time_format, fext.GetString ()), nullptr, _r_fmt (L"%s%s %s.%s", name_prefix.GetString (), date_format, time_format, fext.GetString ())))
-				return result;
 		}
+
+		if (PathYetAnotherMakeUniqueName (result, _r_fmt (L"%s\\%s%s-%s.%s", directory, name_prefix.GetString (), date_format, time_format, fext.GetString ()), nullptr, _r_fmt (L"%s%s %s.%s", name_prefix.GetString (), date_format, time_format, fext.GetString ())))
+			return result;
 	}
 	else
 	{
-		static const USHORT idx = 1;
+		static const USHORT idx = START_IDX;
 
 		for (USHORT i = idx; i < USHRT_MAX; i++)
 		{
@@ -325,7 +325,7 @@ bool _app_iswndoverlapped (HWND hwnd, LPRECT lprect)
 	return false;
 }
 
-BOOL CALLBACK CalculateChildsRect (HWND hwnd, LPARAM lparam)
+BOOL CALLBACK CalculateOverlappedRect (HWND hwnd, LPARAM lparam)
 {
 	ENUM_INFO* enum_info = (ENUM_INFO*)lparam;
 
@@ -479,7 +479,7 @@ void _app_takeshot (HWND hwnd, EnumScreenshot mode)
 				enuminfo.hroot = hwnd;
 				enuminfo.lprect = &window_rect;
 
-				EnumWindows (&CalculateChildsRect, (LPARAM)&enuminfo);
+				EnumWindows (&CalculateOverlappedRect, (LPARAM)&enuminfo);
 			}
 
 			// calculate shadow padding
@@ -1197,7 +1197,7 @@ void _app_initdropdownmenu (HMENU hmenu, bool is_button)
 	app.LocaleMenu (hmenu, IDS_IMAGEFORMAT, FORMAT_MENU, true, nullptr);
 	app.LocaleMenu (hmenu, IDS_HOTKEYS, IDM_HOTKEYS, false, is_button ? L"...\tF3" : L"...");
 
-	app.LocaleMenu (hmenu, 0, IDM_FILENAME_INDEX, false, _r_fmt (FILE_FORMAT_NAME_FORMAT L".%s", app.ConfigGet (L"FilenamePrefix", FILE_FORMAT_NAME_PREFIX).GetString (), 1, formats.at (_app_getimageformat ()).ext));
+	app.LocaleMenu (hmenu, 0, IDM_FILENAME_INDEX, false, _r_fmt (FILE_FORMAT_NAME_FORMAT L".%s", app.ConfigGet (L"FilenamePrefix", FILE_FORMAT_NAME_PREFIX).GetString (), START_IDX, formats.at (_app_getimageformat ()).ext));
 	app.LocaleMenu (hmenu, 0, IDM_FILENAME_DATE, false, _r_fmt (FILE_FORMAT_DATE_FORMAT_1 L"-" FILE_FORMAT_DATE_FORMAT_2 L".%s", app.ConfigGet (L"FilenamePrefix", FILE_FORMAT_NAME_PREFIX).GetString (), formats.at (_app_getimageformat ()).ext));
 
 	// initialize formats
