@@ -26,13 +26,19 @@ INT_PTR CALLBACK HotkeysProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 //	WCHAR title[100] = {0};
 //	GetWindowText (hwnd, title, _countof (title));
 //
+//	WCHAR class_name[100] = {0};
+//	GetClassName (hwnd, class_name, _countof (class_name));
+//
 //	RECT rc = {0};
 //	_app_getwindowrect (hwnd, &rc);
 //
 //	if (!title[0])
 //		StringCchCopy (title, _countof (title), L"n/a");
 //
-//	RDBG (L"0x%08x | % 20s | left: %.4d, top: %.4d, width: %.4d, height: %.4d", hwnd, title, rc.left, rc.top, _R_RECT_WIDTH (&rc), _R_RECT_HEIGHT (&rc));
+//	if (!class_name[0])
+//		StringCchCopy (class_name, _countof (class_name), L"n/a");
+//
+//	RDBG (L"0x%08x | % 20s | % 20s | left: %.4d, top: %.4d, width: %.4d, height: %.4d", hwnd, title, class_name, rc.left, rc.top, _R_RECT_WIDTH (&rc), _R_RECT_HEIGHT (&rc));
 //}
 
 size_t _app_getimageformat ()
@@ -104,7 +110,7 @@ rstring _app_uniquefilename (LPCWSTR directory, EnumImageName name_type)
 	return result;
 }
 
-bool GetEncoderClsid (LPCWSTR exif, CLSID *pClsid)
+bool _app_getencoderclsid (LPCWSTR exif, CLSID *pClsid)
 {
 	UINT num = 0, size = 0;
 	const size_t len = wcslen (exif);
@@ -282,6 +288,16 @@ bool _app_isnormalwindow (HWND hwnd)
 	return hwnd && IsWindow (hwnd) && IsWindowVisible (hwnd) && !IsIconic (hwnd) && hwnd != GetShellWindow () && hwnd != GetDesktopWindow ();
 }
 
+bool _app_ismenu (HWND hwnd)
+{
+	WCHAR class_name[MAX_PATH] = {0};
+
+	if (GetClassName (hwnd, class_name, _countof (class_name)) && class_name[0])
+		return _wcsnicmp (class_name, L"#32768", wcslen (class_name)) == 0;
+
+	return false;
+}
+
 int _app_getwindowzorder (HWND hwnd)
 {
 	int z = 0;
@@ -327,33 +343,45 @@ bool _app_iswndoverlapped (HWND hwnd, LPRECT lprect)
 
 BOOL CALLBACK CalculateOverlappedRect (HWND hwnd, LPARAM lparam)
 {
-	ENUM_INFO* enum_info = (ENUM_INFO*)lparam;
+	ENUM_INFO* lpenuminfo = (ENUM_INFO*)lparam;
 
-	if (
-		!enum_info ||
-		(enum_info->hroot == hwnd) ||
-		!_app_isnormalwindow (hwnd) ||
-		!_app_iswndoverlapped (hwnd, enum_info->lprect) ||
-		(_app_getwindowzorder (hwnd) > _app_getwindowzorder (enum_info->hroot))
-		)
-	{
+	if (!lpenuminfo || lpenuminfo->hroot == hwnd)
 		return TRUE;
+
+	if (lpenuminfo->is_menu)
+	{
+		if (!_app_ismenu (hwnd))
+			return TRUE;
+
+		if (_app_getwindowzorder (hwnd) > _app_getwindowzorder (lpenuminfo->hroot))
+			lpenuminfo->hroot = hwnd;
+	}
+	else
+	{
+		if (
+			!_app_isnormalwindow (hwnd) ||
+			!_app_iswndoverlapped (hwnd, lpenuminfo->lprect) ||
+			(_app_getwindowzorder (hwnd) > _app_getwindowzorder (lpenuminfo->hroot))
+			)
+		{
+			return TRUE;
+		}
 	}
 
 	RECT rc = {0};
 	_app_getwindowrect (hwnd, &rc);
 
-	if (rc.left < enum_info->lprect->left)
-		enum_info->lprect->left -= (enum_info->lprect->left - rc.left);
+	if (rc.left < lpenuminfo->lprect->left)
+		lpenuminfo->lprect->left -= (lpenuminfo->lprect->left - rc.left);
 
-	if (rc.top < enum_info->lprect->top)
-		enum_info->lprect->top -= (enum_info->lprect->top - rc.top);
+	if (rc.top < lpenuminfo->lprect->top)
+		lpenuminfo->lprect->top -= (lpenuminfo->lprect->top - rc.top);
 
-	if (rc.bottom > enum_info->lprect->bottom)
-		enum_info->lprect->bottom += (rc.bottom - enum_info->lprect->bottom);
+	if (rc.bottom > lpenuminfo->lprect->bottom)
+		lpenuminfo->lprect->bottom += (rc.bottom - lpenuminfo->lprect->bottom);
 
-	if (rc.right > enum_info->lprect->right)
-		enum_info->lprect->right += (rc.right - enum_info->lprect->right);
+	if (rc.right > lpenuminfo->lprect->right)
+		lpenuminfo->lprect->right += (rc.right - lpenuminfo->lprect->right);
 
 	return TRUE;
 }
@@ -375,15 +403,15 @@ BOOL CALLBACK FindTopWindow (HWND hwnd, LPARAM lparam)
 	return FALSE;
 }
 
-void _app_getshadowsize (PINT px, PINT py)
+void _app_getshadowsize (PINT px, PINT py, bool is_menu)
 {
 	if (!px || !py)
 		return;
 
 	INT shadowX = 0, shadowY = 0;
 
-	const INT fallbackX = GetSystemMetrics (SM_CXSIZEFRAME) * 2;
-	const INT fallbackY = GetSystemMetrics (SM_CYSIZEFRAME) * 2;
+	const INT fallbackX = GetSystemMetrics (SM_CXSIZEFRAME) * (is_menu ? 1 : 2);
+	const INT fallbackY = GetSystemMetrics (SM_CYSIZEFRAME) * (is_menu ? 1 : 2);
 
 	if (app.ConfigGet (L"IsCustomShadow", false).AsBool ())
 	{
@@ -462,9 +490,10 @@ void _app_takeshot (HWND hwnd, EnumScreenshot mode)
 		{
 			HWND hdummy = nullptr;
 
+			const bool is_menu = _app_ismenu (hwnd);
 			const bool is_includewindowshadow = app.ConfigGet (L"IsIncludeWindowShadow", true).AsBool ();
 			const bool is_clearbackground = app.ConfigGet (L"IsClearBackground", true).AsBool ();
-			const bool is_disableaeroonwnd = app.IsVistaOrLater () && app.ConfigGet (L"IsDisableAeroOnWnd", false).AsBool ();
+			const bool is_disableaeroonwnd = !is_menu && app.IsVistaOrLater () && app.ConfigGet (L"IsDisableAeroOnWnd", false).AsBool ();
 
 			if (is_disableaeroonwnd)
 				_app_switchaeroonwnd (hwnd, true);
@@ -477,16 +506,20 @@ void _app_takeshot (HWND hwnd, EnumScreenshot mode)
 				ENUM_INFO enuminfo = {0};
 
 				enuminfo.hroot = hwnd;
+				enuminfo.is_menu = is_menu;
 				enuminfo.lprect = &window_rect;
 
 				EnumWindows (&CalculateOverlappedRect, (LPARAM)&enuminfo);
+
+				if (is_menu)
+					hwnd = enuminfo.hroot;
 			}
 
 			// calculate shadow padding
 			if (is_includewindowshadow)
 			{
 				int shadowX, shadowY;
-				_app_getshadowsize (&shadowX, &shadowY);
+				_app_getshadowsize (&shadowX, &shadowY, is_menu);
 
 				window_rect.left -= shadowX;
 				window_rect.right += shadowX;
@@ -1249,7 +1282,6 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 				// region class
 				wcex.lpszClassName = REGION_CLASS_DLG;
 				wcex.lpfnWndProc = &RegionProc;
-				//wcex.hbrBackground = (HBRUSH)GetStockObject (DKGRAY_BRUSH);
 				wcex.hCursor = LoadCursor (app.GetHINSTANCE (), MAKEINTRESOURCE (IDI_MAIN));
 
 				RegisterClassEx (&wcex);
@@ -1267,6 +1299,9 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 
 				app.ConfigSet (L"Folder", _r_path_unexpand (_app_getdirectory ()));
 			}
+
+			CoInitialize (nullptr);
+			SHAutoComplete (GetDlgItem (hwnd, IDC_FOLDER), SHACF_FILESYS_ONLY | SHACF_FILESYS_DIRS | SHACF_AUTOSUGGEST_FORCE_ON | SHACF_USETAB);
 
 			// add splitbutton style (vista+)
 			if (app.IsVistaOrLater ())
@@ -1300,7 +1335,7 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 				{
 					IMAGE_FORMAT tagImage = {0};
 
-					if (GetEncoderClsid (szexif[i], &tagImage.clsid))
+					if (_app_getencoderclsid (szexif[i], &tagImage.clsid))
 					{
 						StringCchCopy (tagImage.ext, _countof (tagImage.ext), szext[i]);
 
@@ -1418,6 +1453,7 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 			UnregisterClass (REGION_CLASS_DLG, app.GetHINSTANCE ());
 
 			Gdiplus::GdiplusShutdown (gdiplusToken);
+			CoUninitialize ();
 
 			PostQuitMessage (0);
 
@@ -1572,6 +1608,12 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 
 				return FALSE;
 			}
+			else if (LOWORD (wparam) == IDC_FOLDER && HIWORD (wparam) == EN_KILLFOCUS)
+			{
+				app.ConfigSet (L"Folder", _r_path_unexpand (_r_ctrl_gettext (hwnd, LOWORD (wparam))));
+
+				return FALSE;
+			}
 
 			switch (LOWORD (wparam))
 			{
@@ -1655,29 +1697,24 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 
 				case IDC_BROWSE_BTN:
 				{
-					if (SUCCEEDED (CoInitialize (nullptr)))
+					BROWSEINFO browseInfo = {0};
+
+					browseInfo.hwndOwner = hwnd;
+					browseInfo.ulFlags = BIF_RETURNONLYFSDIRS | BIF_USENEWUI | BIF_VALIDATE;
+
+					LPITEMIDLIST pidl = SHBrowseForFolder (&browseInfo);
+
+					if (pidl)
 					{
-						BROWSEINFO browseInfo = {0};
+						WCHAR buffer[MAX_PATH] = {0};
 
-						browseInfo.hwndOwner = hwnd;
-						browseInfo.ulFlags = BIF_RETURNONLYFSDIRS | BIF_USENEWUI | BIF_VALIDATE;
-
-						LPITEMIDLIST pidl = SHBrowseForFolder (&browseInfo);
-
-						if (pidl)
+						if (SHGetPathFromIDList (pidl, buffer))
 						{
-							WCHAR buffer[MAX_PATH] = {0};
-
-							if (SHGetPathFromIDList (pidl, buffer))
-							{
-								app.ConfigSet (L"Folder", _r_path_unexpand (buffer));
-								SetDlgItemText (hwnd, IDC_FOLDER, buffer);
-							}
-
-							CoTaskMemFree (pidl);
+							app.ConfigSet (L"Folder", _r_path_unexpand (buffer));
+							SetDlgItemText (hwnd, IDC_FOLDER, buffer);
 						}
 
-						CoUninitialize ();
+						CoTaskMemFree (pidl);
 					}
 
 					break;

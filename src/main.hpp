@@ -71,6 +71,8 @@ struct ENUM_INFO
 {
 	HWND hroot = nullptr;
 	LPRECT lprect = nullptr;
+
+	bool is_menu = false;
 };
 
 enum EnumScreenshot
