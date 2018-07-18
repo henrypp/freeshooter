@@ -403,15 +403,15 @@ BOOL CALLBACK FindTopWindow (HWND hwnd, LPARAM lparam)
 	return FALSE;
 }
 
-void _app_getshadowsize (PINT px, PINT py, bool is_menu)
+void _app_getshadowsize (PINT px, PINT py)
 {
 	if (!px || !py)
 		return;
 
 	INT shadowX = 0, shadowY = 0;
 
-	const INT fallbackX = GetSystemMetrics (SM_CXSIZEFRAME) * (is_menu ? 1 : 2);
-	const INT fallbackY = GetSystemMetrics (SM_CYSIZEFRAME) * (is_menu ? 1 : 2);
+	const INT fallbackX = GetSystemMetrics (SM_CXSIZEFRAME);
+	const INT fallbackY = GetSystemMetrics (SM_CYSIZEFRAME);
 
 	if (app.ConfigGet (L"IsCustomShadow", false).AsBool ())
 	{
@@ -519,7 +519,7 @@ void _app_takeshot (HWND hwnd, EnumScreenshot mode)
 			if (is_includewindowshadow)
 			{
 				int shadowX, shadowY;
-				_app_getshadowsize (&shadowX, &shadowY, is_menu);
+				_app_getshadowsize (&shadowX, &shadowY);
 
 				window_rect.left -= shadowX;
 				window_rect.right += shadowX;
