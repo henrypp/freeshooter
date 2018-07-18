@@ -6,7 +6,8 @@
 This is old-school tool for taking screenshots without bloatware features, simple as life, light as air.<br />
 It is my first application, written in AutoIt3 and now rewritten on C++. I love this tool, and i hope you are take to love it too.
 
-![Free Shooter](https://www.henrypp.org/images/freeshooter_feature.png?cachefix)
+![Overlapped windows](https://www.henrypp.org/images/freeshooter_feature.png?cachefix)
+![Context menus](https://user-images.githubusercontent.com/3902025/42867543-b8e03be8-8a91-11e8-9a6a-186dcd201ef5.png)
 
 ### Features:
 - Simple interface without useless features
