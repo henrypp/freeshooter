@@ -1,3 +1,9 @@
+v2.0.5 (18 July 2018)
+- added autocompletion for folder edit
+- fixed capturing context menus
+- fixed shadow size
+- filename cosmetics
+
 v2.0.4 (17 July 2018)
 - added buffered paint to avoid flickering (vista+)
 - changed hotkeys error behaviour
