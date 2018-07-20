@@ -1231,7 +1231,7 @@ void _app_initdropdownmenu (HMENU hmenu, bool is_button)
 	app.LocaleMenu (hmenu, IDS_HOTKEYS, IDM_HOTKEYS, false, is_button ? L"...\tF3" : L"...");
 
 	app.LocaleMenu (hmenu, 0, IDM_FILENAME_INDEX, false, _r_fmt (FILE_FORMAT_NAME_FORMAT L".%s", app.ConfigGet (L"FilenamePrefix", FILE_FORMAT_NAME_PREFIX).GetString (), START_IDX, formats.at (_app_getimageformat ()).ext));
-	app.LocaleMenu (hmenu, 0, IDM_FILENAME_DATE, false, _r_fmt (FILE_FORMAT_DATE_FORMAT_1 L"-" FILE_FORMAT_DATE_FORMAT_2 L".%s", app.ConfigGet (L"FilenamePrefix", FILE_FORMAT_NAME_PREFIX).GetString (), formats.at (_app_getimageformat ()).ext));
+	app.LocaleMenu (hmenu, 0, IDM_FILENAME_DATE, false, _r_fmt (L"%s" FILE_FORMAT_DATE_FORMAT_1 L"-" FILE_FORMAT_DATE_FORMAT_2 L".%s", app.ConfigGet (L"FilenamePrefix", FILE_FORMAT_NAME_PREFIX).GetString (), formats.at (_app_getimageformat ()).ext));
 
 	// initialize formats
 	{
