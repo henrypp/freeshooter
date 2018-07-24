@@ -47,7 +47,7 @@ size_t _app_getimageformat ()
 		return 0;
 
 	const INT size = (INT)formats.size ();
-	const INT current = app.ConfigGet (L"ImageFormat", FormatJpeg).AsInt ();
+	const INT current = app.ConfigGet (L"ImageFormat", FormatPng).AsInt ();
 
 	return size_t (max (min (current, size - 1), 0));
 }
@@ -434,6 +434,12 @@ void _app_getshadowsize (PINT px, PINT py)
 	*py = max (shadowY, 0);
 }
 
+void _app_playsound ()
+{
+	if (app.ConfigGet (L"IsPlaySound", true).AsBool ())
+		PlaySound (MAKEINTRESOURCE (IDW_MAIN), app.GetHINSTANCE (), SND_RESOURCE | SND_ASYNC);
+}
+
 void _app_takeshot (HWND hwnd, EnumScreenshot mode)
 {
 	bool result = false;
@@ -457,9 +463,6 @@ void _app_takeshot (HWND hwnd, EnumScreenshot mode)
 		app.TrayToggle (myWindow, UID, nullptr, false);
 	}
 
-	if (mode != ScreenshotRegion && app.ConfigGet (L"IsPlaySound", true).AsBool ())
-		PlaySound (MAKEINTRESOURCE (IDW_MAIN), app.GetHINSTANCE (), SND_SENTRY | SND_RESOURCE | SND_ASYNC);
-
 	if (mode == ScreenshotFullscreen)
 	{
 		POINT pt = {0};
@@ -473,6 +476,8 @@ void _app_takeshot (HWND hwnd, EnumScreenshot mode)
 		if (GetMonitorInfo (hmonitor, &monitorInfo))
 		{
 			const LPRECT lprc = &monitorInfo.rcMonitor;
+
+			_app_playsound ();
 			_app_screenshot (lprc->left, lprc->top, _R_RECT_WIDTH (lprc), _R_RECT_HEIGHT (lprc), is_includecursor);
 		}
 	}
@@ -543,6 +548,8 @@ void _app_takeshot (HWND hwnd, EnumScreenshot mode)
 			}
 
 			_r_sleep (WND_SLEEP);
+
+			_app_playsound ();
 			_app_screenshot (window_rect.left, window_rect.top, _R_RECT_WIDTH (&window_rect), _R_RECT_HEIGHT (&window_rect), is_includecursor);
 
 			if (is_disableaeroonwnd)
@@ -876,9 +883,7 @@ LRESULT CALLBACK RegionProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 							SelectObject (hcapture_finish, hbitmap_finish);
 							BitBlt (hcapture_finish, 0, 0, width, height, hcapture, x, y, SRCCOPY);
 
-							if (app.ConfigGet (L"IsPlaySound", true).AsBool ())
-								PlaySound (MAKEINTRESOURCE (IDW_MAIN), app.GetHINSTANCE (), SND_SENTRY | SND_RESOURCE | SND_ASYNC);
-
+							_app_playsound ();
 							_app_dofinishjob (hbitmap_finish, width, height);
 
 							DeleteObject (hbitmap_finish);
