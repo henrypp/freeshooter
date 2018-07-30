@@ -191,7 +191,11 @@ void _app_dofinishjob (HBITMAP hbitmap, INT width, INT height)
 		if (OpenClipboard (app.GetHWND ()))
 		{
 			if (EmptyClipboard ())
-				SetClipboardData (CF_BITMAP, hbitmap);
+			{
+				HBITMAP hbitmap_copy = (HBITMAP)CopyImage (hbitmap, IMAGE_BITMAP, width, height, 0);
+
+				SetClipboardData (CF_BITMAP, hbitmap_copy);
+			}
 
 			CloseClipboard ();
 		}
@@ -264,8 +268,6 @@ void _app_switchaeroonwnd (HWND hwnd, bool is_disable)
 
 void _app_getwindowrect (HWND hwnd, LPRECT lprect)
 {
-	bool is_dwmsuccess = false;
-
 	if (app.IsVistaOrLater ())
 	{
 		const HMODULE hlib = GetModuleHandle (L"dwmapi.dll");
@@ -275,12 +277,11 @@ void _app_getwindowrect (HWND hwnd, LPRECT lprect)
 			const DWMGWA _DwmGetWindowAttribute = (DWMGWA)GetProcAddress (hlib, "DwmGetWindowAttribute"); // vista+
 
 			if (_DwmGetWindowAttribute && _DwmGetWindowAttribute (hwnd, DWMWA_EXTENDED_FRAME_BOUNDS, lprect, sizeof (RECT)) == S_OK)
-				is_dwmsuccess = true;
+				return;
 		}
 	}
 
-	if (!is_dwmsuccess)
-		GetWindowRect (hwnd, lprect);
+	GetWindowRect (hwnd, lprect); // fallback
 }
 
 bool _app_isnormalwindow (HWND hwnd)
@@ -777,11 +778,6 @@ LRESULT CALLBACK RegionProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 				{
 					SelectObject (hcapture_mask, hbitmap_mask);
 
-					SetDCPenColor (hcapture_mask, REGION_COLOR_BK);
-					SetDCBrushColor (hcapture_mask, REGION_COLOR_BK);
-
-					_r_dc_fillrect (hcapture_mask, &wndRect, REGION_COLOR_BK);
-
 					{
 						BLENDFUNCTION bf = {0};
 
@@ -791,7 +787,17 @@ LRESULT CALLBACK RegionProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 						AlphaBlend (hdc, wndRect.left, wndRect.top, _R_RECT_WIDTH (&wndRect), _R_RECT_HEIGHT (&wndRect), hcapture_mask, wndRect.left, wndRect.top, wndRect.right, wndRect.bottom, bf);
 					}
 
+					{
+						BLENDFUNCTION bf = {0};
+
+						bf.BlendOp = AC_SRC_OVER;
+						bf.SourceConstantAlpha = REGION_BLEND;
+
+						AlphaBlend (hcapture_mask, wndRect.left, wndRect.top, _R_RECT_WIDTH (&wndRect), _R_RECT_HEIGHT (&wndRect), hdc, wndRect.left, wndRect.top, wndRect.right, wndRect.bottom, bf);
+					}
+
 					BitBlt (hcapture_mask, wndRect.left, wndRect.top, _R_RECT_WIDTH (&wndRect), _R_RECT_HEIGHT (&wndRect), hdc, wndRect.left, wndRect.top, SRCCOPY);
+
 				}
 
 				ReleaseDC (nullptr, hdc);
