@@ -787,15 +787,6 @@ LRESULT CALLBACK RegionProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 						AlphaBlend (hdc, wndRect.left, wndRect.top, _R_RECT_WIDTH (&wndRect), _R_RECT_HEIGHT (&wndRect), hcapture_mask, wndRect.left, wndRect.top, wndRect.right, wndRect.bottom, bf);
 					}
 
-					{
-						BLENDFUNCTION bf = {0};
-
-						bf.BlendOp = AC_SRC_OVER;
-						bf.SourceConstantAlpha = REGION_BLEND;
-
-						AlphaBlend (hcapture_mask, wndRect.left, wndRect.top, _R_RECT_WIDTH (&wndRect), _R_RECT_HEIGHT (&wndRect), hdc, wndRect.left, wndRect.top, wndRect.right, wndRect.bottom, bf);
-					}
-
 					BitBlt (hcapture_mask, wndRect.left, wndRect.top, _R_RECT_WIDTH (&wndRect), _R_RECT_HEIGHT (&wndRect), hdc, wndRect.left, wndRect.top, SRCCOPY);
 				}
 
