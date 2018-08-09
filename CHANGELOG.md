@@ -1,3 +1,11 @@
+v2.0.6 (9 August 2018)
+- set default image format to .png
+- fixed copying to clipboard (issue #21)
+- fixed playing sounds
+- updated project sdk
+- updated locale
+- cosmetic fixes
+
 v2.0.5 (18 July 2018)
 - added autocompletion for folder edit
 - fixed capturing context menus
