@@ -836,12 +836,6 @@ LRESULT CALLBACK RegionProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 			return TRUE;
 		}
 
-		case WM_DISPLAYCHANGE:
-		{
-			SetWindowPos (hwnd, HWND_TOPMOST, 0, 0, GetSystemMetrics (SM_CXVIRTUALSCREEN), GetSystemMetrics (SM_CYVIRTUALSCREEN), SWP_DEFERERASE | SWP_NOSENDCHANGING);
-			return TRUE;
-		}
-
 		case WM_LBUTTONDOWN:
 		{
 			if (!fDraw)
