@@ -1,5 +1,5 @@
 // Free Shooter
-// Copyright (c) 2009, 2010, 2018 Henry++
+// Copyright (c) 2009-2018 Henry++
 
 #include <windows.h>
 #include <dwmapi.h>
@@ -333,8 +333,8 @@ bool _app_iswndoverlapped (HWND hwnd, LPRECT lprect)
 	if (PtInRect (lprect, pt))
 		return true;
 
-	pt.x = rc.bottom;
-	pt.y = rc.right;
+	pt.x = rc.right;
+	pt.y = rc.bottom;
 
 	if (PtInRect (lprect, pt))
 		return true;
@@ -404,35 +404,18 @@ BOOL CALLBACK FindTopWindow (HWND hwnd, LPARAM lparam)
 	return FALSE;
 }
 
-void _app_getshadowsize (PINT px, PINT py)
+INT _app_getshadowsize (HWND hwnd)
 {
-	if (!px || !py)
-		return;
+	if (IsZoomed (hwnd))
+		return 0;
 
-	INT shadowX = 0, shadowY = 0;
+	// Determine the border size by asking windows to calculate the window rect
+	// required for a client rect with a width and height of 0. This method will
+	// work before the window is fully initialized and when the window is minimized.
+	RECT rc = {0};
+	AdjustWindowRectEx (&rc, WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME | WS_MINIMIZEBOX | WS_MAXIMIZEBOX, FALSE, WS_EX_WINDOWEDGE);
 
-	const INT fallbackX = GetSystemMetrics (SM_CXSIZEFRAME);
-	const INT fallbackY = GetSystemMetrics (SM_CYSIZEFRAME);
-
-	if (app.ConfigGet (L"IsCustomShadow", false).AsBool ())
-	{
-		shadowX = app.GetDPI (app.ConfigGet (L"CustomShadowX", fallbackX).AsInt ());
-		shadowY = app.GetDPI (app.ConfigGet (L"CustomShadowY", fallbackY).AsInt ());
-	}
-	else
-	{
-		shadowX = fallbackX;
-		shadowY = fallbackY;
-	}
-
-	if (!shadowX)
-		shadowX = fallbackX;
-
-	if (!shadowY)
-		shadowY = fallbackY;
-
-	*px = max (shadowX, 0);
-	*py = max (shadowY, 0);
+	return _R_RECT_WIDTH (&rc);
 }
 
 void _app_playsound ()
@@ -508,6 +491,7 @@ void _app_takeshot (HWND hwnd, EnumScreenshot mode)
 			_app_getwindowrect (hwnd, &window_rect);
 
 			// calculate window rectangle and all overlapped windows
+			if (!IsZoomed (hwnd))
 			{
 				ENUM_INFO enuminfo = {0};
 
@@ -524,14 +508,13 @@ void _app_takeshot (HWND hwnd, EnumScreenshot mode)
 			// calculate shadow padding
 			if (is_includewindowshadow)
 			{
-				int shadowX, shadowY;
-				_app_getshadowsize (&shadowX, &shadowY);
+				const INT shadow_size = _app_getshadowsize (hwnd);
 
-				window_rect.left -= shadowX;
-				window_rect.right += shadowX;
+				window_rect.left -= shadow_size;
+				window_rect.right += shadow_size;
 
-				window_rect.top -= shadowY;
-				window_rect.bottom += shadowY;
+				window_rect.top -= shadow_size;
+				window_rect.bottom += shadow_size;
 			}
 
 			if (is_clearbackground)
