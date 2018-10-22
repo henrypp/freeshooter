@@ -1,6 +1,7 @@
-## Free Shooter
+Free Shooter [![Github All Releases](https://img.shields.io/github/downloads/henrypp/freeshooter/total.svg)](https://github.com/henrypp/freeshooter/releases) [![Licence](https://img.shields.io/badge/license-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0.en.html)
+=======
 
-![Free Shooter](https://www.henrypp.org/images/freeshooter.png?cachefix)
+![Free Shooter](https://www.henrypp.org/images/freeshooter.png)
 
 ### Description:
 This is old-school tool for taking screenshots without bloatware features, simple as life, light as air.<br />
