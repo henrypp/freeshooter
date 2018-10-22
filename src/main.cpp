@@ -554,7 +554,7 @@ void _app_takeshot (HWND hwnd, EnumScreenshot mode)
 
 			if (config.hregion)
 			{
-				SetWindowPos (config.hregion, HWND_TOPMOST, 0, 0, GetSystemMetrics (SM_CXVIRTUALSCREEN), GetSystemMetrics (SM_CYVIRTUALSCREEN), SWP_SHOWWINDOW | SWP_DEFERERASE | SWP_NOSENDCHANGING);
+				SetWindowPos (config.hregion, HWND_TOPMOST, 0, 0, GetSystemMetrics (SM_CXVIRTUALSCREEN), GetSystemMetrics (SM_CYVIRTUALSCREEN), SWP_NOACTIVATE | SWP_NOCOPYBITS | SWP_NOSENDCHANGING);
 				WaitForSingleObjectEx (config.hregion, INFINITE, FALSE);
 			}
 			else
@@ -760,20 +760,32 @@ LRESULT CALLBACK RegionProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 				if (hbitmap_mask && hcapture_mask)
 				{
 					SelectObject (hcapture_mask, hbitmap_mask);
+					BitBlt (hcapture_mask, wndRect.left, wndRect.top, _R_RECT_WIDTH (&wndRect), _R_RECT_HEIGHT (&wndRect), hcapture, wndRect.left, wndRect.top, SRCCOPY);
 
+					const LONG imageBytes = _R_RECT_WIDTH (&wndRect) * _R_RECT_HEIGHT (&wndRect) * 4;
+					const double blend = 1.5;
+
+					UINT* bmpBuffer = (UINT*) new BYTE[imageBytes];
+					GetBitmapBits (hbitmap_mask, imageBytes, bmpBuffer);
+
+					int R, G, B;
+					for (int i = 0; i < (_R_RECT_WIDTH (&wndRect) * _R_RECT_HEIGHT (&wndRect)); i++)
 					{
-						BLENDFUNCTION bf = {0};
+						R = (int) (GetRValue(bmpBuffer[i]) / blend);
+						G = (int) (GetGValue(bmpBuffer[i]) / blend);
+						B = (int) (GetBValue(bmpBuffer[i]) / blend);
 
-						bf.BlendOp = AC_SRC_OVER;
-						bf.SourceConstantAlpha = REGION_BLEND;
-
-						AlphaBlend (hdc, wndRect.left, wndRect.top, _R_RECT_WIDTH (&wndRect), _R_RECT_HEIGHT (&wndRect), hcapture_mask, wndRect.left, wndRect.top, wndRect.right, wndRect.bottom, bf);
+						bmpBuffer[i] = RGB (R, G, B);
 					}
 
-					BitBlt (hcapture_mask, wndRect.left, wndRect.top, _R_RECT_WIDTH (&wndRect), _R_RECT_HEIGHT (&wndRect), hdc, wndRect.left, wndRect.top, SRCCOPY);
+					SetBitmapBits (hbitmap_mask, imageBytes, bmpBuffer);
+
+					delete[] bmpBuffer;
 				}
 
 				ReleaseDC (nullptr, hdc);
+
+				ShowWindow (hwnd, SW_SHOW);
 			}
 
 			break;
@@ -821,6 +833,12 @@ LRESULT CALLBACK RegionProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 				hcapture_mask = nullptr;
 			}
 
+			return TRUE;
+		}
+
+		case WM_DISPLAYCHANGE:
+		{
+			SetWindowPos (hwnd, HWND_TOPMOST, 0, 0, GetSystemMetrics (SM_CXVIRTUALSCREEN), GetSystemMetrics (SM_CYVIRTUALSCREEN), SWP_DEFERERASE | SWP_NOSENDCHANGING);
 			return TRUE;
 		}
 
