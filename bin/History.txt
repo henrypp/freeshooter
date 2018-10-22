@@ -1,3 +1,11 @@
+v2.0.7 (22 October 2018)
+- fixed region selection mask device context
+- fixed calculating overlapped windows rectangle
+- fixed calculating shadow size
+- updated project sdk
+- updated windows sdk
+- fixed bugs
+
 v2.0.6 (9 August 2018)
 - set default image format to .png
 - fixed copying to clipboard (issue #21)
