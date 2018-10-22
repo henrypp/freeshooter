@@ -554,7 +554,7 @@ void _app_takeshot (HWND hwnd, EnumScreenshot mode)
 
 			if (config.hregion)
 			{
-				SetWindowPos (config.hregion, HWND_TOPMOST, 0, 0, GetSystemMetrics (SM_CXVIRTUALSCREEN), GetSystemMetrics (SM_CYVIRTUALSCREEN), SWP_NOACTIVATE | SWP_NOCOPYBITS | SWP_NOSENDCHANGING);
+				SetWindowPos (config.hregion, HWND_TOPMOST, 0, 0, GetSystemMetrics (SM_CXVIRTUALSCREEN), GetSystemMetrics (SM_CYVIRTUALSCREEN), SWP_NOACTIVATE | SWP_NOCOPYBITS | SWP_NOREDRAW | SWP_NOSENDCHANGING);
 				WaitForSingleObjectEx (config.hregion, INFINITE, FALSE);
 			}
 			else
@@ -763,7 +763,7 @@ LRESULT CALLBACK RegionProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 					BitBlt (hcapture_mask, wndRect.left, wndRect.top, _R_RECT_WIDTH (&wndRect), _R_RECT_HEIGHT (&wndRect), hcapture, wndRect.left, wndRect.top, SRCCOPY);
 
 					const LONG imageBytes = _R_RECT_WIDTH (&wndRect) * _R_RECT_HEIGHT (&wndRect) * 4;
-					const double blend = 1.5;
+					static const double blend = 1.5;
 
 					UINT* bmpBuffer = (UINT*) new BYTE[imageBytes];
 					GetBitmapBits (hbitmap_mask, imageBytes, bmpBuffer);
@@ -784,9 +784,9 @@ LRESULT CALLBACK RegionProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 				}
 
 				ReleaseDC (nullptr, hdc);
-
-				ShowWindow (hwnd, SW_SHOW);
 			}
+
+			ShowWindow (hwnd, SW_SHOWNA);
 
 			break;
 		}
@@ -863,27 +863,32 @@ LRESULT CALLBACK RegionProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 				{
 					// save region to a file
 					const HDC hdc = GetDC (nullptr);
-					const HDC hcapture_finish = CreateCompatibleDC (hdc);
 
-					if (hcapture_finish)
+					if (hdc)
 					{
-						const HBITMAP hbitmap_finish = _app_createbitmap (hdc, width, height);
+						const HDC hcapture_finish = CreateCompatibleDC (hdc);
 
-						if (hbitmap_finish)
+						if (hcapture_finish)
 						{
-							SelectObject (hcapture_finish, hbitmap_finish);
-							BitBlt (hcapture_finish, 0, 0, width, height, hcapture, x, y, SRCCOPY);
+							const HBITMAP hbitmap_finish = _app_createbitmap (hdc, width, height);
 
-							_app_playsound ();
-							_app_dofinishjob (hbitmap_finish, width, height);
+							if (hbitmap_finish)
+							{
+								SelectObject (hcapture_finish, hbitmap_finish);
+								BitBlt (hcapture_finish, 0, 0, width, height, hcapture, x, y, SRCCOPY);
 
-							DeleteObject (hbitmap_finish);
+								_app_playsound ();
+								_app_dofinishjob (hbitmap_finish, width, height);
+
+								DeleteObject (hbitmap_finish);
+							}
+
+							DeleteDC (hcapture_finish);
 						}
 
-						DeleteDC (hcapture_finish);
+						ReleaseDC (nullptr, hdc);
 					}
 
-					ReleaseDC (nullptr, hdc);
 					DestroyWindow (hwnd);
 				}
 			}
