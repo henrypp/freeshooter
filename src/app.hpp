@@ -6,8 +6,8 @@
 
 #define APP_NAME L"Free Shooter"
 #define APP_NAME_SHORT L"freeshooter"
-#define APP_VERSION L"2.0.7"
-#define APP_VERSION_RES 2,0,7,0
+#define APP_VERSION L"2.0.8"
+#define APP_VERSION_RES 2,0,8,0
 #define APP_COPYRIGHT L"(c) 2009-2019 " _APP_AUTHOR L". All Rights Reversed."
 
 #endif // __APP_H__
