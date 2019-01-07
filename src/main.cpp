@@ -113,7 +113,7 @@ rstring _app_uniquefilename (LPCWSTR directory, EnumImageName name_type)
 bool _app_getencoderclsid (LPCWSTR exif, CLSID *pClsid)
 {
 	UINT num = 0, size = 0;
-	const size_t len = wcslen (exif);
+	const size_t len = _r_str_length (exif);
 	Gdiplus::GetImageEncodersSize (&num, &size);
 
 	if (size)
@@ -294,7 +294,7 @@ bool _app_ismenu (HWND hwnd)
 	WCHAR class_name[MAX_PATH] = {0};
 
 	if (GetClassName (hwnd, class_name, _countof (class_name)) && class_name[0])
-		return _wcsnicmp (class_name, L"#32768", wcslen (class_name)) == 0;
+		return _wcsnicmp (class_name, L"#32768", 6) == 0;
 
 	return false;
 }
@@ -1036,6 +1036,10 @@ INT_PTR CALLBACK HotkeysProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 			// configure window
 			_r_wnd_center (hwnd, GetParent (hwnd));
 
+#ifdef _APP_HAVE_DARKTHEME
+			_r_wnd_setdarktheme (hwnd);
+#endif // _APP_HAVE_DARKTHEME
+
 			// localize window
 			SetWindowText (hwnd, app.LocaleString (IDS_HOTKEYS, nullptr));
 
@@ -1264,6 +1268,10 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 	{
 		case WM_INITDIALOG:
 		{
+#ifdef _APP_HAVE_DARKTHEME
+			_r_wnd_setdarktheme (hwnd);
+#endif // _APP_HAVE_DARKTHEME
+
 			// create dummy window
 			{
 				WNDCLASSEX wcex = {0};
@@ -1465,8 +1473,6 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 		case WM_CTLCOLORDLG:
 		case WM_CTLCOLORBTN:
 		{
-			SetBkMode ((HDC)wparam, TRANSPARENT); // background-hack
-
 			return (INT_PTR)GetSysColorBrush (COLOR_BTNFACE);
 		}
 
