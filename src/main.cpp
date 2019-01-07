@@ -1,5 +1,5 @@
 // Free Shooter
-// Copyright (c) 2009-2018 Henry++
+// Copyright (c) 2009-2019 Henry++
 
 #include <windows.h>
 #include <dwmapi.h>
