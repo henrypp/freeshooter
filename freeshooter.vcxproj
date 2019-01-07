@@ -131,7 +131,7 @@
       <ExceptionHandling>Sync</ExceptionHandling>
       <ControlFlowGuard>Guard</ControlFlowGuard>
       <FunctionLevelLinking>true</FunctionLevelLinking>
-      <PreprocessorDefinitions>_UNICODE;UNICODE;_APP_HAVE_AUTORUN;_APP_HAVE_TRAY;_APP_HAVE_UPDATES;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_UNICODE;UNICODE;_APP_HAVE_DARKTHEME;_APP_HAVE_AUTORUN;_APP_HAVE_TRAY;_APP_HAVE_UPDATES;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>
       </MinimalRebuild>
       <OmitFramePointers>true</OmitFramePointers>
@@ -170,7 +170,7 @@
       <ExceptionHandling>Sync</ExceptionHandling>
       <ControlFlowGuard>Guard</ControlFlowGuard>
       <FunctionLevelLinking>true</FunctionLevelLinking>
-      <PreprocessorDefinitions>_UNICODE;UNICODE;_APP_HAVE_AUTORUN;_APP_HAVE_TRAY;_APP_HAVE_UPDATES;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_UNICODE;UNICODE;_APP_HAVE_DARKTHEME;_APP_HAVE_AUTORUN;_APP_HAVE_TRAY;_APP_HAVE_UPDATES;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>
       </MinimalRebuild>
       <OmitFramePointers>true</OmitFramePointers>
@@ -215,7 +215,7 @@
       <MinimalRebuild>
       </MinimalRebuild>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <PreprocessorDefinitions>_UNICODE;UNICODE;_APP_HAVE_AUTORUN;_APP_HAVE_TRAY;_APP_HAVE_UPDATES;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_UNICODE;UNICODE;_APP_HAVE_DARKTHEME;_APP_HAVE_AUTORUN;_APP_HAVE_TRAY;_APP_HAVE_UPDATES;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <OmitFramePointers>true</OmitFramePointers>
       <EnableParallelCodeGeneration>
       </EnableParallelCodeGeneration>
@@ -259,7 +259,7 @@
       <MinimalRebuild>
       </MinimalRebuild>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <PreprocessorDefinitions>_UNICODE;UNICODE;_APP_HAVE_AUTORUN;_APP_HAVE_TRAY;_APP_HAVE_UPDATES;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_UNICODE;UNICODE;_APP_HAVE_DARKTHEME;_APP_HAVE_AUTORUN;_APP_HAVE_TRAY;_APP_HAVE_UPDATES;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <EnableParallelCodeGeneration>
       </EnableParallelCodeGeneration>
       <BufferSecurityCheck>false</BufferSecurityCheck>
