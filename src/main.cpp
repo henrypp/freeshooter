@@ -1036,9 +1036,9 @@ INT_PTR CALLBACK HotkeysProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 			// configure window
 			_r_wnd_center (hwnd, GetParent (hwnd));
 
-#ifdef _APP_HAVE_DARKTHEME
+#ifndef _APP_NO_DARKTHEME
 			_r_wnd_setdarktheme (hwnd);
-#endif // _APP_HAVE_DARKTHEME
+#endif // _APP_NO_DARKTHEME
 
 			// localize window
 			SetWindowText (hwnd, app.LocaleString (IDS_HOTKEYS, nullptr));
@@ -1268,9 +1268,9 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 	{
 		case WM_INITDIALOG:
 		{
-#ifdef _APP_HAVE_DARKTHEME
+#ifndef _APP_NO_DARKTHEME
 			_r_wnd_setdarktheme (hwnd);
-#endif // _APP_HAVE_DARKTHEME
+#endif // _APP_NO_DARKTHEME
 
 			// create dummy window
 			{
