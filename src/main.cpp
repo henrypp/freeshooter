@@ -499,7 +499,7 @@ void _app_takeshot (HWND hwnd, EnumScreenshot mode)
 				enuminfo.is_menu = is_menu;
 				enuminfo.lprect = &window_rect;
 
-				EnumWindows (&CalculateOverlappedRect, (LPARAM)&enuminfo);
+				EnumWindows (&CalculateOverlappedRect, (LPARAM)& enuminfo);
 
 				if (is_menu)
 					hwnd = enuminfo.hroot;
@@ -687,7 +687,7 @@ HPAINTBUFFER _app_beginbufferedpaint (HDC hdc, LPRECT lprect, HDC* lphdc)
 
 	if (hlib)
 	{
-		typedef HPAINTBUFFER (WINAPI *BBP) (HDC, const LPRECT, BP_BUFFERFORMAT, PBP_PAINTPARAMS, HDC *); // BeginBufferedPaint
+		typedef HPAINTBUFFER (WINAPI * BBP) (HDC, const LPRECT, BP_BUFFERFORMAT, PBP_PAINTPARAMS, HDC *); // BeginBufferedPaint
 		const BBP _BeginBufferedPaint = (BBP)GetProcAddress (hlib, "BeginBufferedPaint");
 
 		if (_BeginBufferedPaint)
@@ -710,7 +710,7 @@ VOID _app_endbufferedpaint (HPAINTBUFFER hpbuff)
 
 	if (hlib)
 	{
-		typedef HRESULT (WINAPI *EBP) (HPAINTBUFFER, BOOL); // EndBufferedPaint
+		typedef HRESULT (WINAPI * EBP) (HPAINTBUFFER, BOOL); // EndBufferedPaint
 		const EBP _EndBufferedPaint = (EBP)GetProcAddress (hlib, "EndBufferedPaint");
 
 		if (_EndBufferedPaint)
@@ -762,25 +762,30 @@ LRESULT CALLBACK RegionProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 					SelectObject (hcapture_mask, hbitmap_mask);
 					BitBlt (hcapture_mask, wndRect.left, wndRect.top, _R_RECT_WIDTH (&wndRect), _R_RECT_HEIGHT (&wndRect), hcapture, wndRect.left, wndRect.top, SRCCOPY);
 
-					const LONG imageBytes = _R_RECT_WIDTH (&wndRect) * _R_RECT_HEIGHT (&wndRect) * 4;
+					const DWORD imageBytes = _R_RECT_WIDTH (&wndRect) * _R_RECT_HEIGHT (&wndRect) * 4;
 					static const double blend = 1.5;
 
-					UINT* bmpBuffer = (UINT*) new BYTE[imageBytes];
-					GetBitmapBits (hbitmap_mask, imageBytes, bmpBuffer);
+					COLORREF* bmpBuffer = (COLORREF*) new BYTE[imageBytes];
+					LONG bytes = GetBitmapBits (hbitmap_mask, imageBytes, bmpBuffer);
 
-					int R, G, B;
-					for (int i = 0; i < (_R_RECT_WIDTH (&wndRect) * _R_RECT_HEIGHT (&wndRect)); i++)
+					if (bytes)
 					{
-						R = (int) (GetRValue(bmpBuffer[i]) / blend);
-						G = (int) (GetGValue(bmpBuffer[i]) / blend);
-						B = (int) (GetBValue(bmpBuffer[i]) / blend);
+						COLORREF R, G, B;
+						for (size_t i = 0; i < (_R_RECT_WIDTH (&wndRect) * _R_RECT_HEIGHT (&wndRect)); i++)
+						{
+							COLORREF clr = bmpBuffer[i];
 
-						bmpBuffer[i] = RGB (R, G, B);
+							R = (int)(GetRValue (clr) / blend);
+							G = (int)(GetGValue (clr) / blend);
+							B = (int)(GetBValue (clr) / blend);
+
+							bmpBuffer[i] = RGB (R, G, B);
+						}
+
+						SetBitmapBits (hbitmap_mask, imageBytes, bmpBuffer);
 					}
 
-					SetBitmapBits (hbitmap_mask, imageBytes, bmpBuffer);
-
-					delete[] bmpBuffer;
+					SAFE_DELETE_ARRAY (bmpBuffer);
 				}
 
 				ReleaseDC (nullptr, hdc);
@@ -1844,7 +1849,7 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 
 					if (mode == ScreenshotWindow)
 					{
-						EnumWindows (&FindTopWindow, (LPARAM)&hwindow);
+						EnumWindows (&FindTopWindow, (LPARAM)& hwindow);
 
 						if (hwindow)
 							_r_wnd_toggle (hwindow, true);
