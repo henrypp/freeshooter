@@ -1525,18 +1525,18 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 					HMENU hmenu_settings = nullptr;
 
 					// fucked compiler
-					rstring mode_fullscreen = app.LocaleString (IDS_MODE_FULLSCREEN, nullptr).GetString ();
-					rstring mode_window = app.LocaleString (IDS_MODE_WINDOW, nullptr).GetString ();
-					rstring mode_region = app.LocaleString (IDS_MODE_REGION, nullptr).GetString ();
+					rstring mode_fullscreen = app.LocaleString (IDS_MODE_FULLSCREEN, nullptr);
+					rstring mode_window = app.LocaleString (IDS_MODE_WINDOW, nullptr);
+					rstring mode_region = app.LocaleString (IDS_MODE_REGION, nullptr);
 
 					if (app.ConfigGet (L"HotkeyFullscreenEnabled", true).AsBool ())
-						mode_fullscreen.ToLower ().AppendFormat (L"\t%s", _app_key2string (app.ConfigGet (L"HotkeyFullscreen", HOTKEY_FULLSCREEN).AsUint ()).GetString ());
+						mode_fullscreen.AppendFormat (L"\t%s", _app_key2string (app.ConfigGet (L"HotkeyFullscreen", HOTKEY_FULLSCREEN).AsUint ()).GetString ());
 
 					if (app.ConfigGet (L"HotkeyWindowEnabled", true).AsBool ())
-						mode_window.ToLower ().AppendFormat (L"\t%s", _app_key2string (app.ConfigGet (L"HotkeyWindow", HOTKEY_WINDOW).AsUint ()).GetString ());
+						mode_window.AppendFormat (L"\t%s", _app_key2string (app.ConfigGet (L"HotkeyWindow", HOTKEY_WINDOW).AsUint ()).GetString ());
 
 					if (app.ConfigGet (L"HotkeyRegionEnabled", true).AsBool ())
-						mode_region.ToLower ().AppendFormat (L"\t%s", _app_key2string (app.ConfigGet (L"HotkeyRegion", HOTKEY_REGION).AsUint ()).GetString ());
+						mode_region.AppendFormat (L"\t%s", _app_key2string (app.ConfigGet (L"HotkeyRegion", HOTKEY_REGION).AsUint ()).GetString ());
 
 					// localize
 					app.LocaleMenu (hsubmenu, IDS_TRAY_SHOW, IDM_TRAY_SHOW, false, nullptr);
