@@ -19,6 +19,7 @@
 
 #define WND_SLEEP 150
 #define JPEG_QUALITY 95
+#define BLEND 1.5
 #define START_IDX 1
 
 #define REGION_PEN_SIZE (GetSystemMetrics (SM_CXBORDER) * 2)

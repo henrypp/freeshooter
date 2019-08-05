@@ -2,6 +2,7 @@
 // Copyright (c) 2009-2019 Henry++
 
 #include <windows.h>
+#include <algorithm>
 #include <dwmapi.h>
 #include <gdiplus.h>
 #include <shlobj.h>
@@ -46,10 +47,9 @@ size_t _app_getimageformat ()
 	if (formats.empty ())
 		return 0;
 
-	const INT size = (INT)formats.size ();
 	const INT current = app.ConfigGet (L"ImageFormat", FormatPng).AsInt ();
 
-	return size_t (max (min (current, size - 1), 0));
+	return std::clamp (current, 0, INT (formats.size () - 1));
 }
 
 rstring _app_getdirectory ()
@@ -93,9 +93,7 @@ rstring _app_uniquefilename (LPCWSTR directory, EnumImageName name_type)
 	}
 	else
 	{
-		static const USHORT idx = START_IDX;
-
-		for (USHORT i = idx; i < USHRT_MAX; i++)
+		for (USHORT i = START_IDX; i < USHRT_MAX; i++)
 		{
 			StringCchPrintf (result, _countof (result), L"%s\\" FILE_FORMAT_NAME_FORMAT L".%s", directory, name_prefix.GetString (), i, fext.GetString ());
 
@@ -113,7 +111,6 @@ rstring _app_uniquefilename (LPCWSTR directory, EnumImageName name_type)
 bool _app_getencoderclsid (LPCWSTR exif, CLSID *pClsid)
 {
 	UINT num = 0, size = 0;
-	const size_t len = _r_str_length (exif);
 	Gdiplus::GetImageEncodersSize (&num, &size);
 
 	if (size)
@@ -123,6 +120,7 @@ bool _app_getencoderclsid (LPCWSTR exif, CLSID *pClsid)
 		if (pImageCodecInfo)
 		{
 			Gdiplus::GetImageEncoders (num, size, pImageCodecInfo);
+			const size_t len = _r_str_length (exif);
 
 			for (UINT i = 0; i < num; ++i)
 			{
@@ -148,23 +146,20 @@ bool _app_savehbitmap (HBITMAP hbitmap, LPCWSTR filepath)
 
 	Gdiplus::Bitmap *pScreenShot = new Gdiplus::Bitmap (hbitmap, nullptr);
 
-	if (pScreenShot)
-	{
-		CLSID* imageCLSID = &formats.at (_app_getimageformat ()).clsid;
-		ULONG uQuality = app.ConfigGet (L"JPEGQuality", JPEG_QUALITY).AsUlong ();
+	CLSID* imageCLSID = &formats.at (_app_getimageformat ()).clsid;
+	ULONG uQuality = app.ConfigGet (L"JPEGQuality", JPEG_QUALITY).AsUlong ();
 
-		Gdiplus::EncoderParameters encoderParams = {0};
+	Gdiplus::EncoderParameters encoderParams = {0};
 
-		encoderParams.Count = 1;
-		encoderParams.Parameter[0].NumberOfValues = 1;
-		encoderParams.Parameter[0].Guid = Gdiplus::EncoderQuality;
-		encoderParams.Parameter[0].Type = Gdiplus::EncoderParameterValueTypeLong;
-		encoderParams.Parameter[0].Value = &uQuality;
+	encoderParams.Count = 1;
+	encoderParams.Parameter[0].NumberOfValues = 1;
+	encoderParams.Parameter[0].Guid = Gdiplus::EncoderQuality;
+	encoderParams.Parameter[0].Type = Gdiplus::EncoderParameterValueTypeLong;
+	encoderParams.Parameter[0].Value = &uQuality;
 
-		result = (pScreenShot->Save (filepath, imageCLSID, &encoderParams) == Gdiplus::Ok);
+	result = (pScreenShot->Save (filepath, imageCLSID, &encoderParams) == Gdiplus::Ok);
 
-		delete pScreenShot;
-	}
+	SAFE_DELETE (pScreenShot);
 
 	return result;
 }
@@ -202,7 +197,7 @@ void _app_dofinishjob (HBITMAP hbitmap, INT width, INT height)
 	}
 
 	WCHAR full_path[MAX_PATH] = {0};
-	StringCchCopy (full_path, _countof (full_path), _app_uniquefilename (_app_getdirectory (), (EnumImageName)app.ConfigGet (L"FilenameType", NameIndex).AsUint ()));
+	StringCchCopy (full_path, _countof (full_path), _app_uniquefilename (_app_getdirectory (), (EnumImageName)app.ConfigGet (L"FilenameType", NameIndex).AsInt ()));
 
 	_app_savehbitmap (hbitmap, full_path);
 }
@@ -226,16 +221,19 @@ void _app_screenshot (INT x, INT y, INT width, INT height, bool is_cursor)
 
 			if (GetCursorInfo (&cursorinfo))
 			{
-				const HICON hicon = CopyIcon (cursorinfo.hCursor);
-
-				if (hicon)
+				if (cursorinfo.hCursor)
 				{
-					ICONINFO iconinfo = {0};
-					GetIconInfo (hicon, &iconinfo);
+					const HICON hicon = CopyIcon (cursorinfo.hCursor);
 
-					DrawIcon (hcapture, cursorinfo.ptScreenPos.x - iconinfo.xHotspot - x, cursorinfo.ptScreenPos.y - iconinfo.yHotspot - y, hicon);
+					if (hicon)
+					{
+						ICONINFO iconinfo = {0};
+						GetIconInfo (hicon, &iconinfo);
 
-					DestroyIcon (hicon);
+						DrawIcon (hcapture, cursorinfo.ptScreenPos.x - iconinfo.xHotspot - x, cursorinfo.ptScreenPos.y - iconinfo.yHotspot - y, hicon);
+
+						DestroyIcon (hicon);
+					}
 				}
 			}
 		}
@@ -293,7 +291,7 @@ bool _app_ismenu (HWND hwnd)
 {
 	WCHAR class_name[MAX_PATH] = {0};
 
-	if (GetClassName (hwnd, class_name, _countof (class_name)) && class_name[0])
+	if (GetClassName (hwnd, class_name, _countof (class_name)))
 		return _wcsnicmp (class_name, L"#32768", 6) == 0;
 
 	return false;
@@ -763,21 +761,20 @@ LRESULT CALLBACK RegionProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 					BitBlt (hcapture_mask, wndRect.left, wndRect.top, _R_RECT_WIDTH (&wndRect), _R_RECT_HEIGHT (&wndRect), hcapture, wndRect.left, wndRect.top, SRCCOPY);
 
 					const DWORD imageBytes = _R_RECT_WIDTH (&wndRect) * _R_RECT_HEIGHT (&wndRect) * 4;
-					static const double blend = 1.5;
 
-					COLORREF* bmpBuffer = (COLORREF*) new BYTE[imageBytes];
+					COLORREF* bmpBuffer = new COLORREF[imageBytes];
 					LONG bytes = GetBitmapBits (hbitmap_mask, imageBytes, bmpBuffer);
 
 					if (bytes)
 					{
 						COLORREF R, G, B;
-						for (size_t i = 0; i < (_R_RECT_WIDTH (&wndRect) * _R_RECT_HEIGHT (&wndRect)); i++)
+						for (LONG i = 0; i < (_R_RECT_WIDTH (&wndRect) * _R_RECT_HEIGHT (&wndRect)); i++)
 						{
 							COLORREF clr = bmpBuffer[i];
 
-							R = (int)(GetRValue (clr) / blend);
-							G = (int)(GetGValue (clr) / blend);
-							B = (int)(GetBValue (clr) / blend);
+							R = (COLORREF)(GetRValue (clr) / BLEND);
+							G = (COLORREF)(GetGValue (clr) / BLEND);
+							B = (COLORREF)(GetBValue (clr) / BLEND);
 
 							bmpBuffer[i] = RGB (R, G, B);
 						}
@@ -1055,9 +1052,11 @@ INT_PTR CALLBACK HotkeysProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 			SetDlgItemText (hwnd, IDC_SAVE, app.LocaleString (IDS_SAVE, nullptr));
 			SetDlgItemText (hwnd, IDC_CLOSE, app.LocaleString (IDS_CLOSE, nullptr));
 
-			SendDlgItemMessage (hwnd, IDC_FULLSCREEN_CB, CB_INSERTSTRING, 0, (LPARAM)app.LocaleString (IDS_DISABLE, nullptr).GetString ());
-			SendDlgItemMessage (hwnd, IDC_WINDOW_CB, CB_INSERTSTRING, 0, (LPARAM)app.LocaleString (IDS_DISABLE, nullptr).GetString ());
-			SendDlgItemMessage (hwnd, IDC_REGION_CB, CB_INSERTSTRING, 0, (LPARAM)app.LocaleString (IDS_DISABLE, nullptr).GetString ());
+			const rstring disabled = app.LocaleString (IDS_DISABLE, nullptr);
+
+			SendDlgItemMessage (hwnd, IDC_FULLSCREEN_CB, CB_INSERTSTRING, 0, (LPARAM)disabled.GetString ());
+			SendDlgItemMessage (hwnd, IDC_WINDOW_CB, CB_INSERTSTRING, 0, (LPARAM)disabled.GetString ());
+			SendDlgItemMessage (hwnd, IDC_REGION_CB, CB_INSERTSTRING, 0, (LPARAM)disabled.GetString ());
 
 			// show config
 			const UINT fullscreen_code = app.ConfigGet (L"HotkeyFullscreen", HOTKEY_FULLSCREEN).AsUint ();
@@ -1260,7 +1259,7 @@ void _app_initdropdownmenu (HMENU hmenu, bool is_button)
 	CheckMenuItem (hmenu, IDM_CLEARBACKGROUND_CHK, MF_BYCOMMAND | (app.ConfigGet (L"IsClearBackground", true).AsBool () ? MF_CHECKED : MF_UNCHECKED));
 	CheckMenuItem (hmenu, IDM_DISABLEAEROONWND_CHK, MF_BYCOMMAND | (app.ConfigGet (L"IsDisableAeroOnWnd", false).AsBool () ? MF_CHECKED : MF_UNCHECKED));
 
-	CheckMenuRadioItem (hmenu, IDM_FILENAME_INDEX, IDM_FILENAME_DATE, IDM_FILENAME_INDEX + app.ConfigGet (L"FilenameType", NameIndex).AsUint (), MF_BYCOMMAND);
+	CheckMenuRadioItem (hmenu, IDM_FILENAME_INDEX, IDM_FILENAME_DATE, IDM_FILENAME_INDEX + app.ConfigGet (L"FilenameType", NameIndex).AsInt (), MF_BYCOMMAND);
 	CheckMenuRadioItem (hmenu, IDX_FORMATS, IDX_FORMATS + UINT (formats.size ()), IDX_FORMATS + UINT (_app_getimageformat ()), MF_BYCOMMAND);
 
 	if (!app.IsVistaOrLater ())
@@ -1371,7 +1370,7 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 			CheckDlgButton (hwnd, IDC_INCLUDEWINDOWSHADOW_CHK, app.ConfigGet (L"IsIncludeWindowShadow", true).AsBool () ? BST_CHECKED : BST_UNCHECKED);
 			CheckDlgButton (hwnd, IDC_CLEARBACKGROUND_CHK, app.ConfigGet (L"IsClearBackground", true).AsBool () ? BST_CHECKED : BST_UNCHECKED);
 
-			CheckRadioButton (hwnd, IDC_MODE_FULLSCREEN, IDC_MODE_REGION, IDC_MODE_FULLSCREEN + app.ConfigGet (L"Mode", 0).AsUint ());
+			CheckRadioButton (hwnd, IDC_MODE_FULLSCREEN, IDC_MODE_REGION, IDC_MODE_FULLSCREEN + app.ConfigGet (L"Mode", 0).AsInt ());
 
 			app.TrayCreate (hwnd, UID, nullptr, WM_TRAYICON, _r_loadicon (app.GetHINSTANCE (), MAKEINTRESOURCE (IDI_MAIN), GetSystemMetrics (SM_CXSMICON)), false);
 			app.TraySetInfo (hwnd, UID, nullptr, nullptr, APP_NAME);
@@ -1616,7 +1615,7 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 			{
 				const size_t idx = (LOWORD (wparam) - IDX_FORMATS);
 
-				app.ConfigSet (L"ImageFormat", (LONGLONG)idx);
+				app.ConfigSet (L"ImageFormat", idx);
 
 				return FALSE;
 			}
@@ -1788,7 +1787,7 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 					else
 						mode = ScreenshotFullscreen;
 
-					app.ConfigSet (L"Mode", (LONGLONG)mode);
+					app.ConfigSet (L"Mode", mode);
 					break;
 				}
 
@@ -1803,7 +1802,7 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 					else
 						val = NameIndex;
 
-					app.ConfigSet (L"FilenameType", (LONGLONG)val);
+					app.ConfigSet (L"FilenameType", val);
 
 					break;
 				}
@@ -1844,7 +1843,7 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 					}
 					else
 					{
-						mode = (EnumScreenshot)app.ConfigGet (L"Mode", 0).AsUint ();
+						mode = (EnumScreenshot)app.ConfigGet (L"Mode", 0).AsInt ();
 					}
 
 					if (mode == ScreenshotWindow)
