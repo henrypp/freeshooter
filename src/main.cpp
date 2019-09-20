@@ -34,15 +34,15 @@ INT_PTR CALLBACK HotkeysProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 //	_app_getwindowrect (hwnd, &rc);
 //
 //	if (!title[0])
-//		StringCchCopy (title, _countof (title), L"n/a");
+//		_r_str_copy (title, _countof (title), L"n/a");
 //
 //	if (!class_name[0])
-//		StringCchCopy (class_name, _countof (class_name), L"n/a");
+//		_r_str_copy (class_name, _countof (class_name), L"n/a");
 //
 //	RDBG (L"0x%08x | % 20s | % 20s | left: %.4d, top: %.4d, width: %.4d, height: %.4d", hwnd, title, class_name, rc.left, rc.top, _R_RECT_WIDTH (&rc), _R_RECT_HEIGHT (&rc));
 //}
 
-size_t _app_getimageformat ()
+INT _app_getimageformat_id ()
 {
 	if (formats.empty ())
 		return 0;
@@ -50,6 +50,13 @@ size_t _app_getimageformat ()
 	const INT current = app.ConfigGet (L"ImageFormat", FormatPng).AsInt ();
 
 	return std::clamp (current, 0, INT (formats.size () - 1));
+}
+
+IMAGE_FORMAT* _app_getimageformat_data ()
+{
+	IMAGE_FORMAT* pif = &formats.at (_app_getimageformat_id ());
+
+	return pif;
 }
 
 rstring _app_getdirectory ()
@@ -64,7 +71,12 @@ rstring _app_getdirectory ()
 
 rstring _app_uniquefilename (LPCWSTR directory, EnumImageName name_type)
 {
-	const rstring fext = formats.at (_app_getimageformat ()).ext;
+	IMAGE_FORMAT* pif = _app_getimageformat_data ();
+
+	if (!pif)
+		return L"";
+
+	const rstring fext = pif->ext;
 
 	WCHAR result[MAX_PATH] = {0};
 	const rstring name_prefix = app.ConfigGet (L"FilenamePrefix", FILE_FORMAT_NAME_PREFIX);
@@ -82,7 +94,7 @@ rstring _app_uniquefilename (LPCWSTR directory, EnumImageName name_type)
 			GetTimeFormat (LOCALE_SYSTEM_DEFAULT, 0, &st, FILE_FORMAT_DATE_FORMAT_2, time_format, _countof (time_format))
 			)
 		{
-			StringCchPrintf (result, _countof (result), L"%s\\%s%s-%s.%s", directory, name_prefix.GetString (), date_format, time_format, fext.GetString ());
+			_r_str_printf (result, _countof (result), L"%s\\%s%s-%s.%s", directory, name_prefix.GetString (), date_format, time_format, fext.GetString ());
 
 			if (!_r_fs_exists (result))
 				return result;
@@ -95,7 +107,7 @@ rstring _app_uniquefilename (LPCWSTR directory, EnumImageName name_type)
 	{
 		for (USHORT i = START_IDX; i < USHRT_MAX; i++)
 		{
-			StringCchPrintf (result, _countof (result), L"%s\\" FILE_FORMAT_NAME_FORMAT L".%s", directory, name_prefix.GetString (), i, fext.GetString ());
+			_r_str_printf (result, _countof (result), L"%s\\" FILE_FORMAT_NAME_FORMAT L".%s", directory, name_prefix.GetString (), i, fext.GetString ());
 
 			if (!_r_fs_exists (result))
 				return result;
@@ -142,11 +154,16 @@ bool _app_getencoderclsid (LPCWSTR exif, CLSID *pClsid)
 
 bool _app_savehbitmap (HBITMAP hbitmap, LPCWSTR filepath)
 {
+	IMAGE_FORMAT* pif = _app_getimageformat_data ();
+
+	if (!pif)
+		return false;
+
 	bool result = false;
 
 	Gdiplus::Bitmap *pScreenShot = new Gdiplus::Bitmap (hbitmap, nullptr);
 
-	CLSID* imageCLSID = &formats.at (_app_getimageformat ()).clsid;
+	CLSID* imageCLSID = &pif->clsid;
 	ULONG uQuality = app.ConfigGet (L"JPEGQuality", JPEG_QUALITY).AsUlong ();
 
 	Gdiplus::EncoderParameters encoderParams = {0};
@@ -197,7 +214,7 @@ void _app_dofinishjob (HBITMAP hbitmap, INT width, INT height)
 	}
 
 	WCHAR full_path[MAX_PATH] = {0};
-	StringCchCopy (full_path, _countof (full_path), _app_uniquefilename (_app_getdirectory (), (EnumImageName)app.ConfigGet (L"FilenameType", NameIndex).AsInt ()));
+	_r_str_copy (full_path, _countof (full_path), _app_uniquefilename (_app_getdirectory (), (EnumImageName)app.ConfigGet (L"FilenameType", NameIndex).AsInt ()));
 
 	_app_savehbitmap (hbitmap, full_path);
 }
@@ -442,7 +459,7 @@ void _app_takeshot (HWND hwnd, EnumScreenshot mode)
 			SetWindowPos (myWindow, nullptr, -GetSystemMetrics (SM_CXVIRTUALSCREEN), -GetSystemMetrics (SM_CYVIRTUALSCREEN), 0, 0, SWP_HIDEWINDOW | SWP_NOSIZE | SWP_NOZORDER | SWP_NOOWNERZORDER | SWP_NOCOPYBITS | SWP_DEFERERASE | SWP_NOSENDCHANGING);
 		}
 
-		app.TrayToggle (myWindow, UID, nullptr, false);
+		_r_tray_toggle (myWindow, UID, false);
 	}
 
 	if (mode == ScreenshotFullscreen)
@@ -567,8 +584,8 @@ void _app_takeshot (HWND hwnd, EnumScreenshot mode)
 		if (is_windowdisplayed)
 			SetWindowPos (myWindow, nullptr, prev_rect.left, prev_rect.top, _R_RECT_WIDTH (&prev_rect), _R_RECT_HEIGHT (&prev_rect), SWP_SHOWWINDOW | SWP_NOACTIVATE | SWP_FRAMECHANGED | SWP_NOZORDER | SWP_NOCOPYBITS | SWP_NOOWNERZORDER | SWP_NOSENDCHANGING);
 
-		app.TrayToggle (myWindow, UID, nullptr, true);
-		app.TraySetInfo (myWindow, UID, nullptr, nullptr, APP_NAME);
+		_r_tray_toggle (myWindow, UID, true);
+		_r_tray_setinfo (myWindow, UID, nullptr, APP_NAME);
 	}
 }
 
@@ -592,7 +609,7 @@ rstring _app_key2string (UINT key)
 
 	if (vk_code == VK_SNAPSHOT)
 	{
-		StringCchCopy (name, _countof (name), L"Prnt scrn");
+		_r_str_copy (name, _countof (name), L"Prnt scrn");
 	}
 	else
 	{
@@ -658,7 +675,9 @@ bool _app_hotkeyinit (HWND hwnd, HWND hwnd_hotkey)
 		if (is_noregion)
 			buffer.AppendFormat (L"%s [%s]\r\n", app.LocaleString (IDS_MODE_REGION, nullptr).GetString (), _app_key2string (hk_region).GetString ());
 
-		if (_r_msg (hwnd_hotkey ? hwnd_hotkey : hwnd, MB_YESNO | MB_ICONWARNING | MB_TOPMOST, APP_NAME, app.LocaleString (IDS_WARNING_HOTKEYS, nullptr), buffer.Trim (L"\r\n")) == IDYES)
+		_r_str_trim (buffer, L"\r\n");
+
+		if (_r_msg (hwnd_hotkey ? hwnd_hotkey : hwnd, MB_YESNO | MB_ICONWARNING | MB_TOPMOST, APP_NAME, app.LocaleString (IDS_WARNING_HOTKEYS, nullptr), buffer.GetString ()) == IDYES)
 		{
 			if (!hwnd_hotkey)
 				DialogBox (nullptr, MAKEINTRESOURCE (IDD_HOTKEYS), hwnd, &HotkeysProc);
@@ -740,8 +759,8 @@ LRESULT CALLBACK RegionProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 
 			if (hdc)
 			{
-				hpen = CreatePen (PS_SOLID, app.GetDPI (REGION_PEN_SIZE), REGION_PEN_COLOR);
-				hpen_draw = CreatePen (PS_SOLID, app.GetDPI (REGION_PEN_SIZE), REGION_PEN_DRAW_COLOR);
+				hpen = CreatePen (PS_SOLID, REGION_PEN_SIZE, REGION_PEN_COLOR);
+				hpen_draw = CreatePen (PS_SOLID, REGION_PEN_SIZE, REGION_PEN_DRAW_COLOR);
 
 				hcapture = CreateCompatibleDC (hdc);
 				hcapture_mask = CreateCompatibleDC (hdc);
@@ -997,7 +1016,7 @@ LRESULT CALLBACK RegionProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 	return DefWindowProc (hwnd, msg, wparam, lparam);
 }
 
-void generate_keys_array (UINT* keys, size_t count)
+void generate_keys_array (CHAR* keys, size_t count)
 {
 	static const UINT predefined_keys[] = {
 		VK_BACK,
@@ -1010,21 +1029,17 @@ void generate_keys_array (UINT* keys, size_t count)
 
 	size_t idx = 0;
 
-	for (UINT i = 'A'; i <= 'Z'; i++)
+	for (CHAR i = 'A'; i <= 'Z'; i++)
 		keys[idx++] = MAKEWORD (i, 0);
 
-	for (UINT i = '0'; i <= '9'; i++)
+	for (CHAR i = '0'; i <= '9'; i++)
 		keys[idx++] = MAKEWORD (i, 0);
 
-	for (UINT i = VK_F1; i <= VK_F12; i++)
-	{
+	for (CHAR i = VK_F1; i <= VK_F12; i++)
 		keys[idx++] = MAKEWORD (i, 0);
-	}
 
-	for (UINT i = 0; i < _countof (predefined_keys); i++)
-	{
+	for (CHAR i = 0; i < _countof (predefined_keys); i++)
 		keys[idx++] = MAKEWORD (predefined_keys[i], 0);
-	}
 
 	keys[idx] = 0;
 }
@@ -1079,7 +1094,7 @@ INT_PTR CALLBACK HotkeysProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 			CheckDlgButton (hwnd, IDC_REGION_CTRL, ((HIBYTE (region_code) & HOTKEYF_CONTROL) != 0) ? BST_CHECKED : BST_UNCHECKED);
 			CheckDlgButton (hwnd, IDC_REGION_ALT, ((HIBYTE (region_code) & HOTKEYF_ALT) != 0) ? BST_CHECKED : BST_UNCHECKED);
 
-			static UINT keys[64] = {0};
+			static CHAR keys[64] = {0};
 			generate_keys_array (keys, _countof (keys));
 
 			for (UINT i = 0; i < _countof (keys); i++)
@@ -1090,7 +1105,7 @@ INT_PTR CALLBACK HotkeysProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 					break;
 
 				WCHAR key_name[64] = {0};
-				StringCchCopy (key_name, _countof (key_name), _app_key2string (MAKEWORD (key_code, 0)));
+				_r_str_copy (key_name, _countof (key_name), _app_key2string (MAKEWORD (key_code, 0)));
 
 				const UINT idx = i + 1;
 
@@ -1209,6 +1224,7 @@ INT_PTR CALLBACK HotkeysProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 						break;
 
 					// without break;
+					[[fallthrough]] ;
 				}
 
 				case IDCANCEL: // process Esc key
@@ -1239,8 +1255,13 @@ void _app_initdropdownmenu (HMENU hmenu, bool is_button)
 	app.LocaleMenu (hmenu, IDS_IMAGEFORMAT, FORMAT_MENU, true, nullptr);
 	app.LocaleMenu (hmenu, IDS_HOTKEYS, IDM_HOTKEYS, false, is_button ? L"...\tF3" : L"...");
 
-	app.LocaleMenu (hmenu, 0, IDM_FILENAME_INDEX, false, _r_fmt (FILE_FORMAT_NAME_FORMAT L".%s", app.ConfigGet (L"FilenamePrefix", FILE_FORMAT_NAME_PREFIX).GetString (), START_IDX, formats.at (_app_getimageformat ()).ext));
-	app.LocaleMenu (hmenu, 0, IDM_FILENAME_DATE, false, _r_fmt (L"%s" FILE_FORMAT_DATE_FORMAT_1 L"-" FILE_FORMAT_DATE_FORMAT_2 L".%s", app.ConfigGet (L"FilenamePrefix", FILE_FORMAT_NAME_PREFIX).GetString (), formats.at (_app_getimageformat ()).ext));
+	IMAGE_FORMAT* pif = _app_getimageformat_data ();
+
+	if (pif)
+	{
+		app.LocaleMenu (hmenu, 0, IDM_FILENAME_INDEX, false, _r_fmt (FILE_FORMAT_NAME_FORMAT L".%s", app.ConfigGet (L"FilenamePrefix", FILE_FORMAT_NAME_PREFIX).GetString (), START_IDX, pif->ext));
+		app.LocaleMenu (hmenu, 0, IDM_FILENAME_DATE, false, _r_fmt (L"%s" FILE_FORMAT_DATE_FORMAT_1 L"-" FILE_FORMAT_DATE_FORMAT_2 L".%s", app.ConfigGet (L"FilenamePrefix", FILE_FORMAT_NAME_PREFIX).GetString (), pif->ext));
+	}
 
 	// initialize formats
 	{
@@ -1260,7 +1281,7 @@ void _app_initdropdownmenu (HMENU hmenu, bool is_button)
 	CheckMenuItem (hmenu, IDM_DISABLEAEROONWND_CHK, MF_BYCOMMAND | (app.ConfigGet (L"IsDisableAeroOnWnd", false).AsBool () ? MF_CHECKED : MF_UNCHECKED));
 
 	CheckMenuRadioItem (hmenu, IDM_FILENAME_INDEX, IDM_FILENAME_DATE, IDM_FILENAME_INDEX + app.ConfigGet (L"FilenameType", NameIndex).AsInt (), MF_BYCOMMAND);
-	CheckMenuRadioItem (hmenu, IDX_FORMATS, IDX_FORMATS + UINT (formats.size ()), IDX_FORMATS + UINT (_app_getimageformat ()), MF_BYCOMMAND);
+	CheckMenuRadioItem (hmenu, IDX_FORMATS, IDX_FORMATS + UINT (formats.size ()), IDX_FORMATS + _app_getimageformat_id (), MF_BYCOMMAND);
 
 	if (!app.IsVistaOrLater ())
 		EnableMenuItem (hmenu, IDM_DISABLEAEROONWND_CHK, MF_BYCOMMAND | MF_DISABLED | MF_GRAYED);
@@ -1307,7 +1328,7 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 				if (SHGetFolderPath (hwnd, CSIDL_DESKTOPDIRECTORY, nullptr, SHGFP_TYPE_CURRENT | SHGFP_TYPE_DEFAULT, config.default_folder) != S_OK &&
 					SHGetFolderPath (hwnd, CSIDL_MYPICTURES, nullptr, SHGFP_TYPE_CURRENT | SHGFP_TYPE_DEFAULT, config.default_folder) != S_OK)
 				{
-					StringCchCopy (config.default_folder, _countof (config.default_folder), DEFAULT_DIRECTORY);
+					_r_str_copy (config.default_folder, _countof (config.default_folder), DEFAULT_DIRECTORY);
 				}
 
 				app.ConfigSet (L"Folder", _r_path_unexpand (_app_getdirectory ()));
@@ -1350,7 +1371,7 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 
 					if (_app_getencoderclsid (szexif[i], &tagImage.clsid))
 					{
-						StringCchCopy (tagImage.ext, _countof (tagImage.ext), szext[i]);
+						_r_str_copy (tagImage.ext, _countof (tagImage.ext), szext[i]);
 
 						formats.push_back (tagImage);
 					}
@@ -1372,8 +1393,7 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 
 			CheckRadioButton (hwnd, IDC_MODE_FULLSCREEN, IDC_MODE_REGION, IDC_MODE_FULLSCREEN + app.ConfigGet (L"Mode", 0).AsInt ());
 
-			app.TrayCreate (hwnd, UID, nullptr, WM_TRAYICON, _r_loadicon (app.GetHINSTANCE (), MAKEINTRESOURCE (IDI_MAIN), GetSystemMetrics (SM_CXSMICON)), false);
-			app.TraySetInfo (hwnd, UID, nullptr, nullptr, APP_NAME);
+			_r_tray_create (hwnd, UID, WM_TRAYICON, _r_loadicon (app.GetHINSTANCE (), MAKEINTRESOURCE (IDI_MAIN), GetSystemMetrics (SM_CXSMICON)), APP_NAME, false);
 
 			// configure menu
 			CheckMenuItem (GetMenu (hwnd), IDM_ALWAYSONTOP_CHK, MF_BYCOMMAND | (app.ConfigGet (L"AlwaysOnTop", false).AsBool () ? MF_CHECKED : MF_UNCHECKED));
@@ -1432,7 +1452,7 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 			app.LocaleMenu (menu, IDS_SCREENSHOT, IDM_TAKE_FULLSCREEN, false, _r_fmt (L": %s", mode_fullscreen.GetString ()));
 			app.LocaleMenu (menu, IDS_SCREENSHOT, IDM_TAKE_WINDOW, false, _r_fmt (L": %s", mode_window.GetString ()));
 			app.LocaleMenu (menu, IDS_SCREENSHOT, IDM_TAKE_REGION, false, _r_fmt (L": %s", mode_region.GetString ()));
-			app.LocaleMenu (menu, IDS_EXIT, IDM_EXIT, false, L"\tAlt+F4");
+			app.LocaleMenu (menu, IDS_EXIT, IDM_EXIT, false, nullptr);
 			app.LocaleMenu (menu, IDS_VIEW, 1, true, nullptr);
 			app.LocaleMenu (menu, IDS_ALWAYSONTOP_CHK, IDM_ALWAYSONTOP_CHK, false, nullptr);
 			app.LocaleMenu (menu, IDS_CLASSICUI_CHK, IDM_CLASSICUI_CHK, false, nullptr);
@@ -1454,7 +1474,7 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 
 		case RM_UNINITIALIZE:
 		{
-			app.TrayDestroy (hwnd, UID, nullptr);
+			_r_tray_destroy (hwnd, UID);
 			break;
 		}
 
@@ -1666,6 +1686,7 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 				case IDM_STARTMINIMIZED_CHK:
 				{
 					const bool new_val = !app.ConfigGet (L"IsStartMinimized", false).AsBool ();
+
 					CheckMenuItem (GetMenu (hwnd), LOWORD (wparam), MF_BYCOMMAND | (new_val ? MF_CHECKED : MF_UNCHECKED));
 					app.ConfigSet (L"IsStartMinimized", new_val);
 
@@ -1675,6 +1696,7 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 				case IDM_LOADONSTARTUP_CHK:
 				{
 					const bool new_val = !app.AutorunIsEnabled ();
+
 					CheckMenuItem (GetMenu (hwnd), LOWORD (wparam), MF_BYCOMMAND | (new_val ? MF_CHECKED : MF_UNCHECKED));
 					app.AutorunEnable (new_val);
 
@@ -1684,6 +1706,7 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 				case IDM_CHECKUPDATES_CHK:
 				{
 					const bool new_val = !app.ConfigGet (L"CheckUpdates", true).AsBool ();
+
 					CheckMenuItem (GetMenu (hwnd), LOWORD (wparam), MF_BYCOMMAND | (new_val ? MF_CHECKED : MF_UNCHECKED));
 					app.ConfigSet (L"CheckUpdates", new_val);
 
@@ -1693,6 +1716,7 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 				case IDM_COPYTOCLIPBOARD_CHK:
 				{
 					const bool new_val = !app.ConfigGet (L"CopyToClipboard", false).AsBool ();
+
 					app.ConfigSet (L"CopyToClipboard", new_val);
 
 					break;
@@ -1734,6 +1758,7 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 				case IDM_PLAYSOUNDS_CHK:
 				{
 					const bool new_val = !app.ConfigGet (L"IsPlaySound", true).AsBool ();
+
 					app.ConfigSet (L"IsPlaySound", new_val);
 
 					break;
@@ -1788,6 +1813,7 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 						mode = ScreenshotFullscreen;
 
 					app.ConfigSet (L"Mode", mode);
+
 					break;
 				}
 
@@ -1815,7 +1841,7 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 				case IDM_TRAY_TAKE_REGION:
 				case IDC_SCREENSHOT:
 				{
-					const UINT ctrl_id = LOWORD (wparam);
+					const INT ctrl_id = LOWORD (wparam);
 
 					EnumScreenshot mode;
 					HWND hwindow = nullptr;
