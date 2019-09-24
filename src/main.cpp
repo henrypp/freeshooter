@@ -136,7 +136,7 @@ bool _app_getencoderclsid (LPCWSTR exif, CLSID *pClsid)
 
 			for (UINT i = 0; i < num; ++i)
 			{
-				if (_wcsnicmp (pImageCodecInfo[i].MimeType, exif, len) == 0)
+				if (_r_str_compare (pImageCodecInfo[i].MimeType, exif, len) == 0)
 				{
 					*pClsid = pImageCodecInfo[i].Clsid;
 					free (pImageCodecInfo);
