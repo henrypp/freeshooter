@@ -1732,10 +1732,17 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 
 				case IDC_BROWSE_BTN:
 				{
+					LPITEMIDLIST item = nullptr;
+					SFGAOF attributes;
+
+
 					BROWSEINFO browseInfo = {0};
 
 					browseInfo.hwndOwner = hwnd;
 					browseInfo.ulFlags = BIF_RETURNONLYFSDIRS | BIF_USENEWUI | BIF_VALIDATE;
+
+					if (SUCCEEDED (SHParseDisplayName (_app_getdirectory (), nullptr, &item, 0, &attributes)))
+						browseInfo.pidlRoot = item;
 
 					LPITEMIDLIST pidl = SHBrowseForFolder (&browseInfo);
 
@@ -1751,6 +1758,9 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 
 						CoTaskMemFree (pidl);
 					}
+
+					if (item)
+						CoTaskMemFree (item);
 
 					break;
 				}
