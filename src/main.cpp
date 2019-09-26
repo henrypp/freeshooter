@@ -514,7 +514,7 @@ void _app_takeshot (HWND hwnd, EnumScreenshot mode)
 				enuminfo.is_menu = is_menu;
 				enuminfo.lprect = &window_rect;
 
-				EnumWindows (&CalculateOverlappedRect, (LPARAM)& enuminfo);
+				EnumWindows (&CalculateOverlappedRect, (LPARAM)&enuminfo);
 
 				if (is_menu)
 					hwnd = enuminfo.hroot;
@@ -1224,7 +1224,7 @@ INT_PTR CALLBACK HotkeysProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 						break;
 
 					// without break;
-					[[fallthrough]] ;
+					[[fallthrough]];
 				}
 
 				case IDCANCEL: // process Esc key
@@ -1884,7 +1884,7 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 
 					if (mode == ScreenshotWindow)
 					{
-						EnumWindows (&FindTopWindow, (LPARAM)& hwindow);
+						EnumWindows (&FindTopWindow, (LPARAM)&hwindow);
 
 						if (hwindow)
 							_r_wnd_toggle (hwindow, true);
