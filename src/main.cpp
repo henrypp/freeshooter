@@ -309,7 +309,7 @@ bool _app_ismenu (HWND hwnd)
 	WCHAR class_name[MAX_PATH] = {0};
 
 	if (GetClassName (hwnd, class_name, _countof (class_name)))
-		return _wcsnicmp (class_name, L"#32768", 6) == 0;
+		return _r_str_compare (class_name, L"#32768", 6) == 0;
 
 	return false;
 }
