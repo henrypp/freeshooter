@@ -1293,10 +1293,6 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 	{
 		case WM_INITDIALOG:
 		{
-#ifndef _APP_NO_DARKTHEME
-			_r_wnd_setdarktheme (hwnd);
-#endif // _APP_NO_DARKTHEME
-
 			// create dummy window
 			{
 				WNDCLASSEX wcex = {0};
@@ -1380,6 +1376,16 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 
 			_app_hotkeyinit (hwnd, nullptr);
 
+#ifndef _APP_NO_DARKTHEME
+			_r_wnd_setdarktheme (hwnd);
+#endif // _APP_NO_DARKTHEME
+
+			break;
+		}
+
+		case WM_NCCREATE:
+		{
+			_r_dc_enablenonclientscaling (hwnd);
 			break;
 		}
 
@@ -1402,6 +1408,14 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 			CheckMenuItem (GetMenu (hwnd), IDM_STARTMINIMIZED_CHK, MF_BYCOMMAND | (app.ConfigGet (L"IsStartMinimized", false).AsBool () ? MF_CHECKED : MF_UNCHECKED));
 			CheckMenuItem (GetMenu (hwnd), IDM_LOADONSTARTUP_CHK, MF_BYCOMMAND | (app.AutorunIsEnabled () ? MF_CHECKED : MF_UNCHECKED));
 			CheckMenuItem (GetMenu (hwnd), IDM_CHECKUPDATES_CHK, MF_BYCOMMAND | (app.ConfigGet (L"CheckUpdates", true).AsBool () ? MF_CHECKED : MF_UNCHECKED));
+
+			break;
+		}
+
+		case RM_TASKBARCREATED:
+		{
+			_r_tray_destroy (hwnd, UID);
+			_r_tray_create (hwnd, UID, WM_TRAYICON, app.GetSharedImage (app.GetHINSTANCE (), IDI_MAIN, _r_dc_getdpi (hwnd, _R_SIZE_ICON16)), APP_NAME, false);
 
 			break;
 		}
@@ -1938,7 +1952,7 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 
 				case IDM_CHECKUPDATES:
 				{
-					app.UpdateCheck (true);
+					app.UpdateCheck (hwnd);
 					break;
 				}
 
