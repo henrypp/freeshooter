@@ -222,9 +222,19 @@ void _app_dofinishjob (HBITMAP hbitmap, INT width, INT height)
 void _app_screenshot (INT x, INT y, INT width, INT height, bool is_cursor)
 {
 	const HDC hdc = GetDC (nullptr);
-	const HDC hcapture = CreateCompatibleDC (hdc);
 
-	const HBITMAP hbitmap = _app_createbitmap (hdc, width, height);
+	if (!hdc)
+		return;
+
+	HDC hcapture = CreateCompatibleDC (hdc);
+
+	if (!hcapture)
+	{
+		ReleaseDC (nullptr, hdc);
+		return;
+	}
+
+	HBITMAP hbitmap = _app_createbitmap (hdc, width, height);
 
 	if (hbitmap)
 	{
@@ -240,7 +250,7 @@ void _app_screenshot (INT x, INT y, INT width, INT height, bool is_cursor)
 			{
 				if (cursorinfo.hCursor)
 				{
-					const HICON hicon = CopyIcon (cursorinfo.hCursor);
+					HICON hicon = CopyIcon (cursorinfo.hCursor);
 
 					if (hicon)
 					{
@@ -249,7 +259,7 @@ void _app_screenshot (INT x, INT y, INT width, INT height, bool is_cursor)
 
 						DrawIcon (hcapture, cursorinfo.ptScreenPos.x - iconinfo.xHotspot - x, cursorinfo.ptScreenPos.y - iconinfo.yHotspot - y, hicon);
 
-						DestroyIcon (hicon);
+						SAFE_DELETE_ICON (hicon);
 					}
 				}
 			}
@@ -257,10 +267,10 @@ void _app_screenshot (INT x, INT y, INT width, INT height, bool is_cursor)
 
 		_app_dofinishjob (hbitmap, width, height);
 
-		DeleteObject (hbitmap);
+		SAFE_DELETE_OBJECT (hbitmap);
 	}
 
-	DeleteDC (hcapture);
+	SAFE_DELETE_DC (hcapture);
 	ReleaseDC (nullptr, hdc);
 }
 
@@ -456,7 +466,7 @@ void _app_takeshot (HWND hwnd, EnumScreenshot mode)
 		if (is_windowdisplayed)
 		{
 			GetWindowRect (myWindow, &prev_rect);
-			SetWindowPos (myWindow, nullptr, -GetSystemMetrics (SM_CXVIRTUALSCREEN), -GetSystemMetrics (SM_CYVIRTUALSCREEN), 0, 0, SWP_HIDEWINDOW | SWP_NOSIZE | SWP_NOZORDER | SWP_NOOWNERZORDER | SWP_NOCOPYBITS | SWP_DEFERERASE | SWP_NOSENDCHANGING);
+			SetWindowPos (myWindow, nullptr, -_r_dc_getsystemmetrics (myWindow, SM_CXVIRTUALSCREEN), -_r_dc_getsystemmetrics (myWindow, SM_CYVIRTUALSCREEN), 0, 0, SWP_HIDEWINDOW | SWP_NOSIZE | SWP_NOZORDER | SWP_NOOWNERZORDER | SWP_NOCOPYBITS | SWP_DEFERERASE | SWP_NOSENDCHANGING);
 		}
 
 		_r_tray_toggle (myWindow, UID, false);
@@ -569,7 +579,7 @@ void _app_takeshot (HWND hwnd, EnumScreenshot mode)
 
 			if (config.hregion)
 			{
-				SetWindowPos (config.hregion, HWND_TOPMOST, 0, 0, GetSystemMetrics (SM_CXVIRTUALSCREEN), GetSystemMetrics (SM_CYVIRTUALSCREEN), SWP_NOACTIVATE | SWP_NOCOPYBITS | SWP_NOREDRAW | SWP_NOSENDCHANGING);
+				SetWindowPos (config.hregion, HWND_TOPMOST, 0, 0, _r_dc_getsystemmetrics (config.hregion, SM_CXVIRTUALSCREEN), _r_dc_getsystemmetrics (config.hregion, SM_CYVIRTUALSCREEN), SWP_NOACTIVATE | SWP_NOCOPYBITS | SWP_NOREDRAW | SWP_NOSENDCHANGING);
 				WaitForSingleObjectEx (config.hregion, INFINITE, FALSE);
 			}
 			else
@@ -752,8 +762,8 @@ LRESULT CALLBACK RegionProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 			ResetEvent (config.hregion_mutex);
 
 			wndRect.left = wndRect.top = 0;
-			wndRect.right = GetSystemMetrics (SM_CXVIRTUALSCREEN);
-			wndRect.bottom = GetSystemMetrics (SM_CYVIRTUALSCREEN);
+			wndRect.right = _r_dc_getsystemmetrics (hwnd, SM_CXVIRTUALSCREEN);
+			wndRect.bottom = _r_dc_getsystemmetrics (hwnd, SM_CYVIRTUALSCREEN);
 
 			const HDC hdc = GetDC (nullptr);
 
@@ -818,41 +828,13 @@ LRESULT CALLBACK RegionProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 
 			fDraw = false;
 
-			if (hpen)
-			{
-				DeleteObject (hpen);
-				hpen = nullptr;
-			}
+			SAFE_DELETE_OBJECT (hpen);
+			SAFE_DELETE_OBJECT (hpen_draw);
+			SAFE_DELETE_OBJECT (hbitmap);
+			SAFE_DELETE_OBJECT (hbitmap_mask);
 
-			if (hpen_draw)
-			{
-				DeleteObject (hpen_draw);
-				hpen_draw = nullptr;
-			}
-
-			if (hbitmap)
-			{
-				DeleteObject (hbitmap);
-				hbitmap = nullptr;
-			}
-
-			if (hbitmap_mask)
-			{
-				DeleteObject (hbitmap_mask);
-				hbitmap_mask = nullptr;
-			}
-
-			if (hcapture)
-			{
-				DeleteDC (hcapture);
-				hcapture = nullptr;
-			}
-
-			if (hcapture_mask)
-			{
-				DeleteDC (hcapture_mask);
-				hcapture_mask = nullptr;
-			}
+			SAFE_DELETE_DC (hcapture);
+			SAFE_DELETE_DC (hcapture_mask);
 
 			return TRUE;
 		}
@@ -887,11 +869,11 @@ LRESULT CALLBACK RegionProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 
 					if (hdc)
 					{
-						const HDC hcapture_finish = CreateCompatibleDC (hdc);
+						HDC hcapture_finish = CreateCompatibleDC (hdc);
 
 						if (hcapture_finish)
 						{
-							const HBITMAP hbitmap_finish = _app_createbitmap (hdc, width, height);
+							HBITMAP hbitmap_finish = _app_createbitmap (hdc, width, height);
 
 							if (hbitmap_finish)
 							{
@@ -901,10 +883,10 @@ LRESULT CALLBACK RegionProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 								_app_playsound ();
 								_app_dofinishjob (hbitmap_finish, width, height);
 
-								DeleteObject (hbitmap_finish);
+								SAFE_DELETE_OBJECT (hbitmap_finish);
 							}
 
-							DeleteDC (hcapture_finish);
+							SAFE_DELETE_DC (hcapture_finish);
 						}
 
 						ReleaseDC (nullptr, hdc);
@@ -1265,11 +1247,11 @@ void _app_initdropdownmenu (HMENU hmenu, bool is_button)
 
 	// initialize formats
 	{
-		const HMENU submenu = GetSubMenu (hmenu, FORMAT_MENU);
-		DeleteMenu (submenu, 0, MF_BYPOSITION);
+		const HMENU hsubmenu = GetSubMenu (hmenu, FORMAT_MENU);
+		DeleteMenu (hsubmenu, 0, MF_BYPOSITION);
 
 		for (size_t i = 0; i < formats.size (); i++)
-			AppendMenu (submenu, MF_BYPOSITION, IDX_FORMATS + i, formats.at (i).ext);
+			AppendMenu (hsubmenu, MF_BYPOSITION, IDX_FORMATS + i, formats.at (i).ext);
 	}
 
 	CheckMenuItem (hmenu, IDM_COPYTOCLIPBOARD_CHK, MF_BYCOMMAND | (app.ConfigGet (L"CopyToClipboard", false).AsBool () ? MF_CHECKED : MF_UNCHECKED));
@@ -1330,7 +1312,6 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 				app.ConfigSet (L"Folder", _r_path_unexpand (_app_getdirectory ()));
 			}
 
-			CoInitialize (nullptr);
 			SHAutoComplete (GetDlgItem (hwnd, IDC_FOLDER), SHACF_FILESYS_ONLY | SHACF_FILESYS_DIRS | SHACF_AUTOSUGGEST_FORCE_ON | SHACF_USETAB);
 
 			// add splitbutton style (vista+)
@@ -1385,7 +1366,7 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 
 		case WM_NCCREATE:
 		{
-			_r_dc_enablenonclientscaling (hwnd);
+			_r_wnd_enablenonclientscaling (hwnd);
 			break;
 		}
 
@@ -1506,7 +1487,6 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 			UnregisterClass (REGION_CLASS_DLG, app.GetHINSTANCE ());
 
 			Gdiplus::GdiplusShutdown (gdiplusToken);
-			CoUninitialize ();
 
 			PostQuitMessage (0);
 
