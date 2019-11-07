@@ -468,7 +468,7 @@ void _app_takeshot (HWND hwnd, EnumScreenshot mode)
 		if (is_windowdisplayed)
 		{
 			GetWindowRect (myWindow, &prev_rect);
-			SetWindowPos (myWindow, nullptr, -_r_dc_getsystemmetrics (myWindow, SM_CXVIRTUALSCREEN), -_r_dc_getsystemmetrics (myWindow, SM_CYVIRTUALSCREEN), 0, 0, SWP_HIDEWINDOW | SWP_NOSIZE | SWP_NOZORDER | SWP_NOOWNERZORDER | SWP_NOCOPYBITS | SWP_DEFERERASE | SWP_NOSENDCHANGING);
+			_r_wnd_resize (nullptr, myWindow, nullptr, -_r_dc_getsystemmetrics (myWindow, SM_CXVIRTUALSCREEN), -_r_dc_getsystemmetrics (myWindow, SM_CYVIRTUALSCREEN), 0, 0, SWP_HIDEWINDOW);
 		}
 
 		_r_tray_toggle (myWindow, UID, false);
@@ -577,11 +577,10 @@ void _app_takeshot (HWND hwnd, EnumScreenshot mode)
 	{
 		if (WaitForSingleObjectEx (config.hregion_mutex, 0, FALSE) == WAIT_OBJECT_0)
 		{
-			config.hregion = CreateWindowEx (WS_EX_TOPMOST, REGION_CLASS_DLG, APP_NAME, WS_POPUP | WS_OVERLAPPED, 0, 0, 0, 0, myWindow, nullptr, app.GetHINSTANCE (), nullptr);
+			config.hregion = CreateWindowEx (WS_EX_TOPMOST, REGION_CLASS_DLG, APP_NAME, WS_POPUP | WS_OVERLAPPED, 0, 0, _r_dc_getsystemmetrics (config.hregion, SM_CXVIRTUALSCREEN), _r_dc_getsystemmetrics (config.hregion, SM_CYVIRTUALSCREEN), myWindow, nullptr, app.GetHINSTANCE (), nullptr);
 
 			if (config.hregion)
 			{
-				SetWindowPos (config.hregion, HWND_TOPMOST, 0, 0, _r_dc_getsystemmetrics (config.hregion, SM_CXVIRTUALSCREEN), _r_dc_getsystemmetrics (config.hregion, SM_CYVIRTUALSCREEN), SWP_NOACTIVATE | SWP_NOCOPYBITS | SWP_NOREDRAW | SWP_NOSENDCHANGING);
 				WaitForSingleObjectEx (config.hregion, INFINITE, FALSE);
 			}
 			else
@@ -594,7 +593,7 @@ void _app_takeshot (HWND hwnd, EnumScreenshot mode)
 	if (is_hideme)
 	{
 		if (is_windowdisplayed)
-			SetWindowPos (myWindow, nullptr, prev_rect.left, prev_rect.top, _R_RECT_WIDTH (&prev_rect), _R_RECT_HEIGHT (&prev_rect), SWP_SHOWWINDOW | SWP_NOACTIVATE | SWP_FRAMECHANGED | SWP_NOZORDER | SWP_NOCOPYBITS | SWP_NOOWNERZORDER | SWP_NOSENDCHANGING);
+			_r_wnd_resize (nullptr, myWindow, nullptr, prev_rect.left, prev_rect.top, _R_RECT_WIDTH (&prev_rect), _R_RECT_HEIGHT (&prev_rect), SWP_SHOWWINDOW | SWP_FRAMECHANGED);
 
 		_r_tray_toggle (myWindow, UID, true);
 		_r_tray_setinfo (myWindow, UID, nullptr, APP_NAME);
@@ -1626,12 +1625,12 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 		{
 			const INT ctrl_id = LOWORD (wparam);
 
-			if (HIWORD (wparam) == 0 && ctrl_id >= IDX_LANGUAGE && ctrl_id <= IDX_LANGUAGE + app.LocaleGetCount ())
+			if (HIWORD (wparam) == 0 && ctrl_id >= IDX_LANGUAGE && ctrl_id <= INT (IDX_LANGUAGE + app.LocaleGetCount ()))
 			{
 				app.LocaleApplyFromMenu (GetSubMenu (GetSubMenu (GetMenu (hwnd), 1), LANG_MENU), ctrl_id, IDX_LANGUAGE);
 				return FALSE;
 			}
-			else if ((ctrl_id >= IDX_FORMATS && ctrl_id <= IDX_FORMATS + formats.size ()))
+			else if ((ctrl_id >= IDX_FORMATS && ctrl_id <= INT (IDX_FORMATS + formats.size ())))
 			{
 				const size_t idx = (ctrl_id - IDX_FORMATS);
 
