@@ -9,7 +9,6 @@
 #include "resource.hpp"
 #include "app.hpp"
 
-#define WM_TRAYICON WM_APP + 1
 #define UID 1337
 
 #define LANG_MENU 6
@@ -22,7 +21,6 @@
 #define BLEND 1.5
 #define START_IDX 1
 
-#define REGION_PEN_SIZE (GetSystemMetrics (SM_CXBORDER) * 2)
 #define REGION_PEN_COLOR RGB(255,0,0)
 #define REGION_PEN_DRAW_COLOR RGB(0,255,0)
 #define REGION_COLOR_BK RGB(0,0,0)
