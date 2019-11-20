@@ -97,7 +97,4 @@ enum EnumImageFormat
 	FormatMax,
 };
 
-typedef HRESULT (WINAPI *DWMGWA) (HWND, DWORD, PVOID, DWORD); // DwmGetWindowAttribute
-typedef HRESULT (WINAPI *DWMSWA) (HWND, DWORD, LPCVOID, DWORD); // DwmSetWindowAttribute
-
 #endif // __MAIN_H__
