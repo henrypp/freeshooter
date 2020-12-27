@@ -1,18 +1,16 @@
 // Free Shooter
-// Copyright (c) 2009-2019 Henry++
+// Copyright (c) 2009-2021 Henry++
 
-#ifndef __MAIN_H__
-#define __MAIN_H__
+#pragma once
 
-#include <windows.h>
-#include <commctrl.h>
-#include "resource.hpp"
-#include "app.hpp"
+#include "routine.h"
+
+#include "resource.h"
+#include "app.h"
 
 #define UID 1337
 
 #define LANG_MENU 6
-#define SETTINGS_MENU 6
 #define FILENAME_MENU 0
 #define FORMAT_MENU 1
 
@@ -45,49 +43,48 @@
 #define DEFAULT_DIRECTORY L"%userprofile%\\Desktop"
 
 // libs
-#pragma comment(lib, "gdiplus.lib")
-#pragma comment(lib, "winmm.lib")
 #pragma comment(lib, "msimg32.lib")
+#pragma comment(lib, "windowscodecs.lib")
+#pragma comment(lib, "winmm.lib")
 
-struct STATIC_DATA
+typedef struct _STATIC_DATA
 {
-	WCHAR default_folder[MAX_PATH] = {0};
+	WCHAR default_folder[MAX_PATH];
 
-	HWND hregion = nullptr;
-	HWND hregion_tran = nullptr;
+	HWND hregion;
+	HWND hregion_tran;
 
-	HANDLE hregion_mutex = nullptr;
-};
+	HANDLE hregion_mutex;
+} STATIC_DATA, *PSTATIC_DATA;
 
-struct IMAGE_FORMAT
+typedef struct _IMAGE_FORMAT
 {
-	WCHAR ext[16] = {0};
+	WCHAR ext[8];
+	GUID guid;
+} IMAGE_FORMAT, *PIMAGE_FORMAT;
 
-	CLSID clsid = {0};
-};
-
-struct ENUM_INFO
+typedef struct _ENUM_INFO
 {
-	HWND hroot = nullptr;
-	LPRECT lprect = nullptr;
+	HWND hroot;
+	LPRECT lprect;
 
-	bool is_menu = false;
-};
+	BOOLEAN is_menu;
+} ENUM_INFO, *PENUM_INFO;
 
-enum EnumScreenshot
+typedef enum _ENUM_TYPE_SCREENSHOT
 {
 	ScreenshotFullscreen,
 	ScreenshotWindow,
 	ScreenshotRegion,
-};
+} ENUM_TYPE_SCREENSHOT, *PENUM_TYPE_SCREENSHOT;
 
-enum EnumImageName
+typedef enum _ENUM_IMAGE_NAME
 {
 	NameIndex,
 	NameDate,
-};
+} ENUM_IMAGE_NAME, *PENUM_IMAGE_NAME;
 
-enum EnumImageFormat
+typedef enum _ENUM_IMAGE_FORMAT
 {
 	FormatBitmap,
 	FormatJpeg,
@@ -95,6 +92,4 @@ enum EnumImageFormat
 	FormatGif,
 	FormatTiff,
 	FormatMax,
-};
-
-#endif // __MAIN_H__
+} ENUM_IMAGE_FORMAT, *PENUM_IMAGE_FORMAT;
