@@ -1,7 +1,18 @@
-Free Shooter [![Github All Releases](https://img.shields.io/github/downloads/henrypp/freeshooter/total.svg)](https://github.com/henrypp/freeshooter/releases) [![GitHub issues](https://img.shields.io/github/issues-raw/henrypp/freeshooter.svg)](https://github.com/henrypp/freeshooter/issues) [![Donate via PayPal](https://img.shields.io/badge/donate-paypal-red.svg)](https://www.paypal.me/henrypp/15) [![Donate via Bitcoin](https://img.shields.io/badge/donate-bitcoin-red.svg)](https://blockchain.info/address/1LrRTXPsvHcQWCNZotA9RcwjsGcRghG96c) [![Licence](https://img.shields.io/badge/license-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0.en.html)
-=======
+<h1 align="center">Free Shooter</h1>
 
-![Free Shooter](https://www.henrypp.org/images/freeshooter.png?pika)
+<p align="center">
+	<a href="https://github.com/henrypp/freeshooter/releases"><img src="https://img.shields.io/github/v/release/henrypp/freeshooter?style=flat-square&include_prereleases&label=version" /></a>
+	<a href="https://github.com/henrypp/freeshooter/releases"><img src="https://img.shields.io/github/downloads/henrypp/freeshooter/total.svg?style=flat-square" /></a>
+	<a href="https://github.com/henrypp/freeshooter/issues"><img src="https://img.shields.io/github/issues-raw/henrypp/freeshooter.svg?style=flat-square&label=issues" /></a>
+	<a href="https://github.com/henrypp/freeshooter/graphs/contributors"><img src="https://img.shields.io/github/contributors/henrypp/freeshooter?style=flat-square" /></a>
+	<a href="https://github.com/henrypp/freeshooter/blob/master/LICENSE"><img src="https://img.shields.io/github/license/henrypp/freeshooter?style=flat-square" /></a>
+</p>
+
+-------
+
+<p align="center">
+	<img src="https://www.henrypp.org/images/freeshooter.png" />
+</p>
 
 ### Description:
 This is old-school tool for taking screenshots without bloatware features, simple as life, light as air.<br />
