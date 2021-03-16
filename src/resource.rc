@@ -232,9 +232,6 @@ STRINGTABLE
 	IDS_SAVE "OK"
 	IDS_CLOSE "Close"
 	IDS_RESET "Reset"
-
-	IDS_EFFECTS "Effects"
-	IDS_ACTIONS "Actions"
 }
 
 //

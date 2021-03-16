@@ -187,9 +187,6 @@
 
 #define IDS_RESET 49
 
-#define IDS_EFFECTS 50
-#define IDS_ACTIONS 51
-
 // Wav
 #define IDW_MAIN 1
 
