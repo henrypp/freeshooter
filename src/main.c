@@ -1208,9 +1208,9 @@ INT_PTR CALLBACK SettingsProc (_In_ HWND hwnd, _In_ UINT msg, _In_ WPARAM wparam
 
 					LPCWSTR disabled_string = _r_locale_getstring (IDS_DISABLE);
 
-					SendDlgItemMessage (hwnd, IDC_FULLSCREEN_CB, CB_INSERTSTRING, 0, (LPARAM)disabled_string);
-					SendDlgItemMessage (hwnd, IDC_WINDOW_CB, CB_INSERTSTRING, 0, (LPARAM)disabled_string);
-					SendDlgItemMessage (hwnd, IDC_REGION_CB, CB_INSERTSTRING, 0, (LPARAM)disabled_string);
+					_r_combobox_insertitem (hwnd, IDC_FULLSCREEN_CB, 0, disabled_string);
+					_r_combobox_insertitem (hwnd, IDC_WINDOW_CB, 0, disabled_string);
+					_r_combobox_insertitem (hwnd, IDC_REGION_CB, 0, disabled_string);
 
 					CHAR keys[64];
 					WCHAR key_string[64];
@@ -1229,32 +1229,32 @@ INT_PTR CALLBACK SettingsProc (_In_ HWND hwnd, _In_ UINT msg, _In_ WPARAM wparam
 
 						_app_key2string (key_string, RTL_NUMBER_OF (key_string), MAKEWORD (key_code, 0));
 
-						SendDlgItemMessage (hwnd, IDC_FULLSCREEN_CB, CB_INSERTSTRING, idx, (LPARAM)key_string);
-						SendDlgItemMessage (hwnd, IDC_WINDOW_CB, CB_INSERTSTRING, idx, (LPARAM)key_string);
-						SendDlgItemMessage (hwnd, IDC_REGION_CB, CB_INSERTSTRING, idx, (LPARAM)key_string);
+						_r_combobox_insertitem (hwnd, IDC_FULLSCREEN_CB, idx, key_string);
+						_r_combobox_insertitem (hwnd, IDC_WINDOW_CB, idx, key_string);
+						_r_combobox_insertitem (hwnd, IDC_REGION_CB, idx, key_string);
 
-						SendDlgItemMessage (hwnd, IDC_FULLSCREEN_CB, CB_SETITEMDATA, idx, (LPARAM)key_code);
-						SendDlgItemMessage (hwnd, IDC_WINDOW_CB, CB_SETITEMDATA, idx, (LPARAM)key_code);
-						SendDlgItemMessage (hwnd, IDC_REGION_CB, CB_SETITEMDATA, idx, (LPARAM)key_code);
+						_r_combobox_setitemparam (hwnd, IDC_FULLSCREEN_CB, idx, (LPARAM)key_code);
+						_r_combobox_setitemparam (hwnd, IDC_WINDOW_CB, idx, (LPARAM)key_code);
+						_r_combobox_setitemparam (hwnd, IDC_REGION_CB, idx, (LPARAM)key_code);
 
 						if (fullscreen_allowed && LOBYTE (fullscreen_code) == key_code)
-							SendDlgItemMessage (hwnd, IDC_FULLSCREEN_CB, CB_SETCURSEL, idx, 0);
+							_r_combobox_setcurrentitem (hwnd, IDC_FULLSCREEN_CB, idx);
 
 						if (window_allowed && LOBYTE (window_code) == key_code)
-							SendDlgItemMessage (hwnd, IDC_WINDOW_CB, CB_SETCURSEL, idx, 0);
+							_r_combobox_setcurrentitem (hwnd, IDC_WINDOW_CB, idx);
 
 						if (region_allowed && LOBYTE (region_code) == key_code)
-							SendDlgItemMessage (hwnd, IDC_REGION_CB, CB_SETCURSEL, idx, 0);
+							_r_combobox_setcurrentitem (hwnd, IDC_REGION_CB, idx);
 					}
 
-					if (SendDlgItemMessage (hwnd, IDC_FULLSCREEN_CB, CB_GETCURSEL, 0, 0) == CB_ERR)
-						SendDlgItemMessage (hwnd, IDC_FULLSCREEN_CB, CB_SETCURSEL, 0, 0);
+					if (_r_combobox_getcurrentitem (hwnd, IDC_FULLSCREEN_CB) == CB_ERR)
+						_r_combobox_setcurrentitem (hwnd, IDC_FULLSCREEN_CB, 0);
 
-					if (SendDlgItemMessage (hwnd, IDC_WINDOW_CB, CB_GETCURSEL, 0, 0) == CB_ERR)
-						SendDlgItemMessage (hwnd, IDC_WINDOW_CB, CB_SETCURSEL, 0, 0);
+					if (_r_combobox_getcurrentitem (hwnd, IDC_WINDOW_CB) == CB_ERR)
+						_r_combobox_setcurrentitem (hwnd, IDC_WINDOW_CB, 0);
 
-					if (SendDlgItemMessage (hwnd, IDC_REGION_CB, CB_GETCURSEL, 0, 0) == CB_ERR)
-						SendDlgItemMessage (hwnd, IDC_REGION_CB, CB_SETCURSEL, 0, 0);
+					if (_r_combobox_getcurrentitem (hwnd, IDC_REGION_CB) == CB_ERR)
+						_r_combobox_setcurrentitem (hwnd, IDC_REGION_CB, 0);
 
 					PostMessage (hwnd, WM_COMMAND, MAKEWPARAM (IDC_FULLSCREEN_CB, CBN_SELCHANGE), 0);
 					PostMessage (hwnd, WM_COMMAND, MAKEWPARAM (IDC_WINDOW_CB, CBN_SELCHANGE), 0);
@@ -1283,7 +1283,7 @@ INT_PTR CALLBACK SettingsProc (_In_ HWND hwnd, _In_ UINT msg, _In_ WPARAM wparam
 
 			if (notify_code == CBN_SELCHANGE && (ctrl_id == IDC_FULLSCREEN_CB || ctrl_id == IDC_WINDOW_CB || ctrl_id == IDC_REGION_CB))
 			{
-				BOOLEAN is_disable = (INT)SendDlgItemMessage (hwnd, ctrl_id, CB_GETCURSEL, 0, 0) > 0;
+				BOOLEAN is_disable = _r_combobox_getcurrentitem (hwnd, ctrl_id) > 0;
 
 				_r_ctrl_enable (hwnd, ctrl_id - 3, is_disable); // shift
 				_r_ctrl_enable (hwnd, ctrl_id - 2, is_disable); // ctrl
@@ -1291,16 +1291,17 @@ INT_PTR CALLBACK SettingsProc (_In_ HWND hwnd, _In_ UINT msg, _In_ WPARAM wparam
 
 				break;
 			}
+
 			//case IDOK: // process Enter key
 			//case IDC_SAVE:
 			//{
-			//	ULONG fullscreen_idx = (ULONG)SendDlgItemMessage (hwnd, IDC_FULLSCREEN_CB, CB_GETCURSEL, 0, 0);
-			//	ULONG window_idx = (ULONG)SendDlgItemMessage (hwnd, IDC_WINDOW_CB, CB_GETCURSEL, 0, 0);
-			//	ULONG region_idx = (ULONG)SendDlgItemMessage (hwnd, IDC_REGION_CB, CB_GETCURSEL, 0, 0);
+			//	INT fullscreen_idx = _r_combobox_getcurrentitem (hwnd, IDC_FULLSCREEN_CB);
+			//	INT window_idx = _r_combobox_getcurrentitem (hwnd, IDC_WINDOW_CB);
+			//	INT region_idx = _r_combobox_getcurrentitem (hwnd, IDC_REGION_CB);
 
-			//	app.ConfigSet (L"HotkeyFullscreenEnabled", bool (fullscreen_idx > 0));
-			//	app.ConfigSet (L"HotkeyWindowEnabled", bool (window_idx > 0));
-			//	app.ConfigSet (L"HotkeyRegionEnabled", bool (region_idx > 0));
+			//	_r_config_setboolean (L"HotkeyFullscreenEnabled", fullscreen_idx > 0);
+			//	_r_config_setboolean (L"HotkeyWindowEnabled", window_idx > 0);
+			//	_r_config_setboolean (L"HotkeyRegionEnabled", region_idx > 0);
 
 			//	if (fullscreen_idx > 0)
 			//	{
@@ -1315,7 +1316,7 @@ INT_PTR CALLBACK SettingsProc (_In_ HWND hwnd, _In_ UINT msg, _In_ WPARAM wparam
 			//		if (IsDlgButtonChecked (hwnd, IDC_FULLSCREEN_ALT) == BST_CHECKED)
 			//			modifiers |= HOTKEYF_ALT;
 
-			//		app.ConfigSet (L"HotkeyFullscreen", (ULONG)MAKEWORD (SendDlgItemMessage (hwnd, IDC_FULLSCREEN_CB, CB_GETITEMDATA, (WPARAM)fullscreen_idx, 0), modifiers));
+			//		_r_config_setulong (L"HotkeyFullscreen", (ULONG)MAKEWORD (_r_combobox_getitemparam (hwnd, IDC_FULLSCREEN_CB, fullscreen_idx), modifiers));
 			//	}
 
 			//	if (window_idx > 0)
@@ -1331,7 +1332,7 @@ INT_PTR CALLBACK SettingsProc (_In_ HWND hwnd, _In_ UINT msg, _In_ WPARAM wparam
 			//		if (IsDlgButtonChecked (hwnd, IDC_WINDOW_ALT) == BST_CHECKED)
 			//			modifiers |= HOTKEYF_ALT;
 
-			//		app.ConfigSet (L"HotkeyWindow", (ULONG)MAKEWORD (SendDlgItemMessage (hwnd, IDC_WINDOW_CB, CB_GETITEMDATA, (WPARAM)window_idx, 0), modifiers));
+			//		_r_config_setulong (L"HotkeyWindow", (ULONG)MAKEWORD (_r_combobox_getitemparam (hwnd, IDC_WINDOW_CB, window_idx), modifiers));
 			//	}
 
 			//	if (region_idx > 0)
@@ -1347,7 +1348,7 @@ INT_PTR CALLBACK SettingsProc (_In_ HWND hwnd, _In_ UINT msg, _In_ WPARAM wparam
 			//		if (IsDlgButtonChecked (hwnd, IDC_REGION_ALT) == BST_CHECKED)
 			//			modifiers |= HOTKEYF_ALT;
 
-			//		app.ConfigSet (L"HotkeyRegion", (ULONG)MAKEWORD (SendDlgItemMessage (hwnd, IDC_REGION_CB, CB_GETITEMDATA, (WPARAM)region_idx, 0), modifiers));
+			//		_r_config_setulong (L"HotkeyRegion", (ULONG)MAKEWORD (_r_combobox_getitemparam (hwnd, IDC_REGION_CB, region_idx), modifiers));
 			//	}
 
 			//	if (!_app_hotkeyinit (_r_app_gethwnd (), hwnd))
