@@ -671,7 +671,7 @@ VOID _app_takeshot (_In_opt_ HWND hwnd, _In_ ENUM_TYPE_SCREENSHOT mode)
 			BOOLEAN is_menu = _r_wnd_ismenu (hwnd);
 			BOOLEAN is_includewindowshadow = _r_config_getboolean (L"IsIncludeWindowShadow", TRUE);
 			BOOLEAN is_clearbackground = _r_config_getboolean (L"IsClearBackground", TRUE);
-			BOOLEAN is_disableaeroonwnd = !is_menu && _r_sys_isosversiongreaterorequal (WINDOWS_VISTA) && _r_config_getboolean (L"IsDisableAeroOnWnd", FALSE);
+			BOOLEAN is_disableaeroonwnd = !is_menu && _r_config_getboolean (L"IsDisableAeroOnWnd", FALSE);
 
 			if (is_disableaeroonwnd)
 				_app_switchaeroonwnd (hwnd, TRUE);
@@ -1373,7 +1373,7 @@ VOID _app_initdropdownmenu (_In_ HMENU hmenu, _In_ BOOLEAN is_button)
 	_r_menu_setitemtext (hmenu, IDM_INCLUDEMOUSECURSOR_CHK, FALSE, _r_locale_getstring (IDS_INCLUDEMOUSECURSOR_CHK));
 	_r_menu_setitemtext (hmenu, IDM_INCLUDEWINDOWSHADOW_CHK, FALSE, _r_locale_getstring (IDS_INCLUDEWINDOWSHADOW_CHK));
 	_r_menu_setitemtext (hmenu, IDM_CLEARBACKGROUND_CHK, FALSE, _r_locale_getstring (IDS_CLEARBACKGROUND_CHK));
-	_r_menu_setitemtextformat (hmenu, IDM_DISABLEAEROONWND_CHK, FALSE, L"%s (vista+)", _r_locale_getstring (IDS_DISABLEAEROONWND_CHK));
+	_r_menu_setitemtext (hmenu, IDM_DISABLEAEROONWND_CHK, FALSE, _r_locale_getstring (IDS_DISABLEAEROONWND_CHK));
 	_r_menu_setitemtext (hmenu, FILENAME_MENU, TRUE, _r_locale_getstring (IDS_FILENAME));
 	_r_menu_setitemtext (hmenu, FORMAT_MENU, TRUE, _r_locale_getstring (IDS_IMAGEFORMAT));
 	_r_menu_setitemtextformat (hmenu, IDM_HOTKEYS, FALSE, L"%s%s", _r_locale_getstring (IDS_HOTKEYS), is_button ? L"...\tF3" : L"...");
@@ -1410,9 +1410,6 @@ VOID _app_initdropdownmenu (_In_ HMENU hmenu, _In_ BOOLEAN is_button)
 
 	CheckMenuRadioItem (hmenu, IDM_FILENAME_INDEX, IDM_FILENAME_DATE, IDM_FILENAME_INDEX + _r_config_getuinteger (L"FilenameType", NameIndex), MF_BYCOMMAND);
 	CheckMenuRadioItem (hmenu, IDX_FORMATS, IDX_FORMATS + formats_count, IDX_FORMATS + _app_getimageformat_id (), MF_BYCOMMAND);
-
-	if (!_r_sys_isosversiongreaterorequal (WINDOWS_VISTA))
-		EnableMenuItem (hmenu, IDM_DISABLEAEROONWND_CHK, MF_BYCOMMAND | MF_DISABLED | MF_GRAYED);
 }
 
 VOID _app_initialize ()
@@ -1510,10 +1507,6 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 		{
 			// set edit control configuration
 			SHAutoComplete (GetDlgItem (hwnd, IDC_FOLDER), SHACF_FILESYS_ONLY | SHACF_FILESYS_DIRS | SHACF_AUTOSUGGEST_FORCE_ON | SHACF_USETAB);
-
-			// add splitbutton style (vista+)
-			if (_r_sys_isosversiongreaterorequal (WINDOWS_VISTA))
-				_r_wnd_addstyle (hwnd, IDC_SETTINGS, BS_SPLITBUTTON, BS_SPLITBUTTON, GWL_STYLE);
 
 			_r_settings_addpage (IDD_SETTINGS_HOTKEYS, IDS_HOTKEYS);
 
