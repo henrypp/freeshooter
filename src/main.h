@@ -11,8 +11,10 @@
 #define UID 1337
 
 #define LANG_MENU 6
+#define SETTINGS_MENU 6
 #define FILENAME_MENU 0
 #define FORMAT_MENU 1
+#define DELAY_MENU 4
 
 #define WND_SLEEP 150
 #define JPEG_QUALITY 95
@@ -49,7 +51,8 @@
 
 typedef struct _STATIC_DATA
 {
-	WCHAR default_folder[MAX_PATH];
+	PR_ARRAY formats;
+	PR_STRING default_folder;
 
 	HWND hregion;
 	HWND hregion_tran;
@@ -66,7 +69,7 @@ typedef struct _IMAGE_FORMAT
 typedef struct _ENUM_INFO
 {
 	HWND hroot;
-	LPRECT lprect;
+	PRECT rect;
 
 	BOOLEAN is_menu;
 } ENUM_INFO, *PENUM_INFO;
