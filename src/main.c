@@ -1671,6 +1671,8 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 			UnregisterClass (DUMMY_CLASS_DLG, _r_sys_getimagebase ());
 			UnregisterClass (REGION_CLASS_DLG, _r_sys_getimagebase ());
 
+			_r_tray_destroy (hwnd, UID);
+
 			PostQuitMessage (0);
 
 			break;
