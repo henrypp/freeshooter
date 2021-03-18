@@ -889,12 +889,12 @@ LRESULT CALLBACK RegionProc (_In_ HWND hwnd, _In_ UINT msg, _In_ WPARAM wparam, 
 	{
 		case WM_CREATE:
 		{
-			RECT rect;
+			INT width = _r_dc_getsystemmetrics (hwnd, SM_CXVIRTUALSCREEN);
+			INT height = _r_dc_getsystemmetrics (hwnd, SM_CYVIRTUALSCREEN);
+
 			ResetEvent (config.hregion_mutex);
 
-			SetRect (&rect, 0, 0, _r_dc_getsystemmetrics (hwnd, SM_CXVIRTUALSCREEN), _r_dc_getsystemmetrics (hwnd, SM_CYVIRTUALSCREEN));
-
-			SetWindowPos (hwnd, NULL, 0, 0, rect.right, rect.bottom, SWP_NOZORDER | SWP_NOACTIVATE | SWP_FRAMECHANGED | SWP_NOOWNERZORDER);
+			SetWindowPos (hwnd, NULL, 0, 0, width, height, SWP_NOZORDER | SWP_NOACTIVATE | SWP_FRAMECHANGED | SWP_NOOWNERZORDER);
 
 			HDC hdc = GetDC (NULL);
 
@@ -908,21 +908,21 @@ LRESULT CALLBACK RegionProc (_In_ HWND hwnd, _In_ UINT msg, _In_ WPARAM wparam, 
 				hcapture = CreateCompatibleDC (hdc);
 				hcapture_mask = CreateCompatibleDC (hdc);
 
-				hbitmap = _app_createbitmap (hdc, _r_calc_rectwidth (&rect), _r_calc_rectheight (&rect));
-				hbitmap_mask = _app_createbitmap (hdc, _r_calc_rectwidth (&rect), _r_calc_rectheight (&rect));
+				hbitmap = _app_createbitmap (hdc, width, height);
+				hbitmap_mask = _app_createbitmap (hdc, width, height);
 
 				if (hbitmap && hcapture)
 				{
 					SelectObject (hcapture, hbitmap);
-					BitBlt (hcapture, rect.left, rect.top, _r_calc_rectwidth (&rect), _r_calc_rectheight (&rect), hdc, rect.left, rect.top, SRCCOPY);
+					BitBlt (hcapture, 0, 0, width, height, hdc, 0, 0, SRCCOPY);
 				}
 
 				if (hbitmap_mask && hcapture_mask)
 				{
 					SelectObject (hcapture_mask, hbitmap_mask);
-					BitBlt (hcapture_mask, rect.left, rect.top, _r_calc_rectwidth (&rect), _r_calc_rectheight (&rect), hcapture, rect.left, rect.top, SRCCOPY);
+					BitBlt (hcapture_mask, 0, 0, width, height, hcapture, 0, 0, SRCCOPY);
 
-					ULONG quadrate_size = _r_calc_rectwidth (&rect) * _r_calc_rectheight (&rect);
+					ULONG quadrate_size = width * height;
 					ULONG image_bytes = quadrate_size * sizeof (COLORREF);
 
 					COLORREF* bmp_buffer = _r_mem_allocatezero (image_bytes);
@@ -1070,25 +1070,28 @@ LRESULT CALLBACK RegionProc (_In_ HWND hwnd, _In_ UINT msg, _In_ WPARAM wparam, 
 
 			RECT rect;
 			POINT pt;
-			GetCursorPos (&pt);
+
+			if (!GetCursorPos (&pt))
+				break;
+
+			if (!GetClientRect (hwnd, &rect))
+				break;
 
 			BP_PAINTPARAMS bpp = {0};
 
 			bpp.cbSize = sizeof (bpp);
 			bpp.dwFlags = BPPF_NOCLIP;
 
-			GetClientRect (hwnd, &rect);
-
 			HPAINTBUFFER hdpaint = BeginBufferedPaint (hdc, &rect, BPBF_TOPDOWNDIB, &bpp, &hdc_buffered);
 
 			if (hdpaint)
 			{
-				BitBlt (hdc_buffered, rect.left, rect.top, _r_calc_rectwidth (&rect), _r_calc_rectheight (&rect), hcapture_mask, rect.left, rect.top, SRCCOPY);
+				BitBlt (hdc_buffered, 0, 0, rect.right, rect.bottom, hcapture_mask, 0, 0, SRCCOPY);
 
 				HGDIOBJ old_pen = SelectObject (hdc_buffered, is_drawing ? hpen_draw : hpen);
 				HGDIOBJ old_brush = SelectObject (hdc_buffered, GetStockObject (NULL_BRUSH));
 
-				if (is_drawing && (pt.x != pt_start.x) && (pt.y != pt_start.y))
+				if (is_drawing)
 				{
 					// draw region rectangle
 					RECT rect_target;
@@ -1100,11 +1103,11 @@ LRESULT CALLBACK RegionProc (_In_ HWND hwnd, _In_ UINT msg, _In_ WPARAM wparam, 
 				else
 				{
 					// draw cursor crosshair
-					MoveToEx (hdc_buffered, pt.x, rect.top, NULL);
-					LineTo (hdc_buffered, pt.x, _r_calc_rectheight (&rect));
+					MoveToEx (hdc_buffered, pt.x, 0, NULL);
+					LineTo (hdc_buffered, pt.x, rect.bottom);
 
-					MoveToEx (hdc_buffered, rect.left, pt.y, NULL);
-					LineTo (hdc_buffered, _r_calc_rectwidth (&rect), pt.y);
+					MoveToEx (hdc_buffered, 0, pt.y, NULL);
+					LineTo (hdc_buffered, rect.right, pt.y);
 				}
 
 				SelectObject (hdc_buffered, old_brush);
