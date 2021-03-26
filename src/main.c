@@ -49,7 +49,7 @@ FORCEINLINE INT _app_getimageformat_id ()
 {
 	assert (!_r_obj_isarrayempty (config.formats));
 
-	return _r_calc_clamp (_r_config_getinteger (L"ImageFormat", FormatPng), 0, (INT)(INT_PTR)_r_obj_getarraysize (config.formats) - 1);
+	return _r_calc_clamp (_r_config_getinteger (L"ImageFormat", 2), 0, (INT)(INT_PTR)_r_obj_getarraysize (config.formats) - 1);
 }
 
 FORCEINLINE PIMAGE_FORMAT _app_getimageformat_data ()
@@ -1497,16 +1497,16 @@ VOID _app_initialize ()
 		LPCWSTR szext[] = {
 			L"bmp",
 			L"jpeg",
-			L"jxr",
 			L"png",
+			L"jxr",
 			L"tiff",
 		};
 
 		LPCGUID guids[] = {
 			&GUID_ContainerFormatBmp,
 			&GUID_ContainerFormatJpeg,
-			&GUID_ContainerFormatWmp,
 			&GUID_ContainerFormatPng,
+			&GUID_ContainerFormatWmp,
 			&GUID_ContainerFormatTiff,
 		};
 
@@ -1864,7 +1864,7 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 			{
 				ULONG idx = (ctrl_id - IDX_FORMATS);
 
-				_r_config_setulong (L"ImageFormat", idx);
+				_r_config_setinteger (L"ImageFormat", _r_calc_clamp (idx, 0, (INT)(INT_PTR)_r_obj_getarraysize (config.formats) - 1));
 
 				return FALSE;
 			}
