@@ -87,12 +87,3 @@ typedef enum _ENUM_IMAGE_NAME
 	NameDate,
 } ENUM_IMAGE_NAME, *PENUM_IMAGE_NAME;
 
-typedef enum _ENUM_IMAGE_FORMAT
-{
-	FormatBitmap,
-	FormatJpeg,
-	FormatPng,
-	FormatGif,
-	FormatTiff,
-	FormatMax,
-} ENUM_IMAGE_FORMAT, *PENUM_IMAGE_FORMAT;
