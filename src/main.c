@@ -765,7 +765,8 @@ VOID _app_takeshot (_In_opt_ HWND hwnd, _In_ ENUM_TYPE_SCREENSHOT mode)
 	}
 }
 
-VOID _app_key2string (_Out_writes_ (length) _Always_ (_Post_z_) LPWSTR buffer, _In_ SIZE_T length, _In_ UINT key)
+_Success_ (return)
+BOOLEAN _app_key2string (_Out_writes_ (length) _Always_ (_Post_z_) LPWSTR buffer, _In_ SIZE_T length, _In_ UINT key)
 {
 	WCHAR key_name[64];
 	UINT vk_code = LOBYTE (key);
@@ -793,6 +794,8 @@ VOID _app_key2string (_Out_writes_ (length) _Always_ (_Post_z_) LPWSTR buffer, _
 	}
 
 	_r_str_append (buffer, length, key_name);
+
+	return TRUE;
 }
 
 BOOLEAN _app_hotkeyinit (_In_ HWND hwnd, _In_opt_ HWND hwnd_hotkey)
@@ -844,19 +847,19 @@ BOOLEAN _app_hotkeyinit (_In_ HWND hwnd, _In_opt_ HWND hwnd_hotkey)
 
 		if (is_nofullscreen)
 		{
-			_app_key2string (key_string, RTL_NUMBER_OF (buffer), hk_fullscreen);
+			_app_key2string (key_string, RTL_NUMBER_OF (key_string), hk_fullscreen);
 			_r_str_appendformat (buffer, RTL_NUMBER_OF (buffer), L"%s [%s]\r\n", _r_locale_getstring (IDS_MODE_FULLSCREEN), key_string);
 		}
 
 		if (is_nowindow)
 		{
-			_app_key2string (key_string, RTL_NUMBER_OF (buffer), hk_window);
+			_app_key2string (key_string, RTL_NUMBER_OF (key_string), hk_window);
 			_r_str_appendformat (buffer, RTL_NUMBER_OF (buffer), L"%s [%s]\r\n", _r_locale_getstring (IDS_MODE_WINDOW), key_string);
 		}
 
 		if (is_noregion)
 		{
-			_app_key2string (key_string, RTL_NUMBER_OF (buffer), hk_region);
+			_app_key2string (key_string, RTL_NUMBER_OF (key_string), hk_region);
 			_r_str_appendformat (buffer, RTL_NUMBER_OF (buffer), L"%s [%s]\r\n", _r_locale_getstring (IDS_MODE_REGION), key_string);
 		}
 
@@ -1148,7 +1151,7 @@ LRESULT CALLBACK RegionProc (_In_ HWND hwnd, _In_ UINT msg, _In_ WPARAM wparam, 
 	return DefWindowProc (hwnd, msg, wparam, lparam);
 }
 
-VOID generate_keys_array (_Out_ PCHAR keys, SIZE_T count)
+VOID generate_keys_array (_Out_writes_ (count) PCHAR keys, _In_ SIZE_T count)
 {
 	UINT predefined_keys[] = {
 		VK_SNAPSHOT,
@@ -1162,16 +1165,38 @@ VOID generate_keys_array (_Out_ PCHAR keys, SIZE_T count)
 	SIZE_T idx = 0;
 
 	for (CHAR i = 0; i < RTL_NUMBER_OF (predefined_keys); i++)
+	{
+		if (count <= idx)
+			goto CleanupExit;
+
 		keys[idx++] = MAKEWORD (predefined_keys[i], 0);
+	}
 
 	for (CHAR i = 'A'; i <= 'Z'; i++)
+	{
+		if (count <= idx)
+			goto CleanupExit;
+
 		keys[idx++] = MAKEWORD (i, 0);
+	}
 
 	for (CHAR i = '0'; i <= '9'; i++)
+	{
+		if (count <= idx)
+			goto CleanupExit;
+
 		keys[idx++] = MAKEWORD (i, 0);
+	}
 
 	for (CHAR i = VK_F1; i <= VK_F12; i++)
+	{
+		if (count <= idx)
+			goto CleanupExit;
+
 		keys[idx++] = MAKEWORD (i, 0);
+	}
+
+CleanupExit:
 
 	keys[idx] = ANSI_NULL;
 }
