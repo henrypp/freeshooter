@@ -440,42 +440,15 @@ CleanupExit:
 		ReleaseDC (NULL, hdc);
 }
 
-VOID _app_switchaeroonwnd (_In_ HWND hwnd, _In_ BOOLEAN is_disable)
+FORCEINLINE VOID _app_switchaeroonwnd (_In_ HWND hwnd, _In_ BOOLEAN is_disable)
 {
-	HMODULE hlib = GetModuleHandle (L"dwmapi.dll");
-
-	if (hlib)
-	{
-		typedef HRESULT (WINAPI *DWMSWA)(HWND hwnd, ULONG dwAttribute, LPCVOID pvAttribute, ULONG cbAttribute);
-		const DWMSWA _DwmSetWindowAttribute = (DWMSWA)GetProcAddress (hlib, "DwmSetWindowAttribute"); // vista+
-
-		if (_DwmSetWindowAttribute)
-		{
-			INT policy = is_disable ? DWMNCRP_DISABLED : DWMNCRP_ENABLED;
-
-			_DwmSetWindowAttribute (hwnd, DWMWA_NCRENDERING_POLICY, &policy, sizeof (policy));
-		}
-	}
+	DwmSetWindowAttribute (hwnd, DWMWA_NCRENDERING_POLICY, &(INT){is_disable ? DWMNCRP_DISABLED : DWMNCRP_ENABLED}, sizeof (INT));
 }
 
 BOOLEAN _app_getwindowrect (_In_ HWND hwnd, _Out_ PRECT rect)
 {
-	if (_r_sys_isosversiongreaterorequal (WINDOWS_VISTA))
-	{
-		HMODULE hlib = GetModuleHandle (L"dwmapi.dll");
-
-		if (hlib)
-		{
-			typedef HRESULT (WINAPI *DWMGWA)(HWND hwnd, ULONG dwAttribute, PVOID pvAttribute, ULONG cbAttribute);
-			const DWMGWA _DwmGetWindowAttribute = (DWMGWA)GetProcAddress (hlib, "DwmGetWindowAttribute"); // vista+
-
-			if (_DwmGetWindowAttribute)
-			{
-				if (SUCCEEDED (_DwmGetWindowAttribute (hwnd, DWMWA_EXTENDED_FRAME_BOUNDS, rect, sizeof (RECT))))
-					return TRUE;
-			}
-		}
-	}
+	if (SUCCEEDED (DwmGetWindowAttribute (hwnd, DWMWA_EXTENDED_FRAME_BOUNDS, rect, sizeof (RECT))))
+		return TRUE;
 
 	return !!GetWindowRect (hwnd, rect); // fallback
 }
@@ -592,18 +565,21 @@ BOOL CALLBACK FindTopWindow (_In_ HWND hwnd, _In_ LPARAM lparam)
 	return FALSE;
 }
 
-INT _app_getshadowsize (_In_ HWND hwnd)
+LONG _app_getshadowsize (_In_ HWND hwnd)
 {
 	if (IsZoomed (hwnd))
 		return 0;
 
-	// Determine the border size by asking windows to calculate the window rect
-	// required for a client rect with a width and height of 0. This method will
-	// work before the window is fully initialized and when the window is minimized.
-	RECT rect = {0};
-	AdjustWindowRectEx (&rect, WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME | WS_MINIMIZEBOX | WS_MAXIMIZEBOX, FALSE, WS_EX_WINDOWEDGE);
+	RECT rect;
+	RECT rect_dwm;
 
-	return _r_calc_rectwidth (&rect);
+	if (!GetWindowRect (hwnd, &rect))
+		return 0;
+
+	if (FAILED (DwmGetWindowAttribute (hwnd, DWMWA_EXTENDED_FRAME_BOUNDS, &rect_dwm, sizeof (rect_dwm))))
+		return 0;
+
+	return _r_calc_clamp32 (rect_dwm.left - rect.left, 4, 20);
 }
 
 VOID _app_playsound ()
@@ -676,7 +652,6 @@ VOID _app_takeshot (_In_opt_ HWND hwnd, _In_ ENUM_TYPE_SCREENSHOT mode)
 			if (is_disableaeroonwnd)
 				_app_switchaeroonwnd (hwnd, TRUE);
 
-
 			if (_app_getwindowrect (hwnd, &window_rect))
 			{
 				// calculate window rectangle and all overlapped windows
@@ -697,9 +672,9 @@ VOID _app_takeshot (_In_opt_ HWND hwnd, _In_ ENUM_TYPE_SCREENSHOT mode)
 				// calculate shadow padding
 				if (is_includewindowshadow)
 				{
-					INT shadow_size = _app_getshadowsize (hwnd);
+					LONG shadow_size = _app_getshadowsize (hwnd);
 
-					if (shadow_size > 0)
+					if (shadow_size)
 					{
 						window_rect.left -= shadow_size;
 						window_rect.right += shadow_size;
