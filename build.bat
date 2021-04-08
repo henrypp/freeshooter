@@ -1,4 +1,6 @@
 @echo off
 
 cd ..\builder
-build "Free Shooter" freeshooter 2.1
+call build freeshooter 2.1 "Free Shooter"
+
+pause
