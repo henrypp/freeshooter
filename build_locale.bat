@@ -1,6 +1,6 @@
 @echo off
 
 cd ..\builder
-call build_locale freeshooter "Free Shooter"
+call build_locale freeshooter
 
 pause
