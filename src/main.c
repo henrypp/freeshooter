@@ -57,14 +57,9 @@ FORCEINLINE PIMAGE_FORMAT _app_getimageformat_data ()
 	return _r_obj_getarrayitem (config.formats, _app_getimageformat_id ());
 }
 
-PR_STRING _app_getdirectory ()
+FORCEINLINE PR_STRING _app_getdirectory ()
 {
-	PR_STRING directory = _r_str_expandenvironmentstring (_r_config_getstring (L"Folder", _r_obj_getstring (config.default_folder)));
-
-	if (_r_obj_isstringempty (directory) || !_r_fs_exists (directory->buffer))
-		_r_obj_movereference (&directory, _r_str_expandenvironmentstring (_r_obj_getstring (config.default_folder)));
-
-	return directory;
+	return _r_config_getstringexpand (L"Folder", _r_obj_getstring (config.default_folder));
 }
 
 PR_STRING _app_uniquefilename (_In_ LPCWSTR directory, _In_ ENUM_IMAGE_NAME name_type)
@@ -210,7 +205,7 @@ FORCEINLINE BOOLEAN _wic_setoptions (_In_ LPCGUID guid, _Inout_ IPropertyBag2 *p
 
 		if (FAILED (hr))
 		{
-			_r_log (Warning, 0, L"IPropertyBag2_Write", hr, NULL);
+			_r_log (LOG_LEVEL_WARNING, 0, L"IPropertyBag2_Write", hr, NULL);
 		}
 		else
 		{
@@ -379,7 +374,7 @@ VOID _app_screenshot (_In_ INT x, _In_ INT y, _In_ INT width, _In_ INT height, _
 
 	if (!hdc)
 	{
-		_r_log (Warning, 0, L"GetDC", GetLastError (), NULL);
+		_r_log (LOG_LEVEL_WARNING, 0, L"GetDC", GetLastError (), NULL);
 
 		goto CleanupExit;
 	}
@@ -388,7 +383,7 @@ VOID _app_screenshot (_In_ INT x, _In_ INT y, _In_ INT width, _In_ INT height, _
 
 	if (!hcapture)
 	{
-		_r_log (Warning, 0, L"CreateCompatibleDC", GetLastError (), NULL);
+		_r_log (LOG_LEVEL_WARNING, 0, L"CreateCompatibleDC", GetLastError (), NULL);
 
 		goto CleanupExit;
 	}
@@ -1137,43 +1132,43 @@ VOID generate_keys_array (_Out_writes_ (count) PCHAR keys, _In_ SIZE_T count)
 		VK_DELETE,
 	};
 
-	SIZE_T idx = 0;
+	SIZE_T index = 0;
 
 	for (CHAR i = 0; i < RTL_NUMBER_OF (predefined_keys); i++)
 	{
-		if (count <= idx)
+		if (count <= index)
 			goto CleanupExit;
 
-		keys[idx++] = MAKEWORD (predefined_keys[i], 0);
+		keys[index++] = MAKEWORD (predefined_keys[i], 0);
 	}
 
 	for (CHAR i = 'A'; i <= 'Z'; i++)
 	{
-		if (count <= idx)
+		if (count <= index)
 			goto CleanupExit;
 
-		keys[idx++] = MAKEWORD (i, 0);
+		keys[index++] = MAKEWORD (i, 0);
 	}
 
 	for (CHAR i = '0'; i <= '9'; i++)
 	{
-		if (count <= idx)
+		if (count <= index)
 			goto CleanupExit;
 
-		keys[idx++] = MAKEWORD (i, 0);
+		keys[index++] = MAKEWORD (i, 0);
 	}
 
 	for (CHAR i = VK_F1; i <= VK_F12; i++)
 	{
-		if (count <= idx)
+		if (count <= index)
 			goto CleanupExit;
 
-		keys[idx++] = MAKEWORD (i, 0);
+		keys[index++] = MAKEWORD (i, 0);
 	}
 
 CleanupExit:
 
-	keys[idx] = ANSI_NULL;
+	keys[index] = ANSI_NULL;
 }
 
 INT_PTR CALLBACK SettingsProc (_In_ HWND hwnd, _In_ UINT msg, _In_ WPARAM wparam, _In_ LPARAM lparam)
@@ -1221,33 +1216,33 @@ INT_PTR CALLBACK SettingsProc (_In_ HWND hwnd, _In_ UINT msg, _In_ WPARAM wparam
 
 					generate_keys_array (keys, RTL_NUMBER_OF (keys));
 
-					for (UINT i = 0, idx = 0; i < RTL_NUMBER_OF (keys); i++)
+					for (UINT i = 0, index = 0; i < RTL_NUMBER_OF (keys); i++)
 					{
 						key_code = keys[i];
 
 						if (!key_code)
 							break;
 
-						idx += 1;
+						index += 1;
 
 						_app_key2string (key_string, RTL_NUMBER_OF (key_string), MAKEWORD (key_code, 0));
 
-						_r_combobox_insertitem (hwnd, IDC_FULLSCREEN_CB, idx, key_string);
-						_r_combobox_insertitem (hwnd, IDC_WINDOW_CB, idx, key_string);
-						_r_combobox_insertitem (hwnd, IDC_REGION_CB, idx, key_string);
+						_r_combobox_insertitem (hwnd, IDC_FULLSCREEN_CB, index, key_string);
+						_r_combobox_insertitem (hwnd, IDC_WINDOW_CB, index, key_string);
+						_r_combobox_insertitem (hwnd, IDC_REGION_CB, index, key_string);
 
-						_r_combobox_setitemparam (hwnd, IDC_FULLSCREEN_CB, idx, (LPARAM)key_code);
-						_r_combobox_setitemparam (hwnd, IDC_WINDOW_CB, idx, (LPARAM)key_code);
-						_r_combobox_setitemparam (hwnd, IDC_REGION_CB, idx, (LPARAM)key_code);
+						_r_combobox_setitemparam (hwnd, IDC_FULLSCREEN_CB, index, (LPARAM)key_code);
+						_r_combobox_setitemparam (hwnd, IDC_WINDOW_CB, index, (LPARAM)key_code);
+						_r_combobox_setitemparam (hwnd, IDC_REGION_CB, index, (LPARAM)key_code);
 
 						if (fullscreen_allowed && LOBYTE (fullscreen_code) == key_code)
-							_r_combobox_setcurrentitem (hwnd, IDC_FULLSCREEN_CB, idx);
+							_r_combobox_setcurrentitem (hwnd, IDC_FULLSCREEN_CB, index);
 
 						if (window_allowed && LOBYTE (window_code) == key_code)
-							_r_combobox_setcurrentitem (hwnd, IDC_WINDOW_CB, idx);
+							_r_combobox_setcurrentitem (hwnd, IDC_WINDOW_CB, index);
 
 						if (region_allowed && LOBYTE (region_code) == key_code)
-							_r_combobox_setcurrentitem (hwnd, IDC_REGION_CB, idx);
+							_r_combobox_setcurrentitem (hwnd, IDC_REGION_CB, index);
 					}
 
 					if (_r_combobox_getcurrentitem (hwnd, IDC_FULLSCREEN_CB) == CB_ERR)
@@ -1455,19 +1450,6 @@ VOID _app_initialize ()
 		if (!config.default_folder)
 			config.default_folder = _r_obj_createstring (DEFAULT_DIRECTORY);
 
-		PR_STRING path_string = _app_getdirectory ();
-		PR_STRING expanded_string = _r_str_unexpandenvironmentstring (path_string->buffer);
-
-		if (expanded_string)
-			_r_obj_movereference (&path_string, expanded_string);
-
-		if (path_string)
-		{
-			_r_config_setstring (L"Folder", path_string->buffer);
-
-			_r_obj_dereference (path_string);
-		}
-
 		// initialize formats
 		LPCWSTR szext[] = {
 			L"bmp",
@@ -1493,6 +1475,8 @@ VOID _app_initialize ()
 
 		for (SIZE_T i = 0; i < RTL_NUMBER_OF (szext); i++)
 		{
+			memset (&image_format, 0, sizeof (image_format));
+
 			_r_str_copy (image_format.ext, RTL_NUMBER_OF (image_format.ext), szext[i]);
 			memcpy (&image_format.guid, guids[i], sizeof (image_format.guid));
 
@@ -1837,9 +1821,9 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 
 			else if ((ctrl_id >= IDX_FORMATS && ctrl_id <= IDX_FORMATS + (INT)_r_obj_getarraysize (config.formats)))
 			{
-				ULONG idx = (ctrl_id - IDX_FORMATS);
+				INT index = (ctrl_id - IDX_FORMATS);
 
-				_r_config_setinteger (L"ImageFormat", _r_calc_clamp (idx, 0, (INT)(INT_PTR)_r_obj_getarraysize (config.formats) - 1));
+				_r_config_setinteger (L"ImageFormat", _r_calc_clamp (index, 0, (INT)(INT_PTR)_r_obj_getarraysize (config.formats) - 1));
 
 				return FALSE;
 			}
@@ -1849,12 +1833,7 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 
 				if (path_string)
 				{
-					PR_STRING expanded_string = _r_str_unexpandenvironmentstring (path_string->buffer);
-
-					if (expanded_string)
-						_r_obj_movereference (&path_string, expanded_string);
-
-					_r_config_setstring (L"Folder", path_string->buffer);
+					_r_config_setstringexpand (L"Folder", path_string->buffer);
 
 					_r_obj_dereference (path_string);
 				}
@@ -1993,36 +1972,36 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 
 				case IDC_BROWSE_BTN:
 				{
-					BROWSEINFO browse_info = {0};
+					R_FILE_DIALOG file_dialog;
+					PR_STRING path;
 
-					browse_info.hwndOwner = hwnd;
-					browse_info.ulFlags = BIF_RETURNONLYFSDIRS | BIF_USENEWUI | BIF_VALIDATE;
-
-					LPITEMIDLIST pidl = SHBrowseForFolder (&browse_info);
-
-					if (pidl)
+					if (_r_filedialog_initialize (&file_dialog, PR_FILEDIALOG_OPENDIR))
 					{
-						WCHAR buffer[MAX_PATH];
+						path = _app_getdirectory ();
 
-						if (SHGetPathFromIDList (pidl, buffer))
+						if (path)
 						{
-							PR_STRING expanded_string = _r_str_unexpandenvironmentstring (buffer);
+							_r_filedialog_setpath (&file_dialog, path->buffer);
 
-							if (expanded_string)
-							{
-								_r_config_setstring (L"Folder", expanded_string->buffer);
-
-								_r_obj_dereference (expanded_string);
-							}
-							else
-							{
-								_r_config_setstring (L"Folder", buffer);
-							}
-
-							_r_ctrl_settext (hwnd, IDC_FOLDER, buffer);
+							_r_obj_dereference (path);
 						}
 
-						CoTaskMemFree (pidl);
+						if (_r_filedialog_show (hwnd, &file_dialog))
+						{
+							path = _r_filedialog_getpath (&file_dialog);
+
+							if (path)
+							{
+								_r_config_setstringexpand (L"Folder", path->buffer);
+
+								_r_ctrl_settext (hwnd, IDC_FOLDER, _r_obj_getstring (path));
+
+								_r_obj_dereference (path);
+							}
+						}
+
+						_r_filedialog_destroy (&file_dialog);
+
 					}
 
 					break;
