@@ -123,7 +123,7 @@ FORCEINLINE BOOLEAN _wic_setoptions (_In_ LPCGUID guid, _Inout_ IPropertyBag2 *p
 	memset (options, 0, sizeof (options));
 	memset (values, 0, sizeof (values)); // VariantInit
 
-	if (memcmp (guid, &GUID_ContainerFormatBmp, sizeof (GUID)) == 0)
+	if (IsEqualGUID (guid, &GUID_ContainerFormatBmp))
 	{
 		options[0].pstrName = L"EnableV5Header32bppBGRA";
 
@@ -132,7 +132,7 @@ FORCEINLINE BOOLEAN _wic_setoptions (_In_ LPCGUID guid, _Inout_ IPropertyBag2 *p
 
 		options_count = 1;
 	}
-	else if (memcmp (guid, &GUID_ContainerFormatJpeg, sizeof (GUID)) == 0)
+	else if (IsEqualGUID (guid, &GUID_ContainerFormatJpeg))
 	{
 		options[0].pstrName = L"ImageQuality";
 
@@ -146,7 +146,7 @@ FORCEINLINE BOOLEAN _wic_setoptions (_In_ LPCGUID guid, _Inout_ IPropertyBag2 *p
 
 		options_count = 2;
 	}
-	else if (memcmp (guid, &GUID_ContainerFormatWmp, sizeof (GUID)) == 0)
+	else if (IsEqualGUID (guid, &GUID_ContainerFormatWmp))
 	{
 		options[0].pstrName = L"UseCodecOptions";
 
@@ -170,7 +170,7 @@ FORCEINLINE BOOLEAN _wic_setoptions (_In_ LPCGUID guid, _Inout_ IPropertyBag2 *p
 
 		options_count = 4;
 	}
-	else if (memcmp (guid, &GUID_ContainerFormatPng, sizeof (GUID)) == 0)
+	else if (IsEqualGUID (guid, &GUID_ContainerFormatPng))
 	{
 		options[0].pstrName = L"InterlaceOption";
 
@@ -184,7 +184,7 @@ FORCEINLINE BOOLEAN _wic_setoptions (_In_ LPCGUID guid, _Inout_ IPropertyBag2 *p
 
 		options_count = 2;
 	}
-	else if (memcmp (guid, &GUID_ContainerFormatTiff, sizeof (GUID)) == 0)
+	else if (IsEqualGUID (guid, &GUID_ContainerFormatTiff))
 	{
 		options[0].pstrName = L"CompressionQuality";
 
@@ -216,7 +216,7 @@ FORCEINLINE BOOLEAN _wic_setoptions (_In_ LPCGUID guid, _Inout_ IPropertyBag2 *p
 	return FALSE;
 }
 
-BOOLEAN _wic_savehbitmap (HBITMAP hbitmap, LPCWSTR filepath)
+BOOLEAN _wic_savehbitmap (_In_ HBITMAP hbitmap, _In_ LPCWSTR filepath)
 {
 	PIMAGE_FORMAT format = _app_getimageformat_data ();
 
