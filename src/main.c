@@ -66,7 +66,11 @@ FORCEINLINE VOID _app_playsound ()
 {
 	if (_r_config_getboolean (L"IsPlaySound", TRUE))
 	{
-		PlaySound (MAKEINTRESOURCE (IDW_MAIN), _r_sys_getimagebase (), SND_ASYNC | SND_NODEFAULT | SND_NOWAIT | SND_FILENAME | SND_SENTRY | SND_RESOURCE);
+		PlaySound (
+			MAKEINTRESOURCE (IDW_MAIN),
+			_r_sys_getimagebase (),
+			SND_ASYNC | SND_NODEFAULT | SND_NOWAIT | SND_FILENAME | SND_SENTRY | SND_RESOURCE
+		);
 	}
 }
 
@@ -76,7 +80,7 @@ LONG _app_getimageformat_id ()
 
 	format_id = _r_config_getlong (L"ImageFormat", 2);
 
-	return _r_calc_clamp32 (format_id, 0, (LONG)_r_obj_getarraysize (config.formats) - 1);
+	return _r_calc_clamp (format_id, 0, (LONG)_r_obj_getarraysize (config.formats) - 1);
 }
 
 FORCEINLINE PIMAGE_FORMAT _app_getimageformat_data ()
@@ -90,7 +94,7 @@ ENUM_IMAGE_NAME _app_getimagename_id ()
 
 	name_id = _r_config_getlong (L"FilenameType", NAME_INDEX);
 
-	return _r_calc_clamp32 (name_id, NAME_INDEX, NAME_DATE);
+	return _r_calc_clamp (name_id, NAME_INDEX, NAME_DATE);
 }
 
 ENUM_TYPE_SCREENSHOT _app_getmode_id ()
@@ -99,7 +103,7 @@ ENUM_TYPE_SCREENSHOT _app_getmode_id ()
 
 	mode_id = _r_config_getlong (L"Mode", SHOT_MONITOR);
 
-	return _r_calc_clamp32 (mode_id, SHOT_FULLSCREEN, SHOT_REGION);
+	return _r_calc_clamp (mode_id, SHOT_FULLSCREEN, SHOT_REGION);
 }
 
 LONG _app_getdelay_id ()
@@ -111,7 +115,7 @@ LONG _app_getdelay_id ()
 	if (delay_idx <= 0)
 		return -1;
 
-	return _r_calc_clamp32 (delay_idx - 1, 0, RTL_NUMBER_OF (timer_array));
+	return _r_calc_clamp (delay_idx - 1, 0, RTL_NUMBER_OF (timer_array));
 }
 
 PR_STRING _app_getdirectory ()
@@ -171,7 +175,7 @@ LONG _app_getwindowshadowsize (_In_ HWND hwnd)
 	if (DwmGetWindowAttribute (hwnd, DWMWA_EXTENDED_FRAME_BOUNDS, &rect_dwm, sizeof (rect_dwm)) != S_OK)
 		return 0;
 
-	return _r_calc_clamp32 (rect_dwm.left - rect.left, 0, 20);
+	return _r_calc_clamp (rect_dwm.left - rect.left, 0, 20);
 }
 
 _Ret_maybenull_
@@ -2285,7 +2289,7 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 
 				index = (ctrl_id - IDX_FORMATS);
 
-				_r_config_setlong (L"ImageFormat", _r_calc_clamp32 (index, 0, (LONG)_r_obj_getarraysize (config.formats) - 1));
+				_r_config_setlong (L"ImageFormat", _r_calc_clamp (index, 0, (LONG)_r_obj_getarraysize (config.formats) - 1));
 
 				return FALSE;
 			}
@@ -2295,7 +2299,7 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 
 				index = (ctrl_id - IDX_DELAY);
 
-				_r_config_setlong (L"Delay", _r_calc_clamp32 (index, 0, RTL_NUMBER_OF (timer_array)) + 1);
+				_r_config_setlong (L"Delay", _r_calc_clamp (index, 0, RTL_NUMBER_OF (timer_array)) + 1);
 
 				return FALSE;
 			}
