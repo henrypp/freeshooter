@@ -350,6 +350,9 @@
   <ItemGroup>
     <ClCompile Include="..\routine\rapp.c" />
     <ClCompile Include="..\routine\routine.c" />
+    <ClCompile Include="src\dialog.c" />
+    <ClCompile Include="src\helper.c" />
+    <ClCompile Include="src\image.c" />
     <ClCompile Include="src\main.c" />
   </ItemGroup>
   <ItemGroup>
@@ -357,7 +360,12 @@
     <ClInclude Include="..\routine\rapp.h" />
     <ClInclude Include="..\routine\rconfig.h" />
     <ClInclude Include="..\routine\routine.h" />
+    <ClInclude Include="..\routine\rtypes.h" />
     <ClInclude Include="src\app.h" />
+    <ClInclude Include="src\dialog.h" />
+    <ClInclude Include="src\global.h" />
+    <ClInclude Include="src\helper.h" />
+    <ClInclude Include="src\image.h" />
     <ClInclude Include="src\main.h" />
     <ClInclude Include="src\resource.h" />
   </ItemGroup>
