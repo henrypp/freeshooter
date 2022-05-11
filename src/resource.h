@@ -16,7 +16,8 @@
 
 // Dialogs
 #define IDD_MAIN 100
-#define IDD_SETTINGS_HOTKEYS 101
+#define IDD_DUMMY 101
+#define IDD_SETTINGS_HOTKEYS 102
 
 // Main Dlg
 #define IDC_TITLE_FOLDER 104
