@@ -1,5 +1,5 @@
 // Free Shooter
-// Copyright (c) 2009-2021 Henry++
+// Copyright (c) 2009-2022 Henry++
 
 #pragma once
 
@@ -14,15 +14,17 @@
 #define FILENAME_MENU 1
 #define DELAY_MENU 2
 
-#define WND_SLEEP 75
+#define WND_SLEEP 150
 #define JPEG_QUALITY 95
-#define BLEND 1.5
+#define BLEND 1.8
 #define START_IDX 1
 
 #define REGION_PEN_COLOR RGB (255,0,0)
 #define REGION_PEN_DRAW_COLOR RGB (0,255,0)
 #define REGION_COLOR_BK RGB (0,0,0)
 #define REGION_BLEND 90
+
+#define BG_COLOR_WINDOW RGB (255, 255, 255)
 
 #define FILE_FORMAT_NAME_PREFIX L"sshot-"
 #define FILE_FORMAT_NAME_FORMAT L"%s%03d"
@@ -39,10 +41,6 @@
 #define HOTKEY_WINDOW MAKEWORD (VK_SNAPSHOT, HOTKEYF_CONTROL)
 #define HOTKEY_REGION MAKEWORD (VK_SNAPSHOT, HOTKEYF_ALT)
 
-#define DUMMY_CLASS_DLG L"DummyDlg"
-#define REGION_CLASS_DLG L"RegionDlg"
-#define TIMER_CLASS_DLG L"TimerDlg"
-
 #define DEFAULT_DIRECTORY L"%userprofile%\\Desktop"
 
 // libs
@@ -58,12 +56,11 @@ typedef struct _STATIC_DATA
 
 	PR_ARRAY formats;
 
-	HWND hdummy;
-
 	HWND hregion;
 	HWND hregion_tran;
 
 	HANDLE hregion_mutex;
+	HANDLE hshot_evt;
 } STATIC_DATA, *PSTATIC_DATA;
 
 typedef struct _SHOT_INFO
@@ -81,10 +78,7 @@ typedef struct _SHOT_INFO
 		};
 	};
 
-	struct
-	{
-		volatile LONG64 timer_value;
-	};
+	HDC hcapture;
 } SHOT_INFO, *PSHOT_INFO;
 
 typedef struct _IMAGE_FORMAT
