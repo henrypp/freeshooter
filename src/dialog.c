@@ -71,7 +71,12 @@ VOID _app_createtimer (
 	timer_context.timer_value = timer_array[delay_id];
 	timer_context.shot_info = shot_info;
 
-	EnumDisplayMonitors (NULL, NULL, &enum_monitor_timer_callback, (LPARAM)&timer_context);
+	EnumDisplayMonitors (
+		NULL,
+		NULL,
+		&enum_monitor_timer_callback,
+		(LPARAM)&timer_context
+	);
 }
 
 VOID _app_initializeregion (
@@ -274,6 +279,7 @@ HWND _app_showdummy (
 	else if (hwnd && rect)
 	{
 		dummy_context.hwnd = hwnd;
+
 		CopyRect (&dummy_context.rect, rect);
 
 		hdummy = CreateWindowEx (
@@ -377,38 +383,38 @@ INT_PTR CALLBACK RegionProc (
 	_In_ LPARAM lparam
 )
 {
-	PMONITOR_CONTEXT monitor_context;
+	PMONITOR_CONTEXT context;
 
 	switch (msg)
 	{
 		case WM_INITDIALOG:
 		{
-			monitor_context = (PMONITOR_CONTEXT)lparam;
+			context = (PMONITOR_CONTEXT)lparam;
 
-			monitor_context->hwnd = hwnd;
+			context->hwnd = hwnd;
 
-			_r_wnd_setcontext (hwnd, LONG_MAX, monitor_context);
+			_r_wnd_setcontext (hwnd, LONG_MAX, context);
 
-			_app_updateregionrect (monitor_context);
-			_app_initializeregion (monitor_context);
+			_app_updateregionrect (context);
+			_app_initializeregion (context);
 
 			break;
 		}
 
 		case WM_NCDESTROY:
 		{
-			monitor_context = _r_wnd_getcontext (hwnd, LONG_MAX);
+			context = _r_wnd_getcontext (hwnd, LONG_MAX);
 
-			if (!monitor_context)
+			if (!context)
 				break;
 
 			_r_wnd_removecontext (hwnd, LONG_MAX);
 
-			_app_destroyregion (monitor_context);
+			_app_destroyregion (context);
 
 			SetEvent (config.hregion_mutex);
 
-			_r_freelist_deleteitem (&context_list, monitor_context);
+			_r_freelist_deleteitem (&context_list, context);
 
 			break;
 		}
@@ -416,16 +422,16 @@ INT_PTR CALLBACK RegionProc (
 		case WM_DPICHANGED:
 		case WM_DISPLAYCHANGE:
 		{
-			monitor_context = _r_wnd_getcontext (hwnd, LONG_MAX);
+			context = _r_wnd_getcontext (hwnd, LONG_MAX);
 
-			if (!monitor_context)
+			if (!context)
 			{
 				DestroyWindow (hwnd);
 				break;
 			}
 
-			_app_updateregionrect (monitor_context);
-			_app_initializeregion (monitor_context);
+			_app_updateregionrect (context);
+			_app_initializeregion (context);
 
 			break;
 		}
@@ -479,14 +485,14 @@ INT_PTR CALLBACK RegionProc (
 
 		case WM_SETCURSOR:
 		{
-			monitor_context = _r_wnd_getcontext (hwnd, LONG_MAX);
+			context = _r_wnd_getcontext (hwnd, LONG_MAX);
 
-			if (!monitor_context)
+			if (!context)
 				break;
 
-			if (monitor_context->hcursor)
+			if (context->hcursor)
 			{
-				SetCursor (monitor_context->hcursor);
+				SetCursor (context->hcursor);
 				return TRUE;
 			}
 
@@ -514,9 +520,9 @@ INT_PTR CALLBACK RegionProc (
 			HGDIOBJ old_pen;
 			HGDIOBJ old_brush;
 
-			monitor_context = _r_wnd_getcontext (hwnd, LONG_MAX);
+			context = _r_wnd_getcontext (hwnd, LONG_MAX);
 
-			if (!monitor_context)
+			if (!context)
 				break;
 
 			if (!GetCursorPos (&pt))
@@ -537,7 +543,13 @@ INT_PTR CALLBACK RegionProc (
 			bpp.cbSize = sizeof (bpp);
 			bpp.dwFlags = BPPF_NOCLIP;
 
-			hdpaint = BeginBufferedPaint (hdc, &rect, BPBF_TOPDOWNDIB, &bpp, &hdc_buffered);
+			hdpaint = BeginBufferedPaint (
+				hdc,
+				&rect,
+				BPBF_TOPDOWNDIB,
+				&bpp,
+				&hdc_buffered
+			);
 
 			if (hdpaint)
 			{
@@ -545,9 +557,9 @@ INT_PTR CALLBACK RegionProc (
 					hdc_buffered,
 					0,
 					0,
-					_r_calc_rectwidth (&monitor_context->rect),
-					_r_calc_rectheight (&monitor_context->rect),
-					monitor_context->region.hcapture_mask,
+					_r_calc_rectwidth (&context->rect),
+					_r_calc_rectheight (&context->rect),
+					context->region.hcapture_mask,
 					0,
 					0,
 					SRCCOPY
@@ -555,7 +567,7 @@ INT_PTR CALLBACK RegionProc (
 
 				old_pen = SelectObject (
 					hdc_buffered,
-					monitor_context->region.is_drawing ? monitor_context->region.hpen_draw : monitor_context->region.hpen
+					context->region.is_drawing ? context->region.hpen_draw : context->region.hpen
 				);
 
 				old_brush = SelectObject (
@@ -563,15 +575,15 @@ INT_PTR CALLBACK RegionProc (
 					GetStockObject (NULL_BRUSH)
 				);
 
-				if (monitor_context->region.is_drawing)
+				if (context->region.is_drawing)
 				{
 					// draw region rectangle
 					SetRect (
 						&rect,
-						min (monitor_context->region.pt_start.x, pt.x),
-						min (monitor_context->region.pt_start.y, pt.y),
-						max (monitor_context->region.pt_start.x, pt.x),
-						max (monitor_context->region.pt_start.y, pt.y)
+						min (context->region.pt_start.x, pt.x),
+						min (context->region.pt_start.y, pt.y),
+						max (context->region.pt_start.x, pt.x),
+						max (context->region.pt_start.y, pt.y)
 					);
 
 					BitBlt (
@@ -580,7 +592,7 @@ INT_PTR CALLBACK RegionProc (
 						rect.top,
 						_r_calc_rectwidth (&rect),
 						_r_calc_rectheight (&rect),
-						monitor_context->region.hcapture,
+						context->region.hcapture,
 						rect.left,
 						rect.top,
 						SRCCOPY
@@ -588,8 +600,8 @@ INT_PTR CALLBACK RegionProc (
 
 					Rectangle (
 						hdc_buffered,
-						monitor_context->region.pt_start.x,
-						monitor_context->region.pt_start.y,
+						context->region.pt_start.x,
+						context->region.pt_start.y,
 						pt.x,
 						pt.y
 					);
@@ -640,33 +652,33 @@ INT_PTR CALLBACK RegionProc (
 					PSHOT_INFO shot_info;
 					RECT rect;
 
-					monitor_context = _r_wnd_getcontext (hwnd, LONG_MAX);
+					context = _r_wnd_getcontext (hwnd, LONG_MAX);
 
-					if (!monitor_context)
+					if (!context)
 						break;
 
-					if (!monitor_context->region.is_drawing)
+					if (!context->region.is_drawing)
 					{
-						monitor_context->region.is_drawing = TRUE;
+						context->region.is_drawing = TRUE;
 
-						monitor_context->region.pt_start.x = LOWORD (lparam);
-						monitor_context->region.pt_start.y = HIWORD (lparam);
+						context->region.pt_start.x = LOWORD (lparam);
+						context->region.pt_start.y = HIWORD (lparam);
 
 						InvalidateRect (hwnd, NULL, TRUE);
 					}
 					else
 					{
-						monitor_context->region.is_drawing = FALSE;
+						context->region.is_drawing = FALSE;
 
-						monitor_context->region.pt_end.x = LOWORD (lparam);
-						monitor_context->region.pt_end.y = HIWORD (lparam);
+						context->region.pt_end.x = LOWORD (lparam);
+						context->region.pt_end.y = HIWORD (lparam);
 
 						SetRect (
 							&rect,
-							min (monitor_context->region.pt_start.x, monitor_context->region.pt_end.x),
-							min (monitor_context->region.pt_start.y, monitor_context->region.pt_end.y),
-							max (monitor_context->region.pt_start.x, monitor_context->region.pt_end.x),
-							max (monitor_context->region.pt_start.y, monitor_context->region.pt_end.y)
+							min (context->region.pt_start.x, context->region.pt_end.x),
+							min (context->region.pt_start.y, context->region.pt_end.y),
+							max (context->region.pt_start.x, context->region.pt_end.x),
+							max (context->region.pt_start.y, context->region.pt_end.y)
 						);
 
 						if (!IsRectEmpty (&rect))
@@ -675,8 +687,8 @@ INT_PTR CALLBACK RegionProc (
 
 							_r_wnd_recttorectangle (&shot_info->rectangle, &rect);
 
-							shot_info->hcapture = monitor_context->region.hcapture;
-							monitor_context->region.hcapture = NULL;
+							shot_info->hcapture = context->region.hcapture;
+							context->region.hcapture = NULL;
 
 							_app_savescreenshot (shot_info);
 
@@ -691,17 +703,17 @@ INT_PTR CALLBACK RegionProc (
 
 				case IDM_REGION_CANCEL:
 				{
-					monitor_context = _r_wnd_getcontext (hwnd, LONG_MAX);
+					context = _r_wnd_getcontext (hwnd, LONG_MAX);
 
-					if (!monitor_context)
+					if (!context)
 						break;
 
-					if (monitor_context->region.is_drawing)
+					if (context->region.is_drawing)
 					{
-						monitor_context->region.is_drawing = FALSE;
+						context->region.is_drawing = FALSE;
 
-						monitor_context->region.pt_start.x = monitor_context->region.pt_start.y = 0;
-						monitor_context->region.pt_end.x = monitor_context->region.pt_end.y = 0;
+						context->region.pt_start.x = context->region.pt_start.y = 0;
+						context->region.pt_end.x = context->region.pt_end.y = 0;
 
 						InvalidateRect (hwnd, NULL, TRUE);
 					}
@@ -728,19 +740,19 @@ INT_PTR CALLBACK TimerProc (
 	_In_ LPARAM lparam
 )
 {
-	PMONITOR_CONTEXT monitor_context;
+	PMONITOR_CONTEXT context;
 
 	switch (msg)
 	{
 		case WM_INITDIALOG:
 		{
-			monitor_context = (PMONITOR_CONTEXT)lparam;
+			context = (PMONITOR_CONTEXT)lparam;
 
-			monitor_context->hwnd = hwnd;
+			context->hwnd = hwnd;
 
-			_r_wnd_setcontext (hwnd, SHORT_MAX, monitor_context);
+			_r_wnd_setcontext (hwnd, SHORT_MAX, context);
 
-			_app_initializetimer (monitor_context);
+			_app_initializetimer (context);
 
 			break;
 		}
@@ -753,16 +765,16 @@ INT_PTR CALLBACK TimerProc (
 
 		case WM_NCDESTROY:
 		{
-			monitor_context = _r_wnd_getcontext (hwnd, SHORT_MAX);
+			context = _r_wnd_getcontext (hwnd, SHORT_MAX);
 
-			if (!monitor_context)
+			if (!context)
 				break;
 
 			_r_wnd_removecontext (hwnd, SHORT_MAX);
 
-			_app_destroytimer (monitor_context);
+			_app_destroytimer (context);
 
-			_r_freelist_deleteitem (&context_list, monitor_context);
+			_r_freelist_deleteitem (&context_list, context);
 
 			break;
 		}
@@ -772,9 +784,9 @@ INT_PTR CALLBACK TimerProc (
 			LONG seconds;
 			LONG dpi_value;
 
-			monitor_context = _r_wnd_getcontext (hwnd, SHORT_MAX);
+			context = _r_wnd_getcontext (hwnd, SHORT_MAX);
 
-			if (!monitor_context)
+			if (!context)
 			{
 				KillTimer (hwnd, wparam);
 				DestroyWindow (hwnd);
@@ -782,7 +794,7 @@ INT_PTR CALLBACK TimerProc (
 				break;
 			}
 
-			seconds = InterlockedDecrement (&monitor_context->timer.timer_value);
+			seconds = InterlockedDecrement (&context->timer.timer_value);
 
 			InvalidateRect (hwnd, NULL, TRUE);
 
@@ -802,10 +814,10 @@ INT_PTR CALLBACK TimerProc (
 					SWP_NOZORDER | SWP_NOACTIVATE | SWP_FRAMECHANGED | SWP_NOOWNERZORDER | SWP_HIDEWINDOW
 				);
 
-				if (monitor_context->timer.shot_info)
+				if (context->timer.shot_info)
 				{
-					_app_proceedscreenshot (monitor_context->timer.shot_info);
-					_r_obj_clearreference (&monitor_context->timer.shot_info);
+					_app_proceedscreenshot (context->timer.shot_info);
+					_r_obj_clearreference (&context->timer.shot_info);
 				}
 
 				DestroyWindow (hwnd);
@@ -827,13 +839,13 @@ INT_PTR CALLBACK TimerProc (
 			BP_PAINTPARAMS bpp;
 			HPAINTBUFFER hdpaint;
 
+			WCHAR text[8];
 			RECT rect;
 			INT length;
-			WCHAR text[8];
 
-			monitor_context = _r_wnd_getcontext (hwnd, SHORT_MAX);
+			context = _r_wnd_getcontext (hwnd, SHORT_MAX);
 
-			if (!monitor_context)
+			if (!context)
 				break;
 
 			if (!GetClientRect (hwnd, &rect))
@@ -849,7 +861,13 @@ INT_PTR CALLBACK TimerProc (
 			bpp.cbSize = sizeof (bpp);
 			bpp.dwFlags = BPPF_ERASE;
 
-			hdpaint = BeginBufferedPaint (hdc, &rect, BPBF_DIB, &bpp, &hdc_buffered);
+			hdpaint = BeginBufferedPaint (
+				hdc,
+				&rect,
+				BPBF_DIB,
+				&bpp,
+				&hdc_buffered
+			);
 
 			if (hdpaint)
 			{
@@ -858,9 +876,9 @@ INT_PTR CALLBACK TimerProc (
 				SetBkMode (hdc_buffered, TRANSPARENT);
 
 				SetTextColor (hdc_buffered, _r_dc_getcoloraccent ());
-				SelectObject (hdc_buffered, monitor_context->timer.hfont);
+				SelectObject (hdc_buffered, context->timer.hfont);
 
-				_r_str_fromlong (text, RTL_NUMBER_OF (text), monitor_context->timer.timer_value);
+				_r_str_fromlong (text, RTL_NUMBER_OF (text), context->timer.timer_value);
 
 				length = (INT)(INT_PTR)_r_str_getlength (text);
 

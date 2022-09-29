@@ -47,14 +47,14 @@ VOID dump_wnd_info (
 
 VOID _app_playsound ()
 {
-	if (_r_config_getboolean (L"IsPlaySound", TRUE))
-	{
-		PlaySound (
-			MAKEINTRESOURCE (IDW_MAIN),
-			_r_sys_getimagebase (),
-			SND_ASYNC | SND_NODEFAULT | SND_NOWAIT | SND_FILENAME | SND_SENTRY | SND_RESOURCE
-		);
-	}
+	if (!_r_config_getboolean (L"IsPlaySound", TRUE))
+		return;
+
+	PlaySound (
+		MAKEINTRESOURCE (IDW_MAIN),
+		_r_sys_getimagebase (),
+		SND_ASYNC | SND_NODEFAULT | SND_NOWAIT | SND_FILENAME | SND_SENTRY | SND_RESOURCE
+	);
 }
 
 LONG _app_getimageformat_id ()
@@ -93,6 +93,7 @@ ENUM_TYPE_SCREENSHOT _app_getmode_id ()
 	return _r_calc_clamp (mode_id, SHOT_FULLSCREEN, SHOT_REGION);
 }
 
+_Success_ (return != -1)
 LONG _app_getdelay_id ()
 {
 	LONG delay_idx;
@@ -155,7 +156,12 @@ VOID _app_getmonitorrect (
 {
 	SetRectEmpty (rect);
 
-	EnumDisplayMonitors (NULL, NULL, &enum_monitor_proc, (LPARAM)rect);
+	EnumDisplayMonitors (
+		NULL,
+		NULL,
+		&enum_monitor_proc,
+		(LPARAM)rect
+	);
 }
 
 VOID _app_switchaeroonwnd (
@@ -176,7 +182,16 @@ BOOLEAN _app_getwindowrect (
 	_Out_ PRECT rect
 )
 {
-	if (DwmGetWindowAttribute (hwnd, DWMWA_EXTENDED_FRAME_BOUNDS, rect, sizeof (RECT)) == S_OK)
+	HRESULT hr;
+
+	hr = DwmGetWindowAttribute (
+		hwnd,
+		DWMWA_EXTENDED_FRAME_BOUNDS,
+		rect,
+		sizeof (RECT)
+	);
+
+	if (hr == S_OK)
 		return TRUE;
 
 	return !!GetWindowRect (hwnd, rect); // fallback
@@ -186,9 +201,6 @@ BOOLEAN _app_isnormalwindow (
 	_In_ HWND hwnd
 )
 {
-	if (!hwnd)
-		return FALSE;
-
 	if (!_r_wnd_isvisible (hwnd))
 		return FALSE;
 
@@ -202,6 +214,7 @@ LONG _app_getwindowshadowsize (
 	RECT rect;
 	RECT rect_dwm;
 	LONG size;
+	HRESULT hr;
 
 	if (_r_wnd_ismaximized (hwnd))
 		return 0;
@@ -209,7 +222,14 @@ LONG _app_getwindowshadowsize (
 	if (!GetWindowRect (hwnd, &rect))
 		return 0;
 
-	if (DwmGetWindowAttribute (hwnd, DWMWA_EXTENDED_FRAME_BOUNDS, &rect_dwm, sizeof (rect_dwm)) != S_OK)
+	hr = DwmGetWindowAttribute (
+		hwnd,
+		DWMWA_EXTENDED_FRAME_BOUNDS,
+		&rect_dwm,
+		sizeof (rect_dwm)
+	);
+
+	if (hr != S_OK)
 		return 0;
 
 	size = max (rect_dwm.left, rect.left) - min (rect_dwm.left, rect.left);
@@ -486,7 +506,7 @@ VOID _app_savescreenshot (
 }
 
 VOID _app_screenshot (
-	_In_ HWND hwnd,
+	_In_opt_ HWND hwnd,
 	_In_ ENUM_TYPE_SCREENSHOT mode
 )
 {
@@ -550,6 +570,9 @@ VOID _app_screenshot (
 
 		case SHOT_WINDOW:
 		{
+			if (!hwnd)
+				break;
+
 			if (!_app_isnormalwindow (hwnd))
 				break;
 

@@ -97,9 +97,7 @@ VOID _app_image_wicsetoptions (
 		hr = IPropertyBag2_Write (property_bag, options_count, options, values);
 
 		if (hr != S_OK)
-		{
 			_r_log (LOG_LEVEL_WARNING, 0, L"IPropertyBag2_Write", hr, NULL);
-		}
 	}
 }
 
@@ -116,6 +114,7 @@ BOOLEAN _app_image_wicsavehbitmap (
 	IWICImagingFactory2 *wicFactory = NULL;
 	IPropertyBag2 *pPropertybag = NULL;
 	BITMAP bitmap = {0};
+	GUID pixel_format;
 	HRESULT hr;
 	BOOLEAN is_success;
 
@@ -123,17 +122,35 @@ BOOLEAN _app_image_wicsavehbitmap (
 
 	is_success = FALSE;
 
-	hr = CoCreateInstance (&CLSID_WICImagingFactory2, NULL, CLSCTX_INPROC_SERVER, &IID_IWICImagingFactory2, &wicFactory);
+	hr = CoCreateInstance (
+		&CLSID_WICImagingFactory2,
+		NULL,
+		CLSCTX_INPROC_SERVER,
+		&IID_IWICImagingFactory2,
+		&wicFactory
+	);
 
 	if (FAILED (hr))
 	{
-		hr = CoCreateInstance (&CLSID_WICImagingFactory1, NULL, CLSCTX_INPROC_SERVER, &IID_IWICImagingFactory, &wicFactory);
+		hr = CoCreateInstance (
+			&CLSID_WICImagingFactory1,
+			NULL,
+			CLSCTX_INPROC_SERVER,
+			&IID_IWICImagingFactory,
+			&wicFactory
+		);
 
 		if (FAILED (hr))
 			goto CleanupExit;
 	}
 
-	hr = IWICImagingFactory_CreateBitmapFromHBITMAP (wicFactory, hbitmap, NULL, WICBitmapIgnoreAlpha, &wicBitmap);
+	hr = IWICImagingFactory_CreateBitmapFromHBITMAP (
+		wicFactory,
+		hbitmap,
+		NULL,
+		WICBitmapIgnoreAlpha,
+		&wicBitmap
+	);
 
 	if (hr != S_OK)
 		goto CleanupExit;
@@ -143,17 +160,30 @@ BOOLEAN _app_image_wicsavehbitmap (
 	if (hr != S_OK)
 		goto CleanupExit;
 
-	hr = IWICStream_InitializeFromFilename (wicStream, filepath, GENERIC_WRITE);
+	hr = IWICStream_InitializeFromFilename (
+		wicStream,
+		filepath,
+		GENERIC_WRITE
+	);
 
 	if (hr != S_OK)
 		goto CleanupExit;
 
-	hr = IWICImagingFactory_CreateEncoder (wicFactory, &format->guid, NULL, &wicEncoder);
+	hr = IWICImagingFactory_CreateEncoder (
+		wicFactory,
+		&format->guid,
+		NULL,
+		&wicEncoder
+	);
 
 	if (hr != S_OK)
 		goto CleanupExit;
 
-	hr = IWICBitmapEncoder_Initialize (wicEncoder, (IStream *)wicStream, WICBitmapEncoderNoCache);
+	hr = IWICBitmapEncoder_Initialize (
+		wicEncoder,
+		(IStream *)wicStream,
+		WICBitmapEncoderNoCache
+	);
 
 	if (hr != S_OK)
 		goto CleanupExit;
@@ -161,23 +191,34 @@ BOOLEAN _app_image_wicsavehbitmap (
 	if (!GetObject (hbitmap, sizeof (bitmap), &bitmap))
 		goto CleanupExit;
 
-	hr = IWICBitmapEncoder_CreateNewFrame (wicEncoder, &wicFrame, &pPropertybag);
+	hr = IWICBitmapEncoder_CreateNewFrame (
+		wicEncoder,
+		&wicFrame,
+		&pPropertybag
+	);
 
 	if (hr != S_OK)
 		goto CleanupExit;
 
 	_app_image_wicsetoptions (&format->guid, pPropertybag);
 
-	hr = IWICBitmapFrameEncode_Initialize (wicFrame, pPropertybag);
+	hr = IWICBitmapFrameEncode_Initialize (
+		wicFrame,
+		pPropertybag
+	);
 
 	if (hr != S_OK)
 		goto CleanupExit;
 
-	hr = IWICBitmapFrameEncode_SetSize (wicFrame, bitmap.bmWidth, bitmap.bmHeight);
+	hr = IWICBitmapFrameEncode_SetSize (
+		wicFrame,
+		bitmap.bmWidth,
+		bitmap.bmHeight
+	);
 
 	if (hr != S_OK)
 	{
-		GUID pixel_format = GUID_WICPixelFormat24bppBGR;
+		pixel_format = GUID_WICPixelFormat24bppBGR;
 
 		hr = IWICBitmapFrameEncode_SetPixelFormat (wicFrame, &pixel_format);
 
@@ -185,7 +226,11 @@ BOOLEAN _app_image_wicsavehbitmap (
 			goto CleanupExit;
 	}
 
-	hr = IWICBitmapFrameEncode_WriteSource (wicFrame, (IWICBitmapSource *)wicBitmap, NULL);
+	hr = IWICBitmapFrameEncode_WriteSource (
+		wicFrame,
+		(IWICBitmapSource *)wicBitmap,
+		NULL
+	);
 
 	if (hr != S_OK)
 		goto CleanupExit;
@@ -251,7 +296,14 @@ HBITMAP _app_image_createbitmap (
 	bmi.bmiHeader.biBitCount = 32; // four 8-bit components
 	bmi.bmiHeader.biSizeImage = (width * height) * 4; // rgba
 
-	hbitmap = CreateDIBSection (hdc, &bmi, DIB_RGB_COLORS, &bits, NULL, 0);
+	hbitmap = CreateDIBSection (
+		hdc,
+		&bmi,
+		DIB_RGB_COLORS,
+		&bits,
+		NULL,
+		0
+	);
 
 	if (out_bytes)
 	{

@@ -22,6 +22,7 @@ ENUM_IMAGE_NAME _app_getimagename_id ();
 
 ENUM_TYPE_SCREENSHOT _app_getmode_id ();
 
+_Success_ (return != -1)
 LONG _app_getdelay_id ();
 
 PR_STRING _app_getdirectory ();
@@ -63,6 +64,6 @@ VOID _app_savescreenshot (
 );
 
 VOID _app_screenshot (
-	_In_ HWND hwnd,
+	_In_opt_ HWND hwnd,
 	_In_ ENUM_TYPE_SCREENSHOT mode
 );
