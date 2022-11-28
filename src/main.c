@@ -735,6 +735,13 @@ VOID _app_initdropdownmenu (
 		_r_locale_getstring (IDS_PLAYSOUNDS_CHK)
 	);
 
+	_r_menu_setitemtext (
+		hmenu,
+		IDM_OPEN_IMAGE_CHK,
+		FALSE,
+		_r_locale_getstring (IDS_OPEN_IMAGE_CHK)
+	);
+
 	_r_menu_setitemtextformat (
 		hmenu,
 		IDM_HOTKEYS,
@@ -890,6 +897,14 @@ VOID _app_initdropdownmenu (
 		0,
 		MF_BYCOMMAND,
 		_r_config_getboolean (L"IsPlaySound", TRUE)
+	);
+
+	_r_menu_checkitem (
+		hmenu,
+		IDM_OPEN_IMAGE_CHK,
+		0,
+		MF_BYCOMMAND,
+		_r_config_getboolean (L"OpenImage", FALSE)
 	);
 }
 
@@ -1959,6 +1974,17 @@ INT_PTR CALLBACK DlgProc (
 					new_val = !_r_config_getboolean (L"CopyToClipboard", FALSE);
 
 					_r_config_setboolean (L"CopyToClipboard", new_val);
+
+					break;
+				}
+
+				case IDM_OPEN_IMAGE_CHK:
+				{
+					BOOLEAN new_val;
+
+					new_val = !_r_config_getboolean (L"OpenImage", FALSE);
+
+					_r_config_setboolean (L"OpenImage", new_val);
 
 					break;
 				}

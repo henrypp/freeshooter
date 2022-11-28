@@ -348,7 +348,9 @@ VOID _app_image_savebitmaptofile (
 	if (unique_path_string)
 		_r_obj_movereference (&path_string, unique_path_string);
 
-	_app_image_wicsavehbitmap (hbitmap, path_string->buffer);
+	if (_app_image_wicsavehbitmap (hbitmap, path_string->buffer) &&
+		_r_config_getboolean (L"OpenImage", FALSE))
+		_r_shell_opendefault (path_string->buffer);
 
 	_r_obj_dereference (path_string);
 }

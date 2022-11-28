@@ -90,6 +90,8 @@
 #define IDC_REGION_ALT 159
 #define IDC_REGION_CB 160
 
+#define IDC_OPEN_IMAGE_CHK 161
+
 // Main Menu
 #define IDM_TAKE_FULLSCREEN 161
 #define IDM_TAKE_MONITOR 162
@@ -129,6 +131,7 @@
 #define IDM_FILENAME_DATE 192
 #define IDM_DELAY_DISABLE 193
 #define IDM_HOTKEYS 194
+#define IDM_OPEN_IMAGE_CHK 195
 
 // Region Menu
 #define IDM_REGION_START 195
@@ -206,6 +209,8 @@
 #define IDS_DELAY 50
 
 #define IDS_MODE_MONITOR 51
+
+#define IDS_OPEN_IMAGE_CHK 52
 
 // Wav
 #define IDW_MAIN 1
