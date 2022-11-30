@@ -902,3 +902,55 @@ INT_PTR CALLBACK TimerProc (
 
 	return FALSE;
 }
+
+static INT_PTR CALLBACK dialog_edit_filename_proc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
+{
+	if (WM_INITDIALOG == msg)
+	{
+		PR_STRING_PTR filename_ref = (PR_STRING_PTR)lp;
+		SetWindowLongPtr (hDlg, GWLP_USERDATA, (LONG_PTR)filename_ref);
+		SetWindowText (hDlg, _r_locale_getstring (IDS_FILE_SAVE));
+		SetDlgItemText (hDlg, IDC_NAME_EDIT_LBL, _r_locale_getstring(IDS_FILENAME_EDIT));
+		SetDlgItemText (hDlg, IDC_SAVE, _r_locale_getstring (IDS_SAVE));
+		SetDlgItemText (hDlg, IDC_CLOSE, _r_locale_getstring (IDS_CLOSE));
+		SetDlgItemText (hDlg, IDC_NAME_EDIT_TXT, (*filename_ref)->buffer);
+		_r_wnd_center (hDlg, NULL); // center window
+		_r_wnd_top (hDlg, TRUE); // set on top
+		HWND hwndCtl = GetDlgItem (hDlg, IDC_NAME_EDIT_TXT);
+		Edit_SetSel (hwndCtl, 0, -1); // sellect all
+		SetFocus (hwndCtl);
+		return FALSE;
+	}
+
+	if (WM_COMMAND == msg)
+	{
+		WORD cmd = LOWORD (wp);
+		if (IDC_SAVE == cmd)
+		{
+			PR_STRING_PTR filename_ref = (PR_STRING_PTR)GetWindowLongPtr (hDlg, GWLP_USERDATA);
+			HWND hwndCtl = GetDlgItem (hDlg, IDC_NAME_EDIT_TXT);
+			size_t cch = (size_t)SendMessageW (hwndCtl, WM_GETTEXTLENGTH, 0, 0);
+			size_t nBytes = (cch + 2) * sizeof (WCHAR); // +2 for extra room
+			LPCWSTR new_filename = _r_obj_allocate (nBytes, NULL);
+			SendMessage (hwndCtl, WM_GETTEXT, cch + 1, (LPARAM)new_filename);
+			if (!_r_str_isempty (new_filename))
+				_r_obj_movereference (filename_ref, _r_obj_createstring (new_filename));
+			EndDialog (hDlg, IDC_SAVE);
+			return TRUE;
+		}
+		else if (IDC_CLOSE == cmd)
+		{
+			EndDialog (hDlg, IDC_CLOSE);
+			return TRUE;
+		}
+	}
+
+	return FALSE;
+}
+
+bool dialog_edit_filename (HWND hWndParent, PR_STRING_PTR filename_ref)
+{
+	INT_PTR res = DialogBoxParam (NULL, MAKEINTRESOURCE (IDD_DIALOG_FILENAME),
+								  hWndParent, dialog_edit_filename_proc, (LPARAM)filename_ref);
+	return (IDC_SAVE == res);
+}

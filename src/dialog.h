@@ -111,3 +111,5 @@ INT_PTR CALLBACK TimerProc (
 	_In_ WPARAM wparam,
 	_In_ LPARAM lparam
 );
+
+bool dialog_edit_filename (HWND hwnd, PR_STRING_PTR filename);

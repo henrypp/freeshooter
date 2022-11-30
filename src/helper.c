@@ -249,6 +249,7 @@ PR_STRING _app_uniquefilename (
 	SYSTEMTIME st;
 
 	PR_STRING name_prefix;
+	PR_STRING file_name = NULL;
 	PR_STRING string;
 
 	PIMAGE_FORMAT format;
@@ -265,13 +266,18 @@ PR_STRING _app_uniquefilename (
 		if (GetDateFormat (LOCALE_SYSTEM_DEFAULT, 0, &st, FILE_FORMAT_DATE_FORMAT_1, date_format, RTL_NUMBER_OF (date_format)) &&
 			GetTimeFormat (LOCALE_SYSTEM_DEFAULT, 0, &st, FILE_FORMAT_DATE_FORMAT_2, time_format, RTL_NUMBER_OF (time_format)))
 		{
-			_r_obj_movereference (&string, _r_format_string (
-				L"%s\\%s%s-%s.%s",
-				directory,
+			_r_obj_movereference (&file_name, _r_format_string (
+				L"%s%s-%s.%s",
 				_r_obj_getstringordefault (name_prefix, FILE_FORMAT_NAME_PREFIX),
 				date_format,
 				time_format,
 				format->ext)
+			);
+
+			_r_obj_movereference (&string, _r_format_string (
+				L"%s\\%s",
+				directory,
+				file_name->buffer)
 			);
 
 			if (_r_fs_exists (string->buffer))
@@ -286,12 +292,17 @@ PR_STRING _app_uniquefilename (
 	{
 		for (USHORT i = START_IDX; i < USHRT_MAX; i++)
 		{
-			_r_obj_movereference (&string, _r_format_string (
-				L"%s\\" FILE_FORMAT_NAME_FORMAT L".%s",
-				directory,
+			_r_obj_movereference (&file_name, _r_format_string (
+				FILE_FORMAT_NAME_FORMAT L".%s",
 				_r_obj_getstringordefault (name_prefix, FILE_FORMAT_NAME_PREFIX),
 				i,
 				format->ext)
+			);
+
+			_r_obj_movereference (&string, _r_format_string (
+				L"%s\\%s",
+				directory,
+				file_name->buffer)
 			);
 
 			if (!_r_fs_exists (string->buffer))
@@ -305,8 +316,25 @@ PR_STRING _app_uniquefilename (
 		//	return result;
 	}
 
+	// Edit file name before save
+	if (_r_config_getboolean (L"EditFileName", FALSE))
+	{
+		do
+		{
+			dialog_edit_filename (_r_app_gethwnd (), &file_name);
+			_r_obj_movereference (&string, _r_format_string (
+				L"%s\\%s",
+				directory,
+				file_name->buffer)
+			);
+		}
+		while (_r_fs_exists (string->buffer));
+	}
+
 	if (name_prefix)
 		_r_obj_dereference (name_prefix);
+	if (file_name)
+		_r_obj_dereference (file_name);
 
 	return string;
 }

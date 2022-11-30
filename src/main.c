@@ -737,6 +737,13 @@ VOID _app_initdropdownmenu (
 
 	_r_menu_setitemtext (
 		hmenu,
+		IDM_FILENAME_EDIT_CHK,
+		FALSE,
+		_r_locale_getstring (IDS_FILENAME_EDIT_CHK)
+	);
+
+	_r_menu_setitemtext (
+		hmenu,
 		IDM_OPEN_IMAGE_CHK,
 		FALSE,
 		_r_locale_getstring (IDS_OPEN_IMAGE_CHK)
@@ -897,6 +904,14 @@ VOID _app_initdropdownmenu (
 		0,
 		MF_BYCOMMAND,
 		_r_config_getboolean (L"IsPlaySound", TRUE)
+	);
+
+	_r_menu_checkitem (
+		hmenu,
+		IDM_FILENAME_EDIT_CHK,
+		0,
+		MF_BYCOMMAND,
+		_r_config_getboolean (L"EditFileName", FALSE)
 	);
 
 	_r_menu_checkitem (
@@ -1974,6 +1989,17 @@ INT_PTR CALLBACK DlgProc (
 					new_val = !_r_config_getboolean (L"CopyToClipboard", FALSE);
 
 					_r_config_setboolean (L"CopyToClipboard", new_val);
+
+					break;
+				}
+
+				case IDM_FILENAME_EDIT_CHK:
+				{
+					BOOLEAN new_val;
+
+					new_val = !_r_config_getboolean (L"EditFileName", FALSE);
+
+					_r_config_setboolean (L"EditFileName", new_val);
 
 					break;
 				}
