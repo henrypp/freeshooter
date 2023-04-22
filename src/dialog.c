@@ -1,5 +1,5 @@
 // Free Shooter
-// Copyright (c) 2009-2022 Henry++
+// Copyright (c) 2009-2023 Henry++
 
 #include "global.h"
 
@@ -27,13 +27,7 @@ BOOL CALLBACK enum_monitor_timer_callback (
 		timer_context->shot_info = NULL;
 	}
 
-	_r_wnd_createwindow (
-		_r_sys_getimagebase (),
-		MAKEINTRESOURCE (IDD_DUMMY),
-		_r_app_gethwnd (),
-		&TimerProc,
-		monitor_context
-	);
+	_r_wnd_createwindow (_r_sys_getimagebase (), MAKEINTRESOURCE (IDD_DUMMY), _r_app_gethwnd (), &TimerProc, monitor_context);
 
 	return TRUE;
 }
@@ -52,13 +46,7 @@ VOID _app_createregion ()
 
 	monitor_context = _r_freelist_allocateitem (&context_list);
 
-	_r_wnd_createwindow (
-		_r_sys_getimagebase (),
-		MAKEINTRESOURCE (IDD_DUMMY),
-		_r_app_gethwnd (),
-		&RegionProc,
-		monitor_context
-	);
+	_r_wnd_createwindow (_r_sys_getimagebase (), MAKEINTRESOURCE (IDD_DUMMY), _r_app_gethwnd (), &RegionProc, monitor_context);
 }
 
 VOID _app_createtimer (
@@ -71,12 +59,7 @@ VOID _app_createtimer (
 	timer_context.timer_value = timer_array[delay_id];
 	timer_context.shot_info = shot_info;
 
-	EnumDisplayMonitors (
-		NULL,
-		NULL,
-		&enum_monitor_timer_callback,
-		(LPARAM)&timer_context
-	);
+	EnumDisplayMonitors (NULL, NULL, &enum_monitor_timer_callback, (LPARAM)&timer_context);
 }
 
 VOID _app_initializeregion (
@@ -130,17 +113,7 @@ VOID _app_initializeregion (
 		{
 			SelectObject (monitor_context->region.hcapture, monitor_context->region.hbitmap);
 
-			BitBlt (
-				monitor_context->region.hcapture,
-				0,
-				0,
-				width,
-				height,
-				hdc,
-				monitor_context->rect.left,
-				monitor_context->rect.top,
-				SRCCOPY
-			);
+			BitBlt (monitor_context->region.hcapture, 0, 0, width, height, hdc, monitor_context->rect.left, monitor_context->rect.top, SRCCOPY);
 		}
 
 		// create bitmap mask
@@ -151,17 +124,7 @@ VOID _app_initializeregion (
 		{
 			SelectObject (monitor_context->region.hcapture_mask, monitor_context->region.hbitmap_mask);
 
-			BitBlt (
-				monitor_context->region.hcapture_mask,
-				0,
-				0,
-				width,
-				height,
-				hdc,
-				monitor_context->rect.left,
-				monitor_context->rect.top,
-				SRCCOPY
-			);
+			BitBlt (monitor_context->region.hcapture_mask, 0, 0, width, height, hdc, monitor_context->rect.left, monitor_context->rect.top, SRCCOPY);
 
 			// blend bitmap bits
 			for (SIZE_T i = 0; i < bmp_bytes.length / sizeof (COLORREF); i++)
@@ -170,11 +133,7 @@ VOID _app_initializeregion (
 
 				clr = *bmp_buffer;
 
-				*bmp_buffer = RGB (
-					GetRValue (clr) / BLEND,
-					GetGValue (clr) / BLEND,
-					GetBValue (clr) / BLEND
-				);
+				*bmp_buffer = RGB (GetRValue (clr) / BLEND, GetGValue (clr) / BLEND, GetBValue (clr) / BLEND);
 			}
 		}
 
@@ -282,20 +241,7 @@ HWND _app_showdummy (
 
 		CopyRect (&dummy_context.rect, rect);
 
-		hdummy = CreateWindowEx (
-			0,
-			DUMMY_CLASS_DLG,
-			_r_app_getname (),
-			WS_POPUP | WS_OVERLAPPED,
-			0,
-			0,
-			0,
-			0,
-			NULL,
-			NULL,
-			_r_sys_getimagebase (),
-			&dummy_context
-		);
+		hdummy = CreateWindowEx (0, DUMMY_CLASS_DLG, _r_app_getname (), WS_POPUP | WS_OVERLAPPED, 0, 0, 0, 0, NULL, NULL, _r_sys_getimagebase (), &dummy_context);
 
 		return hdummy;
 	}
@@ -510,13 +456,10 @@ INT_PTR CALLBACK RegionProc (
 			PAINTSTRUCT ps;
 			RECT rect;
 			POINT pt;
-
 			HDC hdc;
 			HDC hdc_buffered;
-
 			BP_PAINTPARAMS bpp;
 			HPAINTBUFFER hdpaint;
-
 			HGDIOBJ old_pen;
 			HGDIOBJ old_brush;
 
@@ -543,37 +486,15 @@ INT_PTR CALLBACK RegionProc (
 			bpp.cbSize = sizeof (bpp);
 			bpp.dwFlags = BPPF_NOCLIP;
 
-			hdpaint = BeginBufferedPaint (
-				hdc,
-				&rect,
-				BPBF_TOPDOWNDIB,
-				&bpp,
-				&hdc_buffered
-			);
+			hdpaint = BeginBufferedPaint (hdc, &rect, BPBF_TOPDOWNDIB, &bpp, &hdc_buffered);
 
 			if (hdpaint)
 			{
-				BitBlt (
-					hdc_buffered,
-					0,
-					0,
-					_r_calc_rectwidth (&context->rect),
-					_r_calc_rectheight (&context->rect),
-					context->region.hcapture_mask,
-					0,
-					0,
-					SRCCOPY
-				);
+				BitBlt (hdc_buffered, 0, 0, _r_calc_rectwidth (&context->rect), _r_calc_rectheight (&context->rect), context->region.hcapture_mask, 0, 0, SRCCOPY);
 
-				old_pen = SelectObject (
-					hdc_buffered,
-					context->region.is_drawing ? context->region.hpen_draw : context->region.hpen
-				);
+				old_pen = SelectObject (hdc_buffered, context->region.is_drawing ? context->region.hpen_draw : context->region.hpen);
 
-				old_brush = SelectObject (
-					hdc_buffered,
-					GetStockObject (NULL_BRUSH)
-				);
+				old_brush = SelectObject (hdc_buffered, GetStockObject (NULL_BRUSH));
 
 				if (context->region.is_drawing)
 				{
@@ -586,25 +507,9 @@ INT_PTR CALLBACK RegionProc (
 						max (context->region.pt_start.y, pt.y)
 					);
 
-					BitBlt (
-						hdc_buffered,
-						rect.left,
-						rect.top,
-						_r_calc_rectwidth (&rect),
-						_r_calc_rectheight (&rect),
-						context->region.hcapture,
-						rect.left,
-						rect.top,
-						SRCCOPY
-					);
+					BitBlt (hdc_buffered, rect.left, rect.top, _r_calc_rectwidth (&rect), _r_calc_rectheight (&rect), context->region.hcapture, rect.left, rect.top, SRCCOPY);
 
-					Rectangle (
-						hdc_buffered,
-						context->region.pt_start.x,
-						context->region.pt_start.y,
-						pt.x,
-						pt.y
-					);
+					Rectangle (hdc_buffered, context->region.pt_start.x, context->region.pt_start.y, pt.x, pt.y);
 				}
 				else
 				{
@@ -838,7 +743,6 @@ INT_PTR CALLBACK TimerProc (
 			HDC hdc_buffered;
 			BP_PAINTPARAMS bpp;
 			HPAINTBUFFER hdpaint;
-
 			WCHAR text[8];
 			RECT rect;
 			INT length;
@@ -861,13 +765,7 @@ INT_PTR CALLBACK TimerProc (
 			bpp.cbSize = sizeof (bpp);
 			bpp.dwFlags = BPPF_ERASE;
 
-			hdpaint = BeginBufferedPaint (
-				hdc,
-				&rect,
-				BPBF_DIB,
-				&bpp,
-				&hdc_buffered
-			);
+			hdpaint = BeginBufferedPaint (hdc, &rect, BPBF_DIB, &bpp, &hdc_buffered);
 
 			if (hdpaint)
 			{
@@ -882,14 +780,7 @@ INT_PTR CALLBACK TimerProc (
 
 				length = (INT)(INT_PTR)_r_str_getlength (text);
 
-				DrawTextEx (
-					hdc_buffered,
-					text,
-					length,
-					&rect,
-					DT_VCENTER | DT_CENTER | DT_SINGLELINE | DT_NOCLIP | DT_NOPREFIX,
-					NULL
-				);
+				DrawTextEx (hdc_buffered, text, length, &rect, DT_VCENTER | DT_CENTER | DT_SINGLELINE | DT_NOCLIP | DT_NOPREFIX, NULL);
 
 				EndBufferedPaint (hdpaint, TRUE);
 			}

@@ -1,5 +1,5 @@
 // Free Shooter
-// Copyright (c) 2009-2022 Henry++
+// Copyright (c) 2009-2023 Henry++
 
 #include "global.h"
 
@@ -8,7 +8,7 @@ VOID dump_rect_info (
 	_In_ BOOLEAN is_calc
 )
 {
-	_r_debug_v (
+	_r_debug (
 		L"left: %d, top: %d, width: %d, height: %d",
 		rect->left,
 		rect->top,
@@ -33,7 +33,7 @@ VOID dump_wnd_info (
 
 	_app_getwindowrect (hwnd, &rect);
 
-	_r_debug_v (
+	_r_debug (
 		L"0x%08p | % 20s | % 20s | left: %d, top: %d, width: %d, height: %d",
 		hwnd,
 		title,
@@ -50,11 +50,7 @@ VOID _app_playsound ()
 	if (!_r_config_getboolean (L"IsPlaySound", TRUE))
 		return;
 
-	PlaySound (
-		MAKEINTRESOURCE (IDW_MAIN),
-		_r_sys_getimagebase (),
-		SND_ASYNC | SND_NODEFAULT | SND_NOWAIT | SND_FILENAME | SND_SENTRY | SND_RESOURCE
-	);
+	PlaySound (MAKEINTRESOURCE (IDW_MAIN), _r_sys_getimagebase (), SND_ASYNC | SND_NODEFAULT | SND_NOWAIT | SND_FILENAME | SND_SENTRY | SND_RESOURCE);
 }
 
 LONG _app_getimageformat_id ()
@@ -111,10 +107,10 @@ PR_STRING _app_getdirectory ()
 	static R_INITONCE init_once = PR_INITONCE_INIT;
 	static PR_STRING default_folder = NULL;
 
+	PR_STRING string;
+
 	if (_r_initonce_begin (&init_once))
 	{
-		PR_STRING string;
-
 		string = _r_path_getknownfolder (CSIDL_DESKTOPDIRECTORY, NULL);
 
 		if (!string)
@@ -156,12 +152,7 @@ VOID _app_getmonitorrect (
 {
 	SetRectEmpty (rect);
 
-	EnumDisplayMonitors (
-		NULL,
-		NULL,
-		&enum_monitor_proc,
-		(LPARAM)rect
-	);
+	EnumDisplayMonitors (NULL, NULL, &enum_monitor_proc, (LPARAM)rect);
 }
 
 VOID _app_switchaeroonwnd (
@@ -169,12 +160,7 @@ VOID _app_switchaeroonwnd (
 	_In_ BOOLEAN is_disable
 )
 {
-	DwmSetWindowAttribute (
-		hwnd,
-		DWMWA_NCRENDERING_POLICY,
-		&(DWMNCRENDERINGPOLICY){is_disable ? NCRP_DISABLED : NCRP_ENABLED},
-		sizeof (DWMNCRENDERINGPOLICY)
-	);
+	DwmSetWindowAttribute (hwnd, DWMWA_NCRENDERING_POLICY, &(DWMNCRENDERINGPOLICY){is_disable ? NCRP_DISABLED : NCRP_ENABLED}, sizeof (DWMNCRENDERINGPOLICY));
 }
 
 BOOLEAN _app_getwindowrect (
@@ -184,12 +170,7 @@ BOOLEAN _app_getwindowrect (
 {
 	HRESULT hr;
 
-	hr = DwmGetWindowAttribute (
-		hwnd,
-		DWMWA_EXTENDED_FRAME_BOUNDS,
-		rect,
-		sizeof (RECT)
-	);
+	hr = DwmGetWindowAttribute (hwnd, DWMWA_EXTENDED_FRAME_BOUNDS, rect, sizeof (RECT));
 
 	if (hr == S_OK)
 		return TRUE;
@@ -222,12 +203,7 @@ LONG _app_getwindowshadowsize (
 	if (!GetWindowRect (hwnd, &rect))
 		return 0;
 
-	hr = DwmGetWindowAttribute (
-		hwnd,
-		DWMWA_EXTENDED_FRAME_BOUNDS,
-		&rect_dwm,
-		sizeof (rect_dwm)
-	);
+	hr = DwmGetWindowAttribute (hwnd, DWMWA_EXTENDED_FRAME_BOUNDS, &rect_dwm, sizeof (rect_dwm));
 
 	if (hr != S_OK)
 		return 0;
@@ -245,12 +221,9 @@ PR_STRING _app_uniquefilename (
 {
 	WCHAR date_format[MAX_PATH];
 	WCHAR time_format[MAX_PATH];
-
 	SYSTEMTIME st;
-
 	PR_STRING name_prefix;
 	PR_STRING string;
-
 	PIMAGE_FORMAT format;
 
 	format = _app_getimageformat_data ();
@@ -317,17 +290,13 @@ VOID _app_proceedscreenshot (
 {
 	CURSORINFO cursor_info;
 	ICONINFO icon_info;
-
 	HDC hdc;
 	HDC hcapture;
 	HBITMAP hbitmap;
 	HGDIOBJ old_bitmap;
-
 	R_RECTANGLE prev_rect = {0};
 	HWND my_hwnd;
-
 	LONG dpi_value;
-
 	BOOLEAN is_hideme;
 	BOOLEAN is_windowdisplayed;
 
@@ -391,17 +360,7 @@ VOID _app_proceedscreenshot (
 	{
 		old_bitmap = SelectObject (hcapture, hbitmap);
 
-		BitBlt (
-			hcapture,
-			0,
-			0,
-			shot_info->width,
-			shot_info->height,
-			hdc,
-			shot_info->left,
-			shot_info->top,
-			SRCCOPY
-		);
+		BitBlt (hcapture, 0, 0, shot_info->width, shot_info->height, hdc, shot_info->left, shot_info->top, SRCCOPY);
 
 		if (_r_config_getboolean (L"IsIncludeMouseCursor", FALSE))
 		{
@@ -517,9 +476,7 @@ VOID _app_screenshot (
 	POINT pt;
 	HMONITOR hmonitor;
 	HWND hdummy;
-
 	LONG shadow_size;
-
 	BOOLEAN is_maximized;
 	BOOLEAN is_menu;
 	BOOLEAN is_includewindowshadow;
@@ -537,13 +494,7 @@ VOID _app_screenshot (
 		{
 			_app_getmonitorrect (&rect);
 
-			_r_wnd_setrectangle (
-				&shot_info->rectangle,
-				rect.left,
-				rect.top,
-				rect.right,
-				rect.bottom
-			);
+			_r_wnd_setrectangle (&shot_info->rectangle, rect.left, rect.top, rect.right, rect.bottom);
 
 			_app_savescreenshot (shot_info);
 

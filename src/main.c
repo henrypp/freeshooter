@@ -1,5 +1,5 @@
 // Free Shooter
-// Copyright (c) 2009-2022 Henry++
+// Copyright (c) 2009-2023 Henry++
 
 #include "routine.h"
 
@@ -58,12 +58,10 @@ BOOLEAN _app_hotkeyinit (
 {
 	WCHAR buffer[256] = {0};
 	WCHAR key_string[128];
-
 	UINT hk_fullscreen;
 	UINT hk_monitor;
 	UINT hk_window;
 	UINT hk_region;
-
 	BOOLEAN is_nofullscreen;
 	BOOLEAN is_nomonitor;
 	BOOLEAN is_nowindow;
@@ -88,14 +86,8 @@ BOOLEAN _app_hotkeyinit (
 	{
 		if (hk_fullscreen)
 		{
-			if (!RegisterHotKey (
-				hwnd,
-				HOTKEY_ID_FULLSCREEN,
-				(HIBYTE (hk_fullscreen) & 2) | ((HIBYTE (hk_fullscreen) & 4) >> 2) | ((HIBYTE (hk_fullscreen) & 1) << 2),
-				LOBYTE (hk_fullscreen)))
-			{
+			if (!RegisterHotKey (hwnd, HOTKEY_ID_FULLSCREEN, (HIBYTE (hk_fullscreen) & 2) | ((HIBYTE (hk_fullscreen) & 4) >> 2) | ((HIBYTE (hk_fullscreen) & 1) << 2), LOBYTE (hk_fullscreen)))
 				is_nofullscreen = TRUE;
-			}
 		}
 	}
 
@@ -103,14 +95,8 @@ BOOLEAN _app_hotkeyinit (
 	{
 		if (hk_monitor)
 		{
-			if (!RegisterHotKey (
-				hwnd,
-				HOTKEY_ID_MONITOR,
-				(HIBYTE (hk_monitor) & 2) | ((HIBYTE (hk_monitor) & 4) >> 2) | ((HIBYTE (hk_monitor) & 1) << 2),
-				LOBYTE (hk_monitor)))
-			{
+			if (!RegisterHotKey (hwnd, HOTKEY_ID_MONITOR, (HIBYTE (hk_monitor) & 2) | ((HIBYTE (hk_monitor) & 4) >> 2) | ((HIBYTE (hk_monitor) & 1) << 2), LOBYTE (hk_monitor)))
 				is_nomonitor = TRUE;
-			}
 		}
 	}
 
@@ -118,14 +104,8 @@ BOOLEAN _app_hotkeyinit (
 	{
 		if (hk_window)
 		{
-			if (!RegisterHotKey (
-				hwnd,
-				HOTKEY_ID_WINDOW,
-				(HIBYTE (hk_window) & 2) | ((HIBYTE (hk_window) & 4) >> 2) | ((HIBYTE (hk_window) & 1) << 2),
-				LOBYTE (hk_window)))
-			{
+			if (!RegisterHotKey (hwnd, HOTKEY_ID_WINDOW, (HIBYTE (hk_window) & 2) | ((HIBYTE (hk_window) & 4) >> 2) | ((HIBYTE (hk_window) & 1) << 2), LOBYTE (hk_window)))
 				is_nowindow = TRUE;
-			}
 		}
 	}
 
@@ -133,14 +113,8 @@ BOOLEAN _app_hotkeyinit (
 	{
 		if (hk_region)
 		{
-			if (!RegisterHotKey (
-				hwnd,
-				HOTKEY_ID_REGION,
-				(HIBYTE (hk_region) & 2) | ((HIBYTE (hk_region) & 4) >> 2) | ((HIBYTE (hk_region) & 1) << 2),
-				LOBYTE (hk_region)))
-			{
+			if (!RegisterHotKey (hwnd, HOTKEY_ID_REGION, (HIBYTE (hk_region) & 2) | ((HIBYTE (hk_region) & 4) >> 2) | ((HIBYTE (hk_region) & 1) << 2), LOBYTE (hk_region)))
 				is_noregion = TRUE;
-			}
 		}
 	}
 
@@ -149,11 +123,7 @@ BOOLEAN _app_hotkeyinit (
 	{
 		if (is_nofullscreen)
 		{
-			_app_key2string (
-				key_string,
-				RTL_NUMBER_OF (key_string),
-				hk_fullscreen
-			);
+			_app_key2string (key_string, RTL_NUMBER_OF (key_string), hk_fullscreen);
 
 			_r_str_appendformat (
 				buffer,
@@ -166,11 +136,7 @@ BOOLEAN _app_hotkeyinit (
 
 		if (is_nomonitor)
 		{
-			_app_key2string (
-				key_string,
-				RTL_NUMBER_OF (key_string),
-				hk_monitor
-			);
+			_app_key2string (key_string, RTL_NUMBER_OF (key_string), hk_monitor);
 
 			_r_str_appendformat (
 				buffer,
@@ -183,11 +149,7 @@ BOOLEAN _app_hotkeyinit (
 
 		if (is_nowindow)
 		{
-			_app_key2string (
-				key_string,
-				RTL_NUMBER_OF (key_string),
-				hk_window
-			);
+			_app_key2string (key_string, RTL_NUMBER_OF (key_string), hk_window);
 
 			_r_str_appendformat (
 				buffer,
@@ -200,11 +162,7 @@ BOOLEAN _app_hotkeyinit (
 
 		if (is_noregion)
 		{
-			_app_key2string (
-				key_string,
-				RTL_NUMBER_OF (key_string),
-				hk_region
-			);
+			_app_key2string (key_string, RTL_NUMBER_OF (key_string), hk_region);
 
 			_r_str_appendformat (
 				buffer,
@@ -217,11 +175,7 @@ BOOLEAN _app_hotkeyinit (
 
 		_r_str_trim (buffer, L"\r\n");
 
-		if (_r_show_message (
-			hwnd_hotkey ? hwnd_hotkey : hwnd,
-			MB_YESNO | MB_ICONWARNING,
-			_r_locale_getstring (IDS_WARNING_HOTKEYS),
-			buffer) == IDYES)
+		if (_r_show_message (hwnd_hotkey ? hwnd_hotkey : hwnd, MB_YESNO | MB_ICONWARNING, _r_locale_getstring (IDS_WARNING_HOTKEYS), buffer) == IDYES)
 		{
 			if (!hwnd_hotkey)
 				_r_settings_createwindow (hwnd, &SettingsProc, IDD_SETTINGS_HOTKEYS);
@@ -308,15 +262,12 @@ INT_PTR CALLBACK SettingsProc (
 				{
 					CHAR keys[64];
 					WCHAR key_string[64];
-
 					LPCWSTR disabled_string;
-
 					UINT fullscreen_code;
 					UINT monitor_code;
 					UINT window_code;
 					UINT region_code;
 					UINT key_code;
-
 					BOOLEAN fullscreen_allowed;
 					BOOLEAN monitor_allowed;
 					BOOLEAN window_allowed;
@@ -332,77 +283,21 @@ INT_PTR CALLBACK SettingsProc (
 					window_allowed = _r_config_getboolean (L"HotkeyWindowEnabled", TRUE);
 					region_allowed = _r_config_getboolean (L"HotkeyRegionEnabled", TRUE);
 
-					_r_ctrl_checkbutton (
-						hwnd,
-						IDC_FULLSCREEN_SHIFT,
-						((HIBYTE (fullscreen_code) & HOTKEYF_SHIFT) != 0)
-					);
+					_r_ctrl_checkbutton (hwnd, IDC_FULLSCREEN_SHIFT, ((HIBYTE (fullscreen_code) & HOTKEYF_SHIFT) != 0));
+					_r_ctrl_checkbutton (hwnd, IDC_FULLSCREEN_CTRL, ((HIBYTE (fullscreen_code) & HOTKEYF_CONTROL) != 0));
+					_r_ctrl_checkbutton (hwnd, IDC_FULLSCREEN_ALT, ((HIBYTE (fullscreen_code) & HOTKEYF_ALT) != 0));
 
-					_r_ctrl_checkbutton (
-						hwnd,
-						IDC_FULLSCREEN_CTRL,
-						((HIBYTE (fullscreen_code) & HOTKEYF_CONTROL) != 0)
-					);
+					_r_ctrl_checkbutton (hwnd, IDC_MONITOR_SHIFT, ((HIBYTE (monitor_code) & HOTKEYF_SHIFT) != 0));
+					_r_ctrl_checkbutton (hwnd, IDC_MONITOR_CTRL, ((HIBYTE (monitor_code) & HOTKEYF_CONTROL) != 0));
+					_r_ctrl_checkbutton (hwnd, IDC_MONITOR_ALT, ((HIBYTE (monitor_code) & HOTKEYF_ALT) != 0));
 
-					_r_ctrl_checkbutton (
-						hwnd,
-						IDC_FULLSCREEN_ALT,
-						((HIBYTE (fullscreen_code) & HOTKEYF_ALT) != 0)
-					);
+					_r_ctrl_checkbutton (hwnd, IDC_WINDOW_SHIFT, ((HIBYTE (window_code) & HOTKEYF_SHIFT) != 0));
+					_r_ctrl_checkbutton (hwnd, IDC_WINDOW_CTRL, ((HIBYTE (window_code) & HOTKEYF_CONTROL) != 0));
+					_r_ctrl_checkbutton (hwnd, IDC_WINDOW_ALT, ((HIBYTE (window_code) & HOTKEYF_ALT) != 0));
 
-					_r_ctrl_checkbutton (
-						hwnd,
-						IDC_MONITOR_SHIFT,
-						((HIBYTE (monitor_code) & HOTKEYF_SHIFT) != 0)
-					);
-
-					_r_ctrl_checkbutton (
-						hwnd,
-						IDC_MONITOR_CTRL,
-						((HIBYTE (monitor_code) & HOTKEYF_CONTROL) != 0)
-					);
-
-					_r_ctrl_checkbutton (
-						hwnd,
-						IDC_MONITOR_ALT,
-						((HIBYTE (monitor_code) & HOTKEYF_ALT) != 0)
-					);
-
-					_r_ctrl_checkbutton (
-						hwnd,
-						IDC_WINDOW_SHIFT,
-						((HIBYTE (window_code) & HOTKEYF_SHIFT) != 0)
-					);
-
-					_r_ctrl_checkbutton (
-						hwnd,
-						IDC_WINDOW_CTRL,
-						((HIBYTE (window_code) & HOTKEYF_CONTROL) != 0)
-					);
-
-					_r_ctrl_checkbutton (
-						hwnd,
-						IDC_WINDOW_ALT,
-						((HIBYTE (window_code) & HOTKEYF_ALT) != 0)
-					);
-
-					_r_ctrl_checkbutton (
-						hwnd,
-						IDC_REGION_SHIFT,
-						((HIBYTE (region_code) & HOTKEYF_SHIFT) != 0)
-					);
-
-					_r_ctrl_checkbutton (
-						hwnd,
-						IDC_REGION_CTRL,
-						((HIBYTE (region_code) & HOTKEYF_CONTROL) != 0)
-					);
-
-					_r_ctrl_checkbutton (
-						hwnd,
-						IDC_REGION_ALT,
-						((HIBYTE (region_code) & HOTKEYF_ALT) != 0)
-					);
+					_r_ctrl_checkbutton (hwnd, IDC_REGION_SHIFT, ((HIBYTE (region_code) & HOTKEYF_SHIFT) != 0));
+					_r_ctrl_checkbutton (hwnd, IDC_REGION_CTRL, ((HIBYTE (region_code) & HOTKEYF_CONTROL) != 0));
+					_r_ctrl_checkbutton (hwnd, IDC_REGION_ALT, ((HIBYTE (region_code) & HOTKEYF_ALT) != 0));
 
 					disabled_string = _r_locale_getstring (IDS_DISABLE);
 
@@ -477,33 +372,10 @@ INT_PTR CALLBACK SettingsProc (
 
 		case RM_LOCALIZE:
 		{
-			_r_ctrl_setstringformat (
-				hwnd,
-				IDC_TITLE_FULLSCREEN,
-				L"%s:",
-				_r_locale_getstring (IDS_MODE_FULLSCREEN)
-			);
-
-			_r_ctrl_setstringformat (
-				hwnd,
-				IDC_TITLE_MONITOR,
-				L"%s:",
-				_r_locale_getstring (IDS_MODE_MONITOR)
-			);
-
-			_r_ctrl_setstringformat (
-				hwnd,
-				IDC_TITLE_WINDOW,
-				L"%s:",
-				_r_locale_getstring (IDS_MODE_WINDOW)
-			);
-
-			_r_ctrl_setstringformat (
-				hwnd,
-				IDC_TITLE_REGION,
-				L"%s:",
-				_r_locale_getstring (IDS_MODE_REGION)
-			);
+			_r_ctrl_setstringformat (hwnd, IDC_TITLE_FULLSCREEN, L"%s:", _r_locale_getstring (IDS_MODE_FULLSCREEN));
+			_r_ctrl_setstringformat (hwnd, IDC_TITLE_MONITOR, L"%s:", _r_locale_getstring (IDS_MODE_MONITOR));
+			_r_ctrl_setstringformat (hwnd, IDC_TITLE_WINDOW, L"%s:", _r_locale_getstring (IDS_MODE_WINDOW));
+			_r_ctrl_setstringformat (hwnd, IDC_TITLE_REGION, L"%s:", _r_locale_getstring (IDS_MODE_REGION));
 
 			break;
 		}
@@ -517,7 +389,6 @@ INT_PTR CALLBACK SettingsProc (
 				case IDD_SETTINGS_HOTKEYS:
 				{
 					ULONG modifiers;
-
 					INT fullscreen_idx;
 					INT monitor_idx;
 					INT window_idx;
@@ -547,10 +418,7 @@ INT_PTR CALLBACK SettingsProc (
 						if (IsDlgButtonChecked (hwnd, IDC_FULLSCREEN_ALT) == BST_CHECKED)
 							modifiers |= HOTKEYF_ALT;
 
-						_r_config_setulong (
-							L"HotkeyFullscreen2",
-							(ULONG)MAKEWORD (_r_combobox_getitemparam (hwnd, IDC_FULLSCREEN_CB, fullscreen_idx), modifiers)
-						);
+						_r_config_setulong (L"HotkeyFullscreen2", (ULONG)MAKEWORD (_r_combobox_getitemparam (hwnd, IDC_FULLSCREEN_CB, fullscreen_idx), modifiers));
 					}
 
 					// save monitor hotkey
@@ -567,10 +435,7 @@ INT_PTR CALLBACK SettingsProc (
 						if (IsDlgButtonChecked (hwnd, IDC_MONITOR_ALT) == BST_CHECKED)
 							modifiers |= HOTKEYF_ALT;
 
-						_r_config_setulong (
-							L"HotkeyMonitor",
-							(ULONG)MAKEWORD (_r_combobox_getitemparam (hwnd, IDC_MONITOR_CB, monitor_idx), modifiers)
-						);
+						_r_config_setulong (L"HotkeyMonitor", (ULONG)MAKEWORD (_r_combobox_getitemparam (hwnd, IDC_MONITOR_CB, monitor_idx), modifiers));
 					}
 
 					// save window hotkey
@@ -587,10 +452,7 @@ INT_PTR CALLBACK SettingsProc (
 						if (IsDlgButtonChecked (hwnd, IDC_WINDOW_ALT) == BST_CHECKED)
 							modifiers |= HOTKEYF_ALT;
 
-						_r_config_setulong (
-							L"HotkeyWindow",
-							(ULONG)MAKEWORD (_r_combobox_getitemparam (hwnd, IDC_WINDOW_CB, window_idx), modifiers)
-						);
+						_r_config_setulong (L"HotkeyWindow", (ULONG)MAKEWORD (_r_combobox_getitemparam (hwnd, IDC_WINDOW_CB, window_idx), modifiers));
 					}
 
 					// save region hotkey
@@ -607,10 +469,7 @@ INT_PTR CALLBACK SettingsProc (
 						if (IsDlgButtonChecked (hwnd, IDC_REGION_ALT) == BST_CHECKED)
 							modifiers |= HOTKEYF_ALT;
 
-						_r_config_setulong (
-							L"HotkeyRegion",
-							(ULONG)MAKEWORD (_r_combobox_getitemparam (hwnd, IDC_REGION_CB, region_idx), modifiers)
-						);
+						_r_config_setulong (L"HotkeyRegion", (ULONG)MAKEWORD (_r_combobox_getitemparam (hwnd, IDC_REGION_CB, region_idx), modifiers));
 					}
 
 					if (!_app_hotkeyinit (_r_app_gethwnd (), hwnd))
@@ -632,11 +491,7 @@ INT_PTR CALLBACK SettingsProc (
 			INT ctrl_id = LOWORD (wparam);
 			INT notify_code = HIWORD (wparam);
 
-			if (notify_code == CBN_SELCHANGE &&
-				(ctrl_id == IDC_FULLSCREEN_CB ||
-				ctrl_id == IDC_MONITOR_CB ||
-				ctrl_id == IDC_WINDOW_CB ||
-				ctrl_id == IDC_REGION_CB))
+			if (notify_code == CBN_SELCHANGE && (ctrl_id == IDC_FULLSCREEN_CB || ctrl_id == IDC_MONITOR_CB || ctrl_id == IDC_WINDOW_CB || ctrl_id == IDC_REGION_CB))
 			{
 				BOOLEAN is_disable;
 
@@ -665,107 +520,24 @@ VOID _app_initdropdownmenu (
 	UINT formats_count;
 	INT delay_idx;
 
-	_r_menu_setitemtext (
-		hmenu,
-		FORMAT_MENU,
-		TRUE,
-		_r_locale_getstring (IDS_IMAGEFORMAT)
-	);
-
-	_r_menu_setitemtext (
-		hmenu,
-		FILENAME_MENU,
-		TRUE,
-		_r_locale_getstring (IDS_FILENAME)
-	);
-
-	_r_menu_setitemtext (
-		hmenu,
-		DELAY_MENU,
-		TRUE,
-		_r_locale_getstring (IDS_DELAY)
-	);
-
-	_r_menu_setitemtext (
-		hmenu,
-		IDM_DELAY_DISABLE,
-		FALSE,
-		_r_locale_getstring (IDS_DISABLE)
-	);
-
-	_r_menu_setitemtext (
-		hmenu,
-		IDM_INCLUDEMOUSECURSOR_CHK,
-		FALSE,
-		_r_locale_getstring (IDS_INCLUDEMOUSECURSOR_CHK)
-	);
-
-	_r_menu_setitemtext (
-		hmenu,
-		IDM_INCLUDEWINDOWSHADOW_CHK,
-		FALSE,
-		_r_locale_getstring (IDS_INCLUDEWINDOWSHADOW_CHK)
-	);
-
-	_r_menu_setitemtext (
-		hmenu,
-		IDM_CLEARBACKGROUND_CHK,
-		FALSE,
-		_r_locale_getstring (IDS_CLEARBACKGROUND_CHK)
-	);
-
-	_r_menu_setitemtext (
-		hmenu,
-		IDM_DISABLEAEROONWND_CHK,
-		FALSE,
-		_r_locale_getstring (IDS_DISABLEAEROONWND_CHK)
-	);
-
-	_r_menu_setitemtext (
-		hmenu,
-		IDM_COPYTOCLIPBOARD_CHK,
-		FALSE,
-		_r_locale_getstring (IDS_COPYTOCLIPBOARD_CHK)
-	);
-
-	_r_menu_setitemtext (
-		hmenu,
-		IDM_PLAYSOUNDS_CHK,
-		FALSE,
-		_r_locale_getstring (IDS_PLAYSOUNDS_CHK)
-	);
-
-	_r_menu_setitemtextformat (
-		hmenu,
-		IDM_HOTKEYS,
-		FALSE,
-		L"%s%s",
-		_r_locale_getstring (IDS_HOTKEYS),
-		is_button ? L"...\tF3" : L"..."
-	);
+	_r_menu_setitemtext (hmenu, FORMAT_MENU, TRUE, _r_locale_getstring (IDS_IMAGEFORMAT));
+	_r_menu_setitemtext (hmenu, FILENAME_MENU, TRUE, _r_locale_getstring (IDS_FILENAME));
+	_r_menu_setitemtext (hmenu, DELAY_MENU, TRUE, _r_locale_getstring (IDS_DELAY));
+	_r_menu_setitemtext (hmenu, IDM_DELAY_DISABLE, FALSE, _r_locale_getstring (IDS_DISABLE));
+	_r_menu_setitemtext (hmenu, IDM_INCLUDEMOUSECURSOR_CHK, FALSE, _r_locale_getstring (IDS_INCLUDEMOUSECURSOR_CHK));
+	_r_menu_setitemtext (hmenu, IDM_INCLUDEWINDOWSHADOW_CHK, FALSE, _r_locale_getstring (IDS_INCLUDEWINDOWSHADOW_CHK));
+	_r_menu_setitemtext (hmenu, IDM_CLEARBACKGROUND_CHK, FALSE, _r_locale_getstring (IDS_CLEARBACKGROUND_CHK));
+	_r_menu_setitemtext (hmenu, IDM_DISABLEAEROONWND_CHK, FALSE, _r_locale_getstring (IDS_DISABLEAEROONWND_CHK));
+	_r_menu_setitemtext (hmenu, IDM_COPYTOCLIPBOARD_CHK, FALSE, _r_locale_getstring (IDS_COPYTOCLIPBOARD_CHK));
+	_r_menu_setitemtext (hmenu, IDM_PLAYSOUNDS_CHK, FALSE, _r_locale_getstring (IDS_PLAYSOUNDS_CHK));
+	_r_menu_setitemtextformat (hmenu, IDM_HOTKEYS, FALSE, L"%s%s", _r_locale_getstring (IDS_HOTKEYS), is_button ? L"...\tF3" : L"...");
 
 	format = _app_getimageformat_data ();
 
 	string = _r_config_getstring (L"FilenamePrefix", FILE_FORMAT_NAME_PREFIX);
 
-	_r_menu_setitemtextformat (
-		hmenu,
-		IDM_FILENAME_INDEX,
-		FALSE,
-		FILE_FORMAT_NAME_FORMAT L".%s",
-		_r_obj_getstringordefault (string, FILE_FORMAT_NAME_PREFIX),
-		START_IDX,
-		format->ext
-	);
-
-	_r_menu_setitemtextformat (
-		hmenu,
-		IDM_FILENAME_DATE,
-		FALSE,
-		L"%s" FILE_FORMAT_DATE_FORMAT_1 L"-" FILE_FORMAT_DATE_FORMAT_2 L".%s",
-		_r_obj_getstringordefault (string, FILE_FORMAT_NAME_PREFIX),
-		format->ext
-	);
+	_r_menu_setitemtextformat (hmenu, IDM_FILENAME_INDEX, FALSE, FILE_FORMAT_NAME_FORMAT L".%s", _r_obj_getstringordefault (string, FILE_FORMAT_NAME_PREFIX), START_IDX, format->ext);
+	_r_menu_setitemtextformat (hmenu, IDM_FILENAME_DATE, FALSE, L"%s" FILE_FORMAT_DATE_FORMAT_1 L"-" FILE_FORMAT_DATE_FORMAT_2 L".%s", _r_obj_getstringordefault (string, FILE_FORMAT_NAME_PREFIX), format->ext);
 
 	if (string)
 		_r_obj_dereference (string);
@@ -809,88 +581,21 @@ VOID _app_initdropdownmenu (
 
 	if (delay_idx == -1)
 	{
-		_r_menu_checkitem (
-			hmenu,
-			IDM_DELAY_DISABLE,
-			IDM_DELAY_DISABLE,
-			MF_BYCOMMAND,
-			IDM_DELAY_DISABLE
-		);
+		_r_menu_checkitem (hmenu, IDM_DELAY_DISABLE, IDM_DELAY_DISABLE, MF_BYCOMMAND, IDM_DELAY_DISABLE);
 	}
 	else
 	{
-		_r_menu_checkitem (
-			hmenu,
-			IDX_DELAY,
-			IDX_DELAY + RTL_NUMBER_OF (timer_array),
-			MF_BYCOMMAND,
-			IDX_DELAY + delay_idx
-		);
+		_r_menu_checkitem (hmenu, IDX_DELAY, IDX_DELAY + RTL_NUMBER_OF (timer_array), MF_BYCOMMAND, IDX_DELAY + delay_idx);
 	}
 
-	_r_menu_checkitem (
-		hmenu,
-		IDX_FORMATS,
-		IDX_FORMATS + formats_count,
-		MF_BYCOMMAND,
-		IDX_FORMATS + _app_getimageformat_id ()
-	);
-
-	_r_menu_checkitem (
-		hmenu,
-		IDM_FILENAME_INDEX,
-		IDM_FILENAME_DATE,
-		MF_BYCOMMAND,
-		IDM_FILENAME_INDEX + _app_getimagename_id ()
-	);
-
-	_r_menu_checkitem (
-		hmenu,
-		IDM_INCLUDEMOUSECURSOR_CHK,
-		0,
-		MF_BYCOMMAND,
-		_r_config_getboolean (L"IsIncludeMouseCursor", FALSE)
-	);
-
-	_r_menu_checkitem (
-		hmenu,
-		IDM_INCLUDEWINDOWSHADOW_CHK,
-		0,
-		MF_BYCOMMAND,
-		_r_config_getboolean (L"IsIncludeWindowShadow", TRUE)
-	);
-
-	_r_menu_checkitem (
-		hmenu,
-		IDM_CLEARBACKGROUND_CHK,
-		0,
-		MF_BYCOMMAND,
-		_r_config_getboolean (L"IsClearBackground", TRUE)
-	);
-
-	_r_menu_checkitem (
-		hmenu,
-		IDM_DISABLEAEROONWND_CHK,
-		0,
-		MF_BYCOMMAND,
-		_r_config_getboolean (L"IsDisableAeroOnWnd", FALSE)
-	);
-
-	_r_menu_checkitem (
-		hmenu,
-		IDM_COPYTOCLIPBOARD_CHK,
-		0,
-		MF_BYCOMMAND,
-		_r_config_getboolean (L"CopyToClipboard", FALSE)
-	);
-
-	_r_menu_checkitem (
-		hmenu,
-		IDM_PLAYSOUNDS_CHK,
-		0,
-		MF_BYCOMMAND,
-		_r_config_getboolean (L"IsPlaySound", TRUE)
-	);
+	_r_menu_checkitem (hmenu, IDX_FORMATS, IDX_FORMATS + formats_count, MF_BYCOMMAND, IDX_FORMATS + _app_getimageformat_id ());
+	_r_menu_checkitem (hmenu, IDM_FILENAME_INDEX, IDM_FILENAME_DATE, MF_BYCOMMAND, IDM_FILENAME_INDEX + _app_getimagename_id ());
+	_r_menu_checkitem (hmenu, IDM_INCLUDEMOUSECURSOR_CHK, 0, MF_BYCOMMAND, _r_config_getboolean (L"IsIncludeMouseCursor", FALSE));
+	_r_menu_checkitem (hmenu, IDM_INCLUDEWINDOWSHADOW_CHK, 0, MF_BYCOMMAND, _r_config_getboolean (L"IsIncludeWindowShadow", TRUE));
+	_r_menu_checkitem (hmenu, IDM_CLEARBACKGROUND_CHK, 0, MF_BYCOMMAND, _r_config_getboolean (L"IsClearBackground", TRUE));
+	_r_menu_checkitem (hmenu, IDM_DISABLEAEROONWND_CHK, 0, MF_BYCOMMAND, _r_config_getboolean (L"IsDisableAeroOnWnd", FALSE));
+	_r_menu_checkitem (hmenu, IDM_COPYTOCLIPBOARD_CHK, 0, MF_BYCOMMAND, _r_config_getboolean (L"CopyToClipboard", FALSE));
+	_r_menu_checkitem (hmenu, IDM_PLAYSOUNDS_CHK, 0, MF_BYCOMMAND, _r_config_getboolean (L"IsPlaySound", TRUE));
 }
 
 VOID _app_initialize ()
@@ -916,11 +621,7 @@ VOID _app_initialize ()
 	WNDCLASSEX wcex;
 	IMAGE_FORMAT image_format;
 
-	config.formats = _r_obj_createarray_ex (
-		sizeof (IMAGE_FORMAT),
-		RTL_NUMBER_OF (szext),
-		NULL
-	);
+	config.formats = _r_obj_createarray_ex (sizeof (IMAGE_FORMAT), RTL_NUMBER_OF (szext), NULL);
 
 	for (SIZE_T i = 0; i < RTL_NUMBER_OF (szext); i++)
 	{
@@ -971,12 +672,7 @@ INT_PTR CALLBACK DlgProc (
 			hctrl = GetDlgItem (hwnd, IDC_FOLDER);
 
 			if (hctrl)
-			{
-				SHAutoComplete (
-					hctrl,
-					SHACF_FILESYS_ONLY | SHACF_FILESYS_DIRS | SHACF_AUTOSUGGEST_FORCE_ON | SHACF_USETAB
-				);
-			}
+				SHAutoComplete (hctrl, SHACF_FILESYS_ONLY | SHACF_FILESYS_DIRS | SHACF_AUTOSUGGEST_FORCE_ON | SHACF_USETAB);
 
 			_r_settings_addpage (IDD_SETTINGS_HOTKEYS, IDS_HOTKEYS);
 
@@ -988,10 +684,8 @@ INT_PTR CALLBACK DlgProc (
 		case RM_INITIALIZE:
 		{
 			PR_STRING string;
-
 			HMENU hmenu;
 			HICON hicon;
-
 			LONG dpi_value;
 			LONG icon_small;
 
@@ -999,11 +693,7 @@ INT_PTR CALLBACK DlgProc (
 
 			icon_small = _r_dc_getsystemmetrics (SM_CXSMICON, dpi_value);
 
-			hicon = _r_sys_loadsharedicon (
-				_r_sys_getimagebase (),
-				MAKEINTRESOURCE (IDI_MAIN),
-				icon_small
-			);
+			hicon = _r_sys_loadsharedicon (_r_sys_getimagebase (), MAKEINTRESOURCE (IDI_MAIN), icon_small);
 
 			// initialize tray icon
 			_r_tray_create (hwnd, &GUID_TrayIcon, RM_TRAYICON, hicon, _r_app_getname (), FALSE);
@@ -1012,78 +702,25 @@ INT_PTR CALLBACK DlgProc (
 			string = _app_getdirectory ();
 			_r_ctrl_setstring (hwnd, IDC_FOLDER, string->buffer);
 
-			_r_obj_dereference (string);
+			_r_ctrl_checkbutton (hwnd, IDC_INCLUDEMOUSECURSOR_CHK, _r_config_getboolean (L"IsIncludeMouseCursor", FALSE));
+			_r_ctrl_checkbutton (hwnd, IDC_INCLUDEWINDOWSHADOW_CHK, _r_config_getboolean (L"IsIncludeWindowShadow", TRUE));
+			_r_ctrl_checkbutton (hwnd, IDC_CLEARBACKGROUND_CHK, _r_config_getboolean (L"IsClearBackground", TRUE));
 
-			_r_ctrl_checkbutton (
-				hwnd,
-				IDC_INCLUDEMOUSECURSOR_CHK,
-				_r_config_getboolean (L"IsIncludeMouseCursor", FALSE)
-			);
-
-			_r_ctrl_checkbutton (
-				hwnd,
-				IDC_INCLUDEWINDOWSHADOW_CHK,
-				_r_config_getboolean (L"IsIncludeWindowShadow", TRUE)
-			);
-
-			_r_ctrl_checkbutton (
-				hwnd,
-				IDC_CLEARBACKGROUND_CHK,
-				_r_config_getboolean (L"IsClearBackground", TRUE)
-			);
-
-			CheckRadioButton (
-				hwnd,
-				IDC_MODE_MONITOR,
-				IDC_MODE_REGION,
-				IDC_MODE_MONITOR + _app_getmode_id () - 1
-			);
+			CheckRadioButton (hwnd, IDC_MODE_MONITOR, IDC_MODE_REGION, IDC_MODE_MONITOR + _app_getmode_id () - 1);
 
 			// configure menu
 			hmenu = GetMenu (hwnd);
 
 			if (hmenu)
 			{
-				_r_menu_checkitem (
-					hmenu,
-					IDM_ALWAYSONTOP_CHK,
-					0,
-					MF_BYCOMMAND,
-					_r_config_getboolean (L"AlwaysOnTop", FALSE)
-				);
-
-				_r_menu_checkitem (
-					hmenu,
-					IDM_LOADONSTARTUP_CHK,
-					0,
-					MF_BYCOMMAND,
-					_r_autorun_isenabled ()
-				);
-
-				_r_menu_checkitem (
-					hmenu,
-					IDM_STARTMINIMIZED_CHK,
-					0,
-					MF_BYCOMMAND,
-					_r_config_getboolean (L"IsStartMinimized", FALSE)
-				);
-
-				_r_menu_checkitem (
-					hmenu,
-					IDM_HIDEME_CHK,
-					0,
-					MF_BYCOMMAND,
-					_r_config_getboolean (L"IsHideMe", TRUE)
-				);
-
-				_r_menu_checkitem (
-					hmenu,
-					IDM_CHECKUPDATES_CHK,
-					0,
-					MF_BYCOMMAND,
-					_r_update_isenabled (FALSE)
-				);
+				_r_menu_checkitem (hmenu, IDM_ALWAYSONTOP_CHK, 0, MF_BYCOMMAND, _r_config_getboolean (L"AlwaysOnTop", FALSE));
+				_r_menu_checkitem (hmenu, IDM_LOADONSTARTUP_CHK, 0, MF_BYCOMMAND, _r_autorun_isenabled ());
+				_r_menu_checkitem (hmenu, IDM_STARTMINIMIZED_CHK, 0, MF_BYCOMMAND, _r_config_getboolean (L"IsStartMinimized", FALSE));
+				_r_menu_checkitem (hmenu, IDM_HIDEME_CHK, 0, MF_BYCOMMAND, _r_config_getboolean (L"IsHideMe", TRUE));
+				_r_menu_checkitem (hmenu, IDM_CHECKUPDATES_CHK, 0, MF_BYCOMMAND, _r_update_isenabled (FALSE));
 			}
+
+			_r_obj_dereference (string);
 
 			break;
 		}
@@ -1091,7 +728,6 @@ INT_PTR CALLBACK DlgProc (
 		case RM_TASKBARCREATED:
 		{
 			HICON hicon;
-
 			LONG dpi_value;
 			LONG icon_small;
 
@@ -1099,20 +735,9 @@ INT_PTR CALLBACK DlgProc (
 
 			icon_small = _r_dc_getsystemmetrics (SM_CXSMICON, dpi_value);
 
-			hicon = _r_sys_loadsharedicon (
-				_r_sys_getimagebase (),
-				MAKEINTRESOURCE (IDI_MAIN),
-				icon_small
-			);
+			hicon = _r_sys_loadsharedicon (_r_sys_getimagebase (), MAKEINTRESOURCE (IDI_MAIN), icon_small);
 
-			_r_tray_create (
-				hwnd,
-				&GUID_TrayIcon,
-				RM_TRAYICON,
-				hicon,
-				_r_app_getname (),
-				FALSE
-			);
+			_r_tray_create (hwnd, &GUID_TrayIcon, RM_TRAYICON, hicon, _r_app_getname (), FALSE);
 
 			break;
 		}
@@ -1122,80 +747,18 @@ INT_PTR CALLBACK DlgProc (
 			HMENU hmenu;
 
 			// configure button
-			_r_ctrl_setstringformat (
-				hwnd,
-				IDC_TITLE_FOLDER,
-				L"%s:",
-				_r_locale_getstring (IDS_FOLDER)
-			);
-
-			_r_ctrl_setstringformat (
-				hwnd,
-				IDC_TITLE_SETTINGS,
-				L"%s:",
-				_r_locale_getstring (IDS_QUICKSETTINGS)
-			);
-
-			_r_ctrl_setstringformat (
-				hwnd,
-				IDC_TITLE_MODE,
-				L"%s:",
-				_r_locale_getstring (IDS_MODE)
-			);
-
-			_r_ctrl_setstring (
-				hwnd,
-				IDC_INCLUDEMOUSECURSOR_CHK,
-				_r_locale_getstring (IDS_INCLUDEMOUSECURSOR_CHK)
-			);
-
-			_r_ctrl_setstring (
-				hwnd,
-				IDC_INCLUDEWINDOWSHADOW_CHK,
-				_r_locale_getstring (IDS_INCLUDEWINDOWSHADOW_CHK)
-			);
-
-			_r_ctrl_setstring (
-				hwnd,
-				IDC_CLEARBACKGROUND_CHK,
-				_r_locale_getstring (IDS_CLEARBACKGROUND_CHK)
-			);
-
-			_r_ctrl_setstring (
-				hwnd,
-				IDC_MODE_MONITOR,
-				_r_locale_getstring (IDS_MODE_MONITOR)
-			);
-
-			_r_ctrl_setstring (
-				hwnd,
-				IDC_MODE_WINDOW,
-				_r_locale_getstring (IDS_MODE_WINDOW)
-			);
-
-			_r_ctrl_setstring (
-				hwnd,
-				IDC_MODE_REGION,
-				_r_locale_getstring (IDS_MODE_REGION)
-			);
-
-			_r_ctrl_setstring (
-				hwnd,
-				IDC_SETTINGS,
-				_r_locale_getstring (IDS_SETTINGS)
-			);
-
-			_r_ctrl_setstring (
-				hwnd,
-				IDC_SCREENSHOT,
-				_r_locale_getstring (IDS_SCREENSHOT)
-			);
-
-			_r_ctrl_setstring (
-				hwnd,
-				IDC_EXIT,
-				_r_locale_getstring (IDS_EXIT)
-			);
+			_r_ctrl_setstringformat (hwnd, IDC_TITLE_FOLDER, L"%s:", _r_locale_getstring (IDS_FOLDER));
+			_r_ctrl_setstringformat (hwnd, IDC_TITLE_SETTINGS, L"%s:", _r_locale_getstring (IDS_QUICKSETTINGS));
+			_r_ctrl_setstringformat (hwnd, IDC_TITLE_MODE, L"%s:", _r_locale_getstring (IDS_MODE));
+			_r_ctrl_setstring (hwnd, IDC_INCLUDEMOUSECURSOR_CHK, _r_locale_getstring (IDS_INCLUDEMOUSECURSOR_CHK));
+			_r_ctrl_setstring (hwnd, IDC_INCLUDEWINDOWSHADOW_CHK, _r_locale_getstring (IDS_INCLUDEWINDOWSHADOW_CHK));
+			_r_ctrl_setstring (hwnd, IDC_CLEARBACKGROUND_CHK, _r_locale_getstring (IDS_CLEARBACKGROUND_CHK));
+			_r_ctrl_setstring (hwnd, IDC_MODE_MONITOR, _r_locale_getstring (IDS_MODE_MONITOR));
+			_r_ctrl_setstring (hwnd, IDC_MODE_WINDOW, _r_locale_getstring (IDS_MODE_WINDOW));
+			_r_ctrl_setstring (hwnd, IDC_MODE_REGION, _r_locale_getstring (IDS_MODE_REGION));
+			_r_ctrl_setstring (hwnd, IDC_SETTINGS, _r_locale_getstring (IDS_SETTINGS));
+			_r_ctrl_setstring (hwnd, IDC_SCREENSHOT, _r_locale_getstring (IDS_SCREENSHOT));
+			_r_ctrl_setstring (hwnd, IDC_EXIT, _r_locale_getstring (IDS_EXIT));
 
 			// localize menu
 			hmenu = GetMenu (hwnd);
@@ -1203,145 +766,25 @@ INT_PTR CALLBACK DlgProc (
 			if (!hmenu)
 				break;
 
-			_r_menu_setitemtext (
-				hmenu,
-				0,
-				TRUE,
-				_r_locale_getstring (IDS_FILE)
-			);
-
-			_r_menu_setitemtext (
-				hmenu,
-				1,
-				TRUE,
-				_r_locale_getstring (IDS_SETTINGS)
-			);
-
-			_r_menu_setitemtextformat (
-				GetSubMenu (hmenu, 1),
-				LANG_MENU,
-				TRUE,
-				L"%s (Language)",
-				_r_locale_getstring (IDS_LANGUAGE)
-			);
-
-			_r_menu_setitemtext (
-				hmenu,
-				2,
-				TRUE,
-				_r_locale_getstring (IDS_SCREENSHOT)
-			);
-
-			_r_menu_setitemtext (
-				hmenu,
-				3,
-				TRUE,
-				_r_locale_getstring (IDS_HELP)
-			);
-
-			_r_menu_setitemtextformat (
-				hmenu,
-				IDM_EXPLORE,
-				FALSE,
-				L"%s...\tCtrl+E",
-				_r_locale_getstring (IDS_EXPLORE)
-			);
-
-			_r_menu_setitemtext (
-				hmenu,
-				IDM_EXIT,
-				FALSE,
-				_r_locale_getstring (IDS_EXIT)
-			);
-
-			_r_menu_setitemtext (
-				hmenu,
-				IDM_ALWAYSONTOP_CHK,
-				FALSE,
-				_r_locale_getstring (IDS_ALWAYSONTOP_CHK)
-			);
-
-			_r_menu_setitemtext (
-				hmenu,
-				IDM_LOADONSTARTUP_CHK,
-				FALSE,
-				_r_locale_getstring (IDS_LOADONSTARTUP_CHK)
-			);
-
-			_r_menu_setitemtext (
-				hmenu,
-				IDM_STARTMINIMIZED_CHK,
-				FALSE,
-				_r_locale_getstring (IDS_STARTMINIMIZED_CHK)
-			);
-
-			_r_menu_setitemtext (
-				hmenu,
-				IDM_HIDEME_CHK,
-				FALSE,
-				_r_locale_getstring (IDS_HIDEME_CHK)
-			);
-
-			_r_menu_setitemtextformat (
-				hmenu,
-				IDM_TAKE_FULLSCREEN,
-				FALSE,
-				L"%s\tCtrl+1",
-				_r_locale_getstring (IDS_MODE_FULLSCREEN)
-			);
-
-			_r_menu_setitemtextformat (
-				hmenu,
-				IDM_TAKE_MONITOR,
-				FALSE,
-				L"%s\tCtrl+2",
-				_r_locale_getstring (IDS_MODE_MONITOR)
-			);
-
-			_r_menu_setitemtextformat (
-				hmenu,
-				IDM_TAKE_WINDOW,
-				FALSE,
-				L"%s\tCtrl+3",
-				_r_locale_getstring (IDS_MODE_WINDOW)
-			);
-
-			_r_menu_setitemtextformat (
-				hmenu,
-				IDM_TAKE_REGION,
-				FALSE,
-				L"%s\tCtrl+4",
-				_r_locale_getstring (IDS_MODE_REGION)
-			);
-
-			_r_menu_setitemtext (
-				hmenu,
-				IDM_CHECKUPDATES_CHK,
-				FALSE,
-				_r_locale_getstring (IDS_CHECKUPDATES_CHK)
-			);
-
-			_r_menu_setitemtext (
-				hmenu,
-				IDM_WEBSITE,
-				FALSE,
-				_r_locale_getstring (IDS_WEBSITE)
-			);
-
-			_r_menu_setitemtext (
-				hmenu,
-				IDM_CHECKUPDATES,
-				FALSE,
-				_r_locale_getstring (IDS_CHECKUPDATES)
-			);
-
-			_r_menu_setitemtextformat (
-				hmenu,
-				IDM_ABOUT,
-				FALSE,
-				L"%s\tF1",
-				_r_locale_getstring (IDS_ABOUT)
-			);
+			_r_menu_setitemtext (hmenu, 0, TRUE, _r_locale_getstring (IDS_FILE));
+			_r_menu_setitemtext (hmenu, 1, TRUE, _r_locale_getstring (IDS_SETTINGS));
+			_r_menu_setitemtextformat (GetSubMenu (hmenu, 1), LANG_MENU, TRUE, L"%s (Language)", _r_locale_getstring (IDS_LANGUAGE));
+			_r_menu_setitemtext (hmenu, 2, TRUE, _r_locale_getstring (IDS_SCREENSHOT));
+			_r_menu_setitemtext (hmenu, 3, TRUE, _r_locale_getstring (IDS_HELP));
+			_r_menu_setitemtextformat (hmenu, IDM_EXPLORE, FALSE, L"%s...\tCtrl+E", _r_locale_getstring (IDS_EXPLORE));
+			_r_menu_setitemtext (hmenu, IDM_EXIT, FALSE, _r_locale_getstring (IDS_EXIT));
+			_r_menu_setitemtext (hmenu, IDM_ALWAYSONTOP_CHK, FALSE, _r_locale_getstring (IDS_ALWAYSONTOP_CHK));
+			_r_menu_setitemtext (hmenu, IDM_LOADONSTARTUP_CHK, FALSE, _r_locale_getstring (IDS_LOADONSTARTUP_CHK));
+			_r_menu_setitemtext (hmenu, IDM_STARTMINIMIZED_CHK, FALSE, _r_locale_getstring (IDS_STARTMINIMIZED_CHK));
+			_r_menu_setitemtext (hmenu, IDM_HIDEME_CHK, FALSE, _r_locale_getstring (IDS_HIDEME_CHK));
+			_r_menu_setitemtextformat (hmenu, IDM_TAKE_FULLSCREEN, FALSE, L"%s\tCtrl+1", _r_locale_getstring (IDS_MODE_FULLSCREEN));
+			_r_menu_setitemtextformat (hmenu, IDM_TAKE_MONITOR, FALSE, L"%s\tCtrl+2", _r_locale_getstring (IDS_MODE_MONITOR));
+			_r_menu_setitemtextformat (hmenu, IDM_TAKE_WINDOW, FALSE, L"%s\tCtrl+3", _r_locale_getstring (IDS_MODE_WINDOW));
+			_r_menu_setitemtextformat (hmenu, IDM_TAKE_REGION, FALSE, L"%s\tCtrl+4", _r_locale_getstring (IDS_MODE_REGION));
+			_r_menu_setitemtext (hmenu, IDM_CHECKUPDATES_CHK, FALSE, _r_locale_getstring (IDS_CHECKUPDATES_CHK));
+			_r_menu_setitemtext (hmenu, IDM_WEBSITE, FALSE, _r_locale_getstring (IDS_WEBSITE));
+			_r_menu_setitemtext (hmenu, IDM_CHECKUPDATES, FALSE, _r_locale_getstring (IDS_CHECKUPDATES));
+			_r_menu_setitemtextformat (hmenu, IDM_ABOUT, FALSE, L"%s\tF1", _r_locale_getstring (IDS_ABOUT));
 
 			// enum localizations
 			_r_locale_enum (GetSubMenu (hmenu, 1), LANG_MENU, IDX_LANGUAGE);
@@ -1360,7 +803,6 @@ INT_PTR CALLBACK DlgProc (
 		case WM_DPICHANGED:
 		{
 			HICON hicon;
-
 			LONG dpi_value;
 			LONG icon_small;
 
@@ -1368,11 +810,7 @@ INT_PTR CALLBACK DlgProc (
 
 			icon_small = _r_dc_getsystemmetrics (SM_CXSMICON, dpi_value);
 
-			hicon = _r_sys_loadsharedicon (
-				_r_sys_getimagebase (),
-				MAKEINTRESOURCE (IDI_MAIN),
-				icon_small
-			);
+			hicon = _r_sys_loadsharedicon (_r_sys_getimagebase (), MAKEINTRESOURCE (IDI_MAIN), icon_small);
 
 			_r_tray_setinfo (hwnd, &GUID_TrayIcon, hicon, NULL);
 
@@ -1424,7 +862,7 @@ INT_PTR CALLBACK DlgProc (
 				break;
 			}
 
-			SendMessage (hwnd, WM_COMMAND, MAKEWPARAM (command_id, 0), 0);
+			PostMessage (hwnd, WM_COMMAND, MAKEWPARAM (command_id, 0), 0);
 
 			break;
 		}
@@ -1459,7 +897,6 @@ INT_PTR CALLBACK DlgProc (
 					HMENU hsubmenu;
 					HMENU hmenu_settings;
 					HMENU hsubmenu_settings;
-
 					WCHAR mode_fullscreen[128];
 					WCHAR mode_monitor[128];
 					WCHAR mode_window[128];
@@ -1476,165 +913,49 @@ INT_PTR CALLBACK DlgProc (
 
 						if (hsubmenu)
 						{
-							_r_str_copy (
-								mode_fullscreen,
-								RTL_NUMBER_OF (mode_fullscreen),
-								_r_locale_getstring (IDS_MODE_FULLSCREEN)
-							);
-
-							_r_str_copy (
-								mode_monitor,
-								RTL_NUMBER_OF (mode_monitor),
-								_r_locale_getstring (IDS_MODE_MONITOR)
-							);
-
-							_r_str_copy (
-								mode_window,
-								RTL_NUMBER_OF (mode_window),
-								_r_locale_getstring (IDS_MODE_WINDOW)
-							);
-
-							_r_str_copy (
-								mode_region,
-								RTL_NUMBER_OF (mode_region),
-								_r_locale_getstring (IDS_MODE_REGION)
-							);
+							_r_str_copy (mode_fullscreen, RTL_NUMBER_OF (mode_fullscreen), _r_locale_getstring (IDS_MODE_FULLSCREEN));
+							_r_str_copy (mode_monitor, RTL_NUMBER_OF (mode_monitor), _r_locale_getstring (IDS_MODE_MONITOR));
+							_r_str_copy (mode_window, RTL_NUMBER_OF (mode_window), _r_locale_getstring (IDS_MODE_WINDOW));
+							_r_str_copy (mode_region, RTL_NUMBER_OF (mode_region), _r_locale_getstring (IDS_MODE_REGION));
 
 							if (_r_config_getboolean (L"HotkeyFullscreenEnabled", FALSE))
 							{
-								_app_key2string (
-									key_string,
-									RTL_NUMBER_OF (key_string),
-									_r_config_getlong (L"HotkeyFullscreen2", HOTKEY_FULLSCREEN)
-								);
+								_app_key2string (key_string, RTL_NUMBER_OF (key_string), _r_config_getlong (L"HotkeyFullscreen2", HOTKEY_FULLSCREEN));
 
-								_r_str_appendformat (
-									mode_fullscreen,
-									RTL_NUMBER_OF (mode_fullscreen),
-									L"\t%s",
-									key_string
-								);
+								_r_str_appendformat (mode_fullscreen, RTL_NUMBER_OF (mode_fullscreen), L"\t%s", key_string);
 							}
 
 							if (_r_config_getboolean (L"HotkeyMonitorEnabled", TRUE))
 							{
-								_app_key2string (
-									key_string,
-									RTL_NUMBER_OF (key_string),
-									_r_config_getlong (L"HotkeyMonitor", HOTKEY_MONITOR)
-								);
+								_app_key2string (key_string, RTL_NUMBER_OF (key_string), _r_config_getlong (L"HotkeyMonitor", HOTKEY_MONITOR));
 
-								_r_str_appendformat (
-									mode_monitor,
-									RTL_NUMBER_OF (mode_monitor),
-									L"\t%s",
-									key_string
-								);
+								_r_str_appendformat (mode_monitor, RTL_NUMBER_OF (mode_monitor), L"\t%s", key_string);
 							}
 
 							if (_r_config_getboolean (L"HotkeyWindowEnabled", TRUE))
 							{
-								_app_key2string (
-									key_string,
-									RTL_NUMBER_OF (key_string),
-									_r_config_getlong (L"HotkeyWindow", HOTKEY_WINDOW)
-								);
+								_app_key2string (key_string, RTL_NUMBER_OF (key_string), _r_config_getlong (L"HotkeyWindow", HOTKEY_WINDOW));
 
-								_r_str_appendformat (
-									mode_window,
-									RTL_NUMBER_OF (mode_window),
-									L"\t%s",
-									key_string
-								);
+								_r_str_appendformat (mode_window, RTL_NUMBER_OF (mode_window), L"\t%s", key_string);
 							}
 
 							if (_r_config_getboolean (L"HotkeyRegionEnabled", TRUE))
 							{
-								_app_key2string (
-									key_string,
-									RTL_NUMBER_OF (key_string),
-									_r_config_getlong (L"HotkeyRegion", HOTKEY_REGION)
-								);
+								_app_key2string (key_string, RTL_NUMBER_OF (key_string), _r_config_getlong (L"HotkeyRegion", HOTKEY_REGION));
 
-								_r_str_appendformat (
-									mode_region,
-									RTL_NUMBER_OF (mode_region),
-									L"\t%s",
-									key_string
-								);
+								_r_str_appendformat (mode_region, RTL_NUMBER_OF (mode_region), L"\t%s", key_string);
 							}
 
 							// localize
-							_r_menu_setitemtext (
-								hsubmenu,
-								IDM_TRAY_SHOW,
-								FALSE,
-								_r_locale_getstring (IDS_TRAY_SHOW)
-							);
-
-							_r_menu_setitemtextformat (
-								hsubmenu,
-								IDM_TRAY_TAKE_FULLSCREEN,
-								FALSE,
-								L"%s: %s",
-								_r_locale_getstring (IDS_SCREENSHOT),
-								mode_fullscreen
-							);
-
-							_r_menu_setitemtextformat (
-								hsubmenu,
-								IDM_TRAY_TAKE_MONITOR,
-								FALSE,
-								L"%s: %s",
-								_r_locale_getstring (IDS_SCREENSHOT),
-								mode_monitor
-							);
-
-							_r_menu_setitemtextformat (
-								hsubmenu,
-								IDM_TRAY_TAKE_WINDOW,
-								FALSE,
-								L"%s: %s",
-								_r_locale_getstring (IDS_SCREENSHOT),
-								mode_window
-							);
-
-							_r_menu_setitemtextformat (
-								hsubmenu,
-								IDM_TRAY_TAKE_REGION,
-								FALSE,
-								L"%s: %s",
-								_r_locale_getstring (IDS_SCREENSHOT),
-								mode_region
-							);
-
-							_r_menu_setitemtext (
-								hsubmenu,
-								SETTINGS_MENU,
-								TRUE,
-								_r_locale_getstring (IDS_SETTINGS)
-							);
-
-							_r_menu_setitemtext (
-								hsubmenu,
-								IDM_TRAY_WEBSITE,
-								FALSE,
-								_r_locale_getstring (IDS_WEBSITE)
-							);
-
-							_r_menu_setitemtext (
-								hsubmenu,
-								IDM_TRAY_ABOUT,
-								FALSE,
-								_r_locale_getstring (IDS_ABOUT)
-							);
-
-							_r_menu_setitemtext (
-								hsubmenu,
-								IDM_TRAY_EXIT,
-								FALSE,
-								_r_locale_getstring (IDS_EXIT)
-							);
+							_r_menu_setitemtext (hsubmenu, IDM_TRAY_SHOW, FALSE, _r_locale_getstring (IDS_TRAY_SHOW));
+							_r_menu_setitemtextformat (hsubmenu, IDM_TRAY_TAKE_FULLSCREEN, FALSE, L"%s: %s", _r_locale_getstring (IDS_SCREENSHOT), mode_fullscreen);
+							_r_menu_setitemtextformat (hsubmenu, IDM_TRAY_TAKE_MONITOR, FALSE, L"%s: %s", _r_locale_getstring (IDS_SCREENSHOT), mode_monitor);
+							_r_menu_setitemtextformat (hsubmenu, IDM_TRAY_TAKE_WINDOW, FALSE, L"%s: %s", _r_locale_getstring (IDS_SCREENSHOT), mode_window);
+							_r_menu_setitemtextformat (hsubmenu, IDM_TRAY_TAKE_REGION, FALSE, L"%s: %s", _r_locale_getstring (IDS_SCREENSHOT), mode_region);
+							_r_menu_setitemtext (hsubmenu, SETTINGS_MENU, TRUE, _r_locale_getstring (IDS_SETTINGS));
+							_r_menu_setitemtext (hsubmenu, IDM_TRAY_WEBSITE, FALSE, _r_locale_getstring (IDS_WEBSITE));
+							_r_menu_setitemtext (hsubmenu, IDM_TRAY_ABOUT, FALSE, _r_locale_getstring (IDS_ABOUT));
+							_r_menu_setitemtext (hsubmenu, IDM_TRAY_EXIT, FALSE, _r_locale_getstring (IDS_EXIT));
 
 							// initialize settings submenu
 							hmenu_settings = LoadMenu (NULL, MAKEINTRESOURCE (IDM_SETTINGS));
@@ -1647,12 +968,7 @@ INT_PTR CALLBACK DlgProc (
 								{
 									_app_initdropdownmenu (hsubmenu_settings, FALSE);
 
-									_r_menu_addsubmenu (
-										hsubmenu,
-										SETTINGS_MENU,
-										hsubmenu_settings,
-										_r_locale_getstring (IDS_SETTINGS)
-									);
+									_r_menu_addsubmenu (hsubmenu, SETTINGS_MENU, hsubmenu_settings, _r_locale_getstring (IDS_SETTINGS));
 								}
 							}
 
@@ -1708,11 +1024,7 @@ INT_PTR CALLBACK DlgProc (
 			if (notify_code == 0 && ctrl_id >= IDX_LANGUAGE &&
 				ctrl_id <= IDX_LANGUAGE + (INT)(INT_PTR)_r_locale_getcount () + 1)
 			{
-				_r_locale_apply (
-					GetSubMenu (GetSubMenu (GetMenu (hwnd), 1), LANG_MENU),
-					ctrl_id,
-					IDX_LANGUAGE
-				);
+				_r_locale_apply (GetSubMenu (GetSubMenu (GetMenu (hwnd), 1), LANG_MENU), ctrl_id, IDX_LANGUAGE);
 
 				return FALSE;
 			}
@@ -1723,9 +1035,7 @@ INT_PTR CALLBACK DlgProc (
 
 				index = (ctrl_id - IDX_FORMATS);
 
-				_r_config_setlong (
-					L"ImageFormat",
-					_r_calc_clamp (index, 0, (LONG)_r_obj_getarraysize (config.formats) - 1));
+				_r_config_setlong (L"ImageFormat", _r_calc_clamp (index, 0, (LONG)_r_obj_getarraysize (config.formats) - 1));
 
 				return FALSE;
 			}
@@ -2134,12 +1444,7 @@ INT APIENTRY wWinMain (
 	if (!_r_app_initialize ())
 		return ERROR_APP_INIT_FAILURE;
 
-	hwnd = _r_app_createwindow (
-		hinst,
-		MAKEINTRESOURCE (IDD_MAIN),
-		MAKEINTRESOURCE (IDI_MAIN),
-		&DlgProc
-	);
+	hwnd = _r_app_createwindow (hinst, MAKEINTRESOURCE (IDD_MAIN), MAKEINTRESOURCE (IDI_MAIN), &DlgProc);
 
 	if (!hwnd)
 		return ERROR_APP_INIT_FAILURE;
