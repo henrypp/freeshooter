@@ -108,15 +108,16 @@ PR_STRING _app_getdirectory ()
 	static PR_STRING default_folder = NULL;
 
 	PR_STRING string;
+	HRESULT status;
 
 	if (_r_initonce_begin (&init_once))
 	{
-		string = _r_path_getknownfolder (CSIDL_DESKTOPDIRECTORY, NULL);
+		status = _r_path_getknownfolder (&FOLDERID_Desktop, NULL, &string);
 
-		if (!string)
-			string = _r_path_getknownfolder (CSIDL_MYPICTURES, NULL);
+		if (FAILED (status))
+			status = _r_path_getknownfolder (&FOLDERID_Pictures, NULL, &string);
 
-		if (!string)
+		if (FAILED (status))
 			string = _r_obj_createstring (DEFAULT_DIRECTORY);
 
 		default_folder = string;

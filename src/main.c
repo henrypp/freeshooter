@@ -1441,7 +1441,7 @@ INT APIENTRY wWinMain (
 {
 	HWND hwnd;
 
-	if (!_r_app_initialize ())
+	if (!_r_app_initialize (NULL))
 		return ERROR_APP_INIT_FAILURE;
 
 	hwnd = _r_app_createwindow (hinst, MAKEINTRESOURCE (IDD_MAIN), MAKEINTRESOURCE (IDI_MAIN), &DlgProc);
