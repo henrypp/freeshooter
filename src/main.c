@@ -14,7 +14,7 @@ INT_PTR CALLBACK SettingsProc (
 
 VOID _app_key2string (
 	_Out_writes_ (length) LPWSTR buffer,
-	_In_ SIZE_T length,
+	_In_ ULONG_PTR length,
 	_In_ UINT key
 )
 {
@@ -189,7 +189,7 @@ BOOLEAN _app_hotkeyinit (
 
 VOID generate_keys_array (
 	_Out_writes_ (count) PCHAR keys,
-	_In_ SIZE_T count
+	_In_ ULONG_PTR count
 )
 {
 	static const UINT predefined_keys[] = {
@@ -201,7 +201,7 @@ VOID generate_keys_array (
 		VK_DELETE,
 	};
 
-	SIZE_T index;
+	ULONG_PTR index;
 	CHAR i;
 
 	index = 0;
@@ -618,12 +618,12 @@ VOID _app_initialize ()
 
 	C_ASSERT (RTL_NUMBER_OF (szext) == RTL_NUMBER_OF (guids));
 
-	WNDCLASSEX wcex;
+	WNDCLASSEX wcex = {0};
 	IMAGE_FORMAT image_format;
 
 	config.formats = _r_obj_createarray_ex (sizeof (IMAGE_FORMAT), RTL_NUMBER_OF (szext), NULL);
 
-	for (SIZE_T i = 0; i < RTL_NUMBER_OF (szext); i++)
+	for (ULONG_PTR i = 0; i < RTL_NUMBER_OF (szext); i++)
 	{
 		RtlZeroMemory (&image_format, sizeof (image_format));
 
@@ -636,10 +636,8 @@ VOID _app_initialize ()
 
 	_r_freelist_initialize (&context_list, sizeof (MONITOR_CONTEXT), 8);
 
-	config.hregion_mutex = CreateEvent (NULL, TRUE, TRUE, NULL);
-	config.hshot_evt = CreateEvent (NULL, TRUE, TRUE, NULL);
-
-	RtlZeroMemory (&wcex, sizeof (wcex));
+	NtCreateEvent (&config.hregion_mutex, EVENT_ALL_ACCESS, NULL, NotificationEvent, TRUE);
+	NtCreateEvent (&config.hshot_evt, EVENT_ALL_ACCESS, NULL, NotificationEvent, TRUE);
 
 	wcex.cbSize = sizeof (wcex);
 	wcex.style = CS_VREDRAW | CS_HREDRAW;
@@ -700,6 +698,7 @@ INT_PTR CALLBACK DlgProc (
 
 			// set directory path
 			string = _app_getdirectory ();
+
 			_r_ctrl_setstring (hwnd, IDC_FOLDER, string->buffer);
 
 			_r_ctrl_checkbutton (hwnd, IDC_INCLUDEMOUSECURSOR_CHK, _r_config_getboolean (L"IsIncludeMouseCursor", FALSE));
@@ -1001,13 +1000,13 @@ INT_PTR CALLBACK DlgProc (
 				{
 					lpdropdown = (LPNMBCDROPDOWN)lparam;
 
-					if (lpdropdown->hdr.idFrom == IDC_SETTINGS)
-					{
+					if (lpdropdown->hdr.idFrom != IDC_SETTINGS)
+										break;
+
 						PostMessage (hwnd, WM_COMMAND, MAKEWPARAM (IDC_SETTINGS, 0), 0);
 
 						SetWindowLongPtr (hwnd, DWLP_MSGRESULT, TRUE);
 						return TRUE;
-					}
 
 					break;
 				}
@@ -1021,15 +1020,13 @@ INT_PTR CALLBACK DlgProc (
 			INT ctrl_id = LOWORD (wparam);
 			INT notify_code = HIWORD (wparam);
 
-			if (notify_code == 0 && ctrl_id >= IDX_LANGUAGE &&
-				ctrl_id <= IDX_LANGUAGE + (INT)(INT_PTR)_r_locale_getcount () + 1)
+			if (notify_code == 0 && ctrl_id >= IDX_LANGUAGE && ctrl_id <= IDX_LANGUAGE + (INT)(INT_PTR)_r_locale_getcount () + 1)
 			{
 				_r_locale_apply (GetSubMenu (GetSubMenu (GetMenu (hwnd), 1), LANG_MENU), ctrl_id, IDX_LANGUAGE);
 
 				return FALSE;
 			}
-			else if ((ctrl_id >= IDX_FORMATS &&
-					 ctrl_id <= IDX_FORMATS + (INT)(INT_PTR)_r_obj_getarraysize (config.formats)))
+			else if ((ctrl_id >= IDX_FORMATS && ctrl_id <= IDX_FORMATS + (INT)(INT_PTR)_r_obj_getarraysize (config.formats)))
 			{
 				LONG index;
 
@@ -1100,19 +1097,19 @@ INT_PTR CALLBACK DlgProc (
 
 					hmenu = LoadMenu (NULL, MAKEINTRESOURCE (IDM_SETTINGS));
 
-					if (hmenu)
+					if (!hmenu)
+						break;
+
+					hsubmenu = GetSubMenu (hmenu, 0);
+
+					if (hsubmenu)
 					{
-						hsubmenu = GetSubMenu (hmenu, 0);
+						_app_initdropdownmenu (hsubmenu, TRUE);
 
-						if (hsubmenu)
-						{
-							_app_initdropdownmenu (hsubmenu, TRUE);
-
-							_r_menu_popup (hsubmenu, hwnd, (PPOINT)&rect, TRUE);
-						}
-
-						DestroyMenu (hmenu);
+						_r_menu_popup (hsubmenu, hwnd, (PPOINT)&rect, TRUE);
 					}
+
+					DestroyMenu (hmenu);
 
 					break;
 				}
@@ -1216,19 +1213,24 @@ INT_PTR CALLBACK DlgProc (
 				{
 					R_FILE_DIALOG file_dialog;
 					PR_STRING path;
+					HRESULT status;
 
-					if (_r_filedialog_initialize (&file_dialog, PR_FILEDIALOG_OPENDIR))
+					status = _r_filedialog_initialize (&file_dialog, PR_FILEDIALOG_OPENDIR);
+
+					if (SUCCEEDED (status))
 					{
 						path = _app_getdirectory ();
 
 						_r_filedialog_setpath (&file_dialog, path->buffer);
 						_r_obj_dereference (path);
 
-						if (_r_filedialog_show (hwnd, &file_dialog))
-						{
-							path = _r_filedialog_getpath (&file_dialog);
+						_r_filedialog_show (hwnd, &file_dialog);
 
-							if (path)
+						if (SUCCEEDED (status))
+						{
+							status = _r_filedialog_getpath (&file_dialog, &path);
+
+							if (SUCCEEDED (status))
 							{
 								_r_config_setstringexpand (L"Folder", path->buffer);
 
@@ -1402,6 +1404,7 @@ INT_PTR CALLBACK DlgProc (
 					if (mode == SHOT_WINDOW)
 					{
 						GetCursorPos (&pt);
+
 						hwindow = WindowFromPoint (pt);
 
 						if (!hwindow)

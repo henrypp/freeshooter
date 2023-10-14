@@ -169,11 +169,11 @@ BOOLEAN _app_getwindowrect (
 	_Out_ PRECT rect
 )
 {
-	HRESULT hr;
+	HRESULT status;
 
-	hr = DwmGetWindowAttribute (hwnd, DWMWA_EXTENDED_FRAME_BOUNDS, rect, sizeof (RECT));
+	status = DwmGetWindowAttribute (hwnd, DWMWA_EXTENDED_FRAME_BOUNDS, rect, sizeof (RECT));
 
-	if (hr == S_OK)
+	if (SUCCEEDED (status))
 		return TRUE;
 
 	return !!GetWindowRect (hwnd, rect); // fallback
@@ -193,10 +193,10 @@ LONG _app_getwindowshadowsize (
 	_In_ HWND hwnd
 )
 {
+	RECT rect_dwm = {0};
 	RECT rect;
-	RECT rect_dwm;
 	LONG size;
-	HRESULT hr;
+	HRESULT status;
 
 	if (_r_wnd_ismaximized (hwnd))
 		return 0;
@@ -204,9 +204,9 @@ LONG _app_getwindowshadowsize (
 	if (!GetWindowRect (hwnd, &rect))
 		return 0;
 
-	hr = DwmGetWindowAttribute (hwnd, DWMWA_EXTENDED_FRAME_BOUNDS, &rect_dwm, sizeof (rect_dwm));
+	status = DwmGetWindowAttribute (hwnd, DWMWA_EXTENDED_FRAME_BOUNDS, &rect_dwm, sizeof (rect_dwm));
 
-	if (hr != S_OK)
+	if (FAILED (status))
 		return 0;
 
 	size = max (rect_dwm.left, rect.left) - min (rect_dwm.left, rect.left);
@@ -289,7 +289,7 @@ VOID _app_proceedscreenshot (
 	_In_ PSHOT_INFO shot_info
 )
 {
-	CURSORINFO cursor_info;
+	CURSORINFO cursor_info = {0};
 	ICONINFO icon_info;
 	HDC hdc;
 	HDC hcapture;
@@ -365,8 +365,6 @@ VOID _app_proceedscreenshot (
 
 		if (_r_config_getboolean (L"IsIncludeMouseCursor", FALSE))
 		{
-			RtlZeroMemory (&cursor_info, sizeof (cursor_info));
-
 			cursor_info.cbSize = sizeof (cursor_info);
 
 			if (GetCursorInfo (&cursor_info))
@@ -470,8 +468,8 @@ VOID _app_screenshot (
 	_In_ ENUM_TYPE_SCREENSHOT mode
 )
 {
+	MONITORINFO monitor_info = {0};
 	PSHOT_INFO shot_info;
-	MONITORINFO monitor_info;
 	RECT rect;
 	RECT window_rect;
 	POINT pt;
@@ -504,8 +502,6 @@ VOID _app_screenshot (
 
 		case SHOT_MONITOR:
 		{
-			RtlZeroMemory (&monitor_info, sizeof (monitor_info));
-
 			monitor_info.cbSize = sizeof (monitor_info);
 
 			hmonitor = MonitorFromPoint (pt, MONITOR_DEFAULTTONEAREST);
@@ -574,7 +570,6 @@ VOID _app_screenshot (
 		case SHOT_REGION:
 		{
 			_app_createregion ();
-
 			break;
 		}
 	}

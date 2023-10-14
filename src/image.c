@@ -115,99 +115,97 @@ BOOLEAN _app_image_wicsavehbitmap (
 	IPropertyBag2 *pPropertybag = NULL;
 	BITMAP bitmap = {0};
 	GUID pixel_format;
-	HRESULT hr;
-	BOOLEAN is_success;
+	HRESULT status;
+	BOOLEAN is_success = FALSE;
 
 	format = _app_getimageformat_data ();
 
-	is_success = FALSE;
+	status = CoCreateInstance (&CLSID_WICImagingFactory2, NULL, CLSCTX_INPROC_SERVER, &IID_IWICImagingFactory2, &wicFactory);
 
-	hr = CoCreateInstance (&CLSID_WICImagingFactory2, NULL, CLSCTX_INPROC_SERVER, &IID_IWICImagingFactory2, &wicFactory);
-
-	if (FAILED (hr))
+	if (FAILED (status))
 	{
-		hr = CoCreateInstance (&CLSID_WICImagingFactory1, NULL, CLSCTX_INPROC_SERVER, &IID_IWICImagingFactory, &wicFactory);
+		status = CoCreateInstance (&CLSID_WICImagingFactory1, NULL, CLSCTX_INPROC_SERVER, &IID_IWICImagingFactory, &wicFactory);
 
-		if (FAILED (hr))
+		if (FAILED (status))
 			goto CleanupExit;
 	}
 
-	hr = IWICImagingFactory_CreateBitmapFromHBITMAP (wicFactory, hbitmap, NULL, WICBitmapIgnoreAlpha, &wicBitmap);
+	status = IWICImagingFactory_CreateBitmapFromHBITMAP (wicFactory, hbitmap, NULL, WICBitmapIgnoreAlpha, &wicBitmap);
 
-	if (hr != S_OK)
+	if (FAILED (status))
 		goto CleanupExit;
 
-	hr = IWICImagingFactory_CreateStream (wicFactory, &wicStream);
+	status = IWICImagingFactory_CreateStream (wicFactory, &wicStream);
 
-	if (hr != S_OK)
+	if (FAILED (status))
 		goto CleanupExit;
 
-	hr = IWICStream_InitializeFromFilename (wicStream, filepath, GENERIC_WRITE);
+	status = IWICStream_InitializeFromFilename (wicStream, filepath, GENERIC_WRITE);
 
-	if (hr != S_OK)
+	if (FAILED (status))
 		goto CleanupExit;
 
-	hr = IWICImagingFactory_CreateEncoder (wicFactory, &format->guid, NULL, &wicEncoder);
+	status = IWICImagingFactory_CreateEncoder (wicFactory, &format->guid, NULL, &wicEncoder);
 
-	if (hr != S_OK)
+	if (FAILED (status))
 		goto CleanupExit;
 
-	hr = IWICBitmapEncoder_Initialize (wicEncoder, (IStream*)wicStream, WICBitmapEncoderNoCache);
+	status = IWICBitmapEncoder_Initialize (wicEncoder, (IStream*)wicStream, WICBitmapEncoderNoCache);
 
-	if (hr != S_OK)
+	if (FAILED (status))
 		goto CleanupExit;
 
 	if (!GetObject (hbitmap, sizeof (bitmap), &bitmap))
 		goto CleanupExit;
 
-	hr = IWICBitmapEncoder_CreateNewFrame (wicEncoder, &wicFrame, &pPropertybag);
+	status = IWICBitmapEncoder_CreateNewFrame (wicEncoder, &wicFrame, &pPropertybag);
 
-	if (hr != S_OK)
+	if (FAILED (status))
 		goto CleanupExit;
 
 	_app_image_wicsetoptions (&format->guid, pPropertybag);
 
-	hr = IWICBitmapFrameEncode_Initialize (wicFrame, pPropertybag);
+	status = IWICBitmapFrameEncode_Initialize (wicFrame, pPropertybag);
 
-	if (hr != S_OK)
+	if (FAILED (status))
 		goto CleanupExit;
 
-	hr = IWICBitmapFrameEncode_SetSize (wicFrame, bitmap.bmWidth, bitmap.bmHeight);
+	status = IWICBitmapFrameEncode_SetSize (wicFrame, bitmap.bmWidth, bitmap.bmHeight);
 
-	if (hr != S_OK)
+	if (FAILED (status))
 	{
 		pixel_format = GUID_WICPixelFormat24bppBGR;
 
-		hr = IWICBitmapFrameEncode_SetPixelFormat (wicFrame, &pixel_format);
+		status = IWICBitmapFrameEncode_SetPixelFormat (wicFrame, &pixel_format);
 
-		if (hr != S_OK)
+		if (FAILED (status))
 			goto CleanupExit;
 	}
 
-	hr = IWICBitmapFrameEncode_WriteSource (wicFrame, (IWICBitmapSource*)wicBitmap, NULL);
+	status = IWICBitmapFrameEncode_WriteSource (wicFrame, (IWICBitmapSource*)wicBitmap, NULL);
 
-	if (hr != S_OK)
+	if (FAILED (status))
 		goto CleanupExit;
 
-	hr = IWICBitmapFrameEncode_Commit (wicFrame);
+	status = IWICBitmapFrameEncode_Commit (wicFrame);
 
-	if (hr != S_OK)
+	if (FAILED (status))
 		goto CleanupExit;
 
-	hr = IWICBitmapEncoder_Commit (wicEncoder);
+	status = IWICBitmapEncoder_Commit (wicEncoder);
 
-	if (hr != S_OK)
+	if (FAILED (status))
 		goto CleanupExit;
 
 	is_success = TRUE;
 
 CleanupExit:
 
-	if (hr != S_OK)
+	if (FAILED (status))
 	{
-		_r_log (LOG_LEVEL_ERROR, 0, TEXT (__FUNCTION__), hr, NULL);
+		_r_log (LOG_LEVEL_ERROR, 0, TEXT (__FUNCTION__), status, NULL);
 
-		_r_show_errormessage (_r_app_gethwnd (), NULL, hr, NULL);
+		_r_show_errormessage (_r_app_gethwnd (), NULL, status, NULL);
 	}
 
 	if (pPropertybag)

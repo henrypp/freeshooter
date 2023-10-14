@@ -24,6 +24,7 @@ BOOL CALLBACK enum_monitor_timer_callback (
 	if (timer_context->shot_info)
 	{
 		monitor_context->timer.shot_info = _r_obj_reference (timer_context->shot_info);
+
 		timer_context->shot_info = NULL;
 	}
 
@@ -35,14 +36,14 @@ BOOL CALLBACK enum_monitor_timer_callback (
 VOID _app_createregion ()
 {
 	PMONITOR_CONTEXT monitor_context;
-	ULONG status;
+	NTSTATUS status;
 
-	status = WaitForSingleObjectEx (config.hregion_mutex, 0, FALSE);
+	status = NtWaitForSingleObject (config.hregion_mutex, FALSE, NULL);
 
 	if (status != WAIT_OBJECT_0)
 		return;
 
-	ResetEvent (config.hregion_mutex);
+	NtResetEvent (config.hregion_mutex, NULL);
 
 	monitor_context = _r_freelist_allocateitem (&context_list);
 
@@ -127,7 +128,7 @@ VOID _app_initializeregion (
 			BitBlt (monitor_context->region.hcapture_mask, 0, 0, width, height, hdc, monitor_context->rect.left, monitor_context->rect.top, SRCCOPY);
 
 			// blend bitmap bits
-			for (SIZE_T i = 0; i < bmp_bytes.length / sizeof (COLORREF); i++)
+			for (ULONG_PTR i = 0; i < bmp_bytes.length / sizeof (COLORREF); i++)
 			{
 				bmp_buffer = PTR_ADD_OFFSET (bmp_bytes.buffer, i * sizeof (COLORREF));
 
@@ -229,7 +230,7 @@ HWND _app_showdummy (
 	_In_opt_ LPCRECT rect
 )
 {
-	DUMMY_CONTEXT dummy_context;
+	DUMMY_CONTEXT dummy_context = {0};
 
 	if (hdummy)
 	{
@@ -358,7 +359,7 @@ INT_PTR CALLBACK RegionProc (
 
 			_app_destroyregion (context);
 
-			SetEvent (config.hregion_mutex);
+			NtSetEvent (config.hregion_mutex, NULL);
 
 			_r_freelist_deleteitem (&context_list, context);
 
@@ -373,6 +374,7 @@ INT_PTR CALLBACK RegionProc (
 			if (!context)
 			{
 				DestroyWindow (hwnd);
+
 				break;
 			}
 
@@ -433,16 +435,12 @@ INT_PTR CALLBACK RegionProc (
 		{
 			context = _r_wnd_getcontext (hwnd, LONG_MAX);
 
-			if (!context)
+			if (!context || !context->hcursor)
 				break;
 
-			if (context->hcursor)
-			{
-				SetCursor (context->hcursor);
-				return TRUE;
-			}
+			SetCursor (context->hcursor);
 
-			break;
+			return TRUE;
 		}
 
 		case WM_MOUSEMOVE:
@@ -458,7 +456,7 @@ INT_PTR CALLBACK RegionProc (
 			POINT pt;
 			HDC hdc;
 			HDC hdc_buffered;
-			BP_PAINTPARAMS bpp;
+			BP_PAINTPARAMS bpp = {0};
 			HPAINTBUFFER hdpaint;
 			HGDIOBJ old_pen;
 			HGDIOBJ old_brush;
@@ -480,8 +478,6 @@ INT_PTR CALLBACK RegionProc (
 
 			if (!hdc)
 				break;
-
-			RtlZeroMemory (&bpp, sizeof (bpp));
 
 			bpp.cbSize = sizeof (bpp);
 			bpp.dwFlags = BPPF_NOCLIP;
@@ -665,6 +661,7 @@ INT_PTR CALLBACK TimerProc (
 		case WM_CLOSE:
 		{
 			DestroyWindow (hwnd);
+
 			break;
 		}
 
@@ -699,7 +696,7 @@ INT_PTR CALLBACK TimerProc (
 				break;
 			}
 
-			seconds = InterlockedDecrement (&context->timer.timer_value);
+			seconds = _InterlockedDecrement (&context->timer.timer_value);
 
 			InvalidateRect (hwnd, NULL, TRUE);
 
@@ -722,6 +719,7 @@ INT_PTR CALLBACK TimerProc (
 				if (context->timer.shot_info)
 				{
 					_app_proceedscreenshot (context->timer.shot_info);
+
 					_r_obj_clearreference (&context->timer.shot_info);
 				}
 
@@ -741,7 +739,7 @@ INT_PTR CALLBACK TimerProc (
 			PAINTSTRUCT ps;
 			HDC hdc;
 			HDC hdc_buffered;
-			BP_PAINTPARAMS bpp;
+			BP_PAINTPARAMS bpp = {0};
 			HPAINTBUFFER hdpaint;
 			WCHAR text[8];
 			RECT rect;
@@ -759,8 +757,6 @@ INT_PTR CALLBACK TimerProc (
 
 			if (!hdc)
 				break;
-
-			RtlZeroMemory (&bpp, sizeof (bpp));
 
 			bpp.cbSize = sizeof (bpp);
 			bpp.dwFlags = BPPF_ERASE;
