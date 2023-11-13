@@ -612,8 +612,8 @@ VOID _app_initialize ()
 		&GUID_ContainerFormatBmp,
 		&GUID_ContainerFormatJpeg,
 		&GUID_ContainerFormatPng,
-		&GUID_ContainerFormatWmp,
 		&GUID_ContainerFormatTiff,
+		&GUID_ContainerFormatWmp,
 	};
 
 	C_ASSERT (RTL_NUMBER_OF (szext) == RTL_NUMBER_OF (guids));
@@ -1001,12 +1001,12 @@ INT_PTR CALLBACK DlgProc (
 					lpdropdown = (LPNMBCDROPDOWN)lparam;
 
 					if (lpdropdown->hdr.idFrom != IDC_SETTINGS)
-										break;
+						break;
 
-						PostMessage (hwnd, WM_COMMAND, MAKEWPARAM (IDC_SETTINGS, 0), 0);
+					PostMessage (hwnd, WM_COMMAND, MAKEWPARAM (IDC_SETTINGS, 0), 0);
 
-						SetWindowLongPtr (hwnd, DWLP_MSGRESULT, TRUE);
-						return TRUE;
+					SetWindowLongPtr (hwnd, DWLP_MSGRESULT, TRUE);
+					return TRUE;
 
 					break;
 				}
@@ -1224,7 +1224,7 @@ INT_PTR CALLBACK DlgProc (
 						_r_filedialog_setpath (&file_dialog, path->buffer);
 						_r_obj_dereference (path);
 
-						_r_filedialog_show (hwnd, &file_dialog);
+						status = _r_filedialog_show (hwnd, &file_dialog);
 
 						if (SUCCEEDED (status))
 						{

@@ -292,7 +292,7 @@ VOID _app_proceedscreenshot (
 	CURSORINFO cursor_info = {0};
 	ICONINFO icon_info;
 	HDC hdc;
-	HDC hcapture;
+	HDC hcapture = NULL;
 	HBITMAP hbitmap;
 	HGDIOBJ old_bitmap;
 	R_RECTANGLE prev_rect = {0};
@@ -300,8 +300,6 @@ VOID _app_proceedscreenshot (
 	LONG dpi_value;
 	BOOLEAN is_hideme;
 	BOOLEAN is_windowdisplayed;
-
-	hcapture = NULL;
 
 	my_hwnd = _r_app_gethwnd ();
 
@@ -340,7 +338,7 @@ VOID _app_proceedscreenshot (
 
 		if (!hdc)
 		{
-			_r_log (LOG_LEVEL_WARNING, 0, L"GetDC", GetLastError (), NULL);
+			_r_log (LOG_LEVEL_WARNING, 0, L"GetDC", PebLastError (), NULL);
 
 			goto CleanupExit;
 		}
@@ -350,7 +348,7 @@ VOID _app_proceedscreenshot (
 
 	if (!hcapture)
 	{
-		_r_log (LOG_LEVEL_WARNING, 0, L"CreateCompatibleDC", GetLastError (), NULL);
+		_r_log (LOG_LEVEL_WARNING, 0, L"CreateCompatibleDC", PebLastError (), NULL);
 
 		goto CleanupExit;
 	}
@@ -399,7 +397,7 @@ VOID _app_proceedscreenshot (
 			}
 		}
 
-		_app_image_savebitmaptofile (hbitmap, shot_info->width, shot_info->height);
+		_app_image_savebitmaptofile (my_hwnd, hbitmap, shot_info->width, shot_info->height);
 
 		SelectObject (hcapture, old_bitmap);
 
@@ -414,6 +412,7 @@ CleanupExit:
 	if (shot_info->hcapture)
 	{
 		DeleteDC (shot_info->hcapture);
+
 		shot_info->hcapture = NULL;
 	}
 	else if (hdc)
@@ -437,10 +436,11 @@ CleanupExit:
 		}
 
 		_r_tray_toggle (my_hwnd, &GUID_TrayIcon, TRUE);
+
 		_r_tray_setinfo (my_hwnd, &GUID_TrayIcon, NULL, _r_app_getname ());
 	}
 
-	SetEvent (config.hshot_evt);
+	NtSetEvent (config.hshot_evt, NULL);
 }
 
 VOID _app_savescreenshot (

@@ -9,6 +9,7 @@ VOID _app_image_wicsetoptions (
 );
 
 BOOLEAN _app_image_wicsavehbitmap (
+	_In_ HWND hwnd,
 	_In_ HBITMAP hbitmap,
 	_In_ LPCWSTR filepath
 );
@@ -21,6 +22,7 @@ HBITMAP _app_image_createbitmap (
 );
 
 VOID _app_image_savebitmaptofile (
+	_In_ HWND hwnd,
 	_In_ HBITMAP hbitmap,
 	_In_ INT width,
 	_In_ INT height

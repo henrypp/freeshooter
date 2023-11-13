@@ -102,55 +102,51 @@ VOID _app_image_wicsetoptions (
 }
 
 BOOLEAN _app_image_wicsavehbitmap (
+	_In_ HWND hwnd,
 	_In_ HBITMAP hbitmap,
 	_In_ LPCWSTR filepath
 )
 {
+	IWICStream *wic_stream = NULL;
+	IWICBitmap *wic_bitmap = NULL;
+	IWICBitmapEncoder *wic_encoder = NULL;
+	IWICBitmapFrameEncode *wic_frame = NULL;
+	IWICImagingFactory2 *wic_factory = NULL;
+	IPropertyBag2 *property_bag = NULL;
 	PIMAGE_FORMAT format;
-	IWICStream *wicStream = NULL;
-	IWICBitmap *wicBitmap = NULL;
-	IWICBitmapEncoder *wicEncoder = NULL;
-	IWICBitmapFrameEncode *wicFrame = NULL;
-	IWICImagingFactory2 *wicFactory = NULL;
-	IPropertyBag2 *pPropertybag = NULL;
 	BITMAP bitmap = {0};
 	GUID pixel_format;
-	HRESULT status;
 	BOOLEAN is_success = FALSE;
+	HRESULT status;
 
 	format = _app_getimageformat_data ();
 
-	status = CoCreateInstance (&CLSID_WICImagingFactory2, NULL, CLSCTX_INPROC_SERVER, &IID_IWICImagingFactory2, &wicFactory);
-
-	if (FAILED (status))
-	{
-		status = CoCreateInstance (&CLSID_WICImagingFactory1, NULL, CLSCTX_INPROC_SERVER, &IID_IWICImagingFactory, &wicFactory);
-
-		if (FAILED (status))
-			goto CleanupExit;
-	}
-
-	status = IWICImagingFactory_CreateBitmapFromHBITMAP (wicFactory, hbitmap, NULL, WICBitmapIgnoreAlpha, &wicBitmap);
+	status = CoCreateInstance (&CLSID_WICImagingFactory2, NULL, CLSCTX_INPROC_SERVER, &IID_IWICImagingFactory2, &wic_factory);
 
 	if (FAILED (status))
 		goto CleanupExit;
 
-	status = IWICImagingFactory_CreateStream (wicFactory, &wicStream);
+	status = IWICImagingFactory_CreateBitmapFromHBITMAP (wic_factory, hbitmap, NULL, WICBitmapIgnoreAlpha, &wic_bitmap);
 
 	if (FAILED (status))
 		goto CleanupExit;
 
-	status = IWICStream_InitializeFromFilename (wicStream, filepath, GENERIC_WRITE);
+	status = IWICImagingFactory_CreateStream (wic_factory, &wic_stream);
 
 	if (FAILED (status))
 		goto CleanupExit;
 
-	status = IWICImagingFactory_CreateEncoder (wicFactory, &format->guid, NULL, &wicEncoder);
+	status = IWICStream_InitializeFromFilename (wic_stream, filepath, GENERIC_WRITE);
 
 	if (FAILED (status))
 		goto CleanupExit;
 
-	status = IWICBitmapEncoder_Initialize (wicEncoder, (IStream*)wicStream, WICBitmapEncoderNoCache);
+	status = IWICImagingFactory_CreateEncoder (wic_factory, &format->guid, NULL, &wic_encoder);
+
+	if (FAILED (status))
+		goto CleanupExit;
+
+	status = IWICBitmapEncoder_Initialize (wic_encoder, (IStream*)wic_stream, WICBitmapEncoderNoCache);
 
 	if (FAILED (status))
 		goto CleanupExit;
@@ -158,41 +154,41 @@ BOOLEAN _app_image_wicsavehbitmap (
 	if (!GetObject (hbitmap, sizeof (bitmap), &bitmap))
 		goto CleanupExit;
 
-	status = IWICBitmapEncoder_CreateNewFrame (wicEncoder, &wicFrame, &pPropertybag);
+	status = IWICBitmapEncoder_CreateNewFrame (wic_encoder, &wic_frame, &property_bag);
 
 	if (FAILED (status))
 		goto CleanupExit;
 
-	_app_image_wicsetoptions (&format->guid, pPropertybag);
+	_app_image_wicsetoptions (&format->guid, property_bag);
 
-	status = IWICBitmapFrameEncode_Initialize (wicFrame, pPropertybag);
+	status = IWICBitmapFrameEncode_Initialize (wic_frame, property_bag);
 
 	if (FAILED (status))
 		goto CleanupExit;
 
-	status = IWICBitmapFrameEncode_SetSize (wicFrame, bitmap.bmWidth, bitmap.bmHeight);
+	status = IWICBitmapFrameEncode_SetSize (wic_frame, bitmap.bmWidth, bitmap.bmHeight);
 
 	if (FAILED (status))
 	{
 		pixel_format = GUID_WICPixelFormat24bppBGR;
 
-		status = IWICBitmapFrameEncode_SetPixelFormat (wicFrame, &pixel_format);
+		status = IWICBitmapFrameEncode_SetPixelFormat (wic_frame, &pixel_format);
 
 		if (FAILED (status))
 			goto CleanupExit;
 	}
 
-	status = IWICBitmapFrameEncode_WriteSource (wicFrame, (IWICBitmapSource*)wicBitmap, NULL);
+	status = IWICBitmapFrameEncode_WriteSource (wic_frame, (IWICBitmapSource*)wic_bitmap, NULL);
 
 	if (FAILED (status))
 		goto CleanupExit;
 
-	status = IWICBitmapFrameEncode_Commit (wicFrame);
+	status = IWICBitmapFrameEncode_Commit (wic_frame);
 
 	if (FAILED (status))
 		goto CleanupExit;
 
-	status = IWICBitmapEncoder_Commit (wicEncoder);
+	status = IWICBitmapEncoder_Commit (wic_encoder);
 
 	if (FAILED (status))
 		goto CleanupExit;
@@ -205,26 +201,26 @@ CleanupExit:
 	{
 		_r_log (LOG_LEVEL_ERROR, 0, TEXT (__FUNCTION__), status, NULL);
 
-		_r_show_errormessage (_r_app_gethwnd (), NULL, status, NULL, NULL, NULL);
+		_r_show_errormessage (hwnd, NULL, status, NULL, NULL, NULL);
 	}
 
-	if (pPropertybag)
-		IPropertyBag2_Release (pPropertybag);
+	if (property_bag)
+		IPropertyBag2_Release (property_bag);
 
-	if (wicBitmap)
-		IWICBitmap_Release (wicBitmap);
+	if (wic_bitmap)
+		IWICBitmap_Release (wic_bitmap);
 
-	if (wicFrame)
-		IWICBitmapFrameEncode_Release (wicFrame);
+	if (wic_frame)
+		IWICBitmapFrameEncode_Release (wic_frame);
 
-	if (wicStream)
-		IWICStream_Release (wicStream);
+	if (wic_stream)
+		IWICStream_Release (wic_stream);
 
-	if (wicEncoder)
-		IWICBitmapDecoder_Release (wicEncoder);
+	if (wic_encoder)
+		IWICBitmapDecoder_Release (wic_encoder);
 
-	if (wicFactory)
-		IWICImagingFactory_Release (wicFactory);
+	if (wic_factory)
+		IWICImagingFactory_Release (wic_factory);
 
 	return is_success;
 }
@@ -260,6 +256,7 @@ HBITMAP _app_image_createbitmap (
 }
 
 VOID _app_image_savebitmaptofile (
+	_In_ HWND hwnd,
 	_In_ HBITMAP hbitmap,
 	_In_ INT width,
 	_In_ INT height
@@ -273,7 +270,7 @@ VOID _app_image_savebitmaptofile (
 
 	if (_r_config_getboolean (L"CopyToClipboard", FALSE))
 	{
-		if (OpenClipboard (_r_app_gethwnd ()))
+		if (OpenClipboard (hwnd))
 		{
 			EmptyClipboard ();
 
@@ -293,7 +290,7 @@ VOID _app_image_savebitmaptofile (
 	if (unique_path_string)
 		_r_obj_movereference (&path_string, unique_path_string);
 
-	_app_image_wicsavehbitmap (hbitmap, path_string->buffer);
+	_app_image_wicsavehbitmap (hwnd, hbitmap, path_string->buffer);
 
 	_r_obj_dereference (path_string);
 }
