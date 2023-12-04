@@ -1,3 +1,20 @@
+v2.1 (4 December 2023)
+- dropped windows 7 and windows 8 support
+- use windows image coding (wic) library
+- improved multi-monitor support
+- added right-click context menu on region screen
+- added fullscreen mode capture
+- added timer feature (issue #27)
+- added arm64 build
+- fixed overlapped windows rectangle calculation
+- fixed update checker bug (issue #25)
+- fixed region selection (issue #31)
+- fixed shadow size calculation
+- fixed painting cursor
+- fixed internal bugs
+- updated project sdk
+- fixed bugs
+
 v2.0.7 (22 October 2018)
 - fixed region selection mask device context
 - fixed calculating overlapped windows rectangle
