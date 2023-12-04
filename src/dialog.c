@@ -320,7 +320,7 @@ LRESULT WINAPI DummyProc (
 		}
 	}
 
-	return DefWindowProc (hwnd, msg, wparam, lparam);
+	return DefWindowProcW (hwnd, msg, wparam, lparam);
 }
 
 INT_PTR CALLBACK RegionProc (
@@ -661,7 +661,6 @@ INT_PTR CALLBACK TimerProc (
 		case WM_CLOSE:
 		{
 			DestroyWindow (hwnd);
-
 			break;
 		}
 
@@ -736,11 +735,11 @@ INT_PTR CALLBACK TimerProc (
 
 		case WM_PAINT:
 		{
-			PAINTSTRUCT ps;
-			HDC hdc;
-			HDC hdc_buffered;
 			BP_PAINTPARAMS bpp = {0};
 			HPAINTBUFFER hdpaint;
+			PAINTSTRUCT ps;
+			HDC hdc_buffered;
+			HDC hdc;
 			WCHAR text[8];
 			RECT rect;
 			INT length;

@@ -25,10 +25,10 @@ VOID dump_wnd_info (
 	WCHAR class_name[128];
 	RECT rect = {0};
 
-	if (!GetWindowText (hwnd, title, RTL_NUMBER_OF (title)))
+	if (!GetWindowTextW (hwnd, title, RTL_NUMBER_OF (title)))
 		_r_str_copy (title, RTL_NUMBER_OF (title), L"n/a");
 
-	if (!GetClassName (hwnd, class_name, RTL_NUMBER_OF (class_name)))
+	if (!GetClassNameW (hwnd, class_name, RTL_NUMBER_OF (class_name)))
 		_r_str_copy (class_name, RTL_NUMBER_OF (class_name), L"n/a");
 
 	_app_getwindowrect (hwnd, &rect);
@@ -289,12 +289,12 @@ VOID _app_proceedscreenshot (
 )
 {
 	CURSORINFO cursor_info = {0};
+	R_RECTANGLE prev_rect = {0};
 	ICONINFO icon_info;
-	HDC hdc;
-	HDC hcapture = NULL;
 	HBITMAP hbitmap;
 	HGDIOBJ old_bitmap;
-	R_RECTANGLE prev_rect = {0};
+	HDC hcapture = NULL;
+	HDC hdc;
 	HWND my_hwnd;
 	LONG dpi_value;
 	BOOLEAN is_hideme;
