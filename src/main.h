@@ -8,21 +8,23 @@
 #include "resource.h"
 #include "app.h"
 
+// libs
+#pragma comment(lib, "msimg32.lib")
+#pragma comment(lib, "windowscodecs.lib")
+#pragma comment(lib, "winmm.lib")
+
 #define LANG_MENU 6
 #define SETTINGS_MENU 7
 #define FORMAT_MENU 0
 #define FILENAME_MENU 1
 #define DELAY_MENU 2
 
+#define DUMMY_CLASS_DLG L"DummyDlg"
+
 #define WND_SLEEP 150
 #define JPEG_QUALITY 95
 #define BLEND 1.8
 #define START_IDX 1
-
-#define REGION_PEN_COLOR RGB (255,0,0)
-#define REGION_PEN_DRAW_COLOR RGB (0,255,0)
-#define REGION_COLOR_BK RGB (0,0,0)
-#define REGION_BLEND 90
 
 #define BG_COLOR_WINDOW RGB (255, 255, 255)
 
@@ -42,11 +44,6 @@
 #define HOTKEY_REGION MAKEWORD (VK_SNAPSHOT, HOTKEYF_ALT)
 
 #define DEFAULT_DIRECTORY L"%userprofile%\\Desktop"
-
-// libs
-#pragma comment(lib, "msimg32.lib")
-#pragma comment(lib, "windowscodecs.lib")
-#pragma comment(lib, "winmm.lib")
 
 DEFINE_GUID (GUID_TrayIcon, 0xabb007cc, 0xd7aa, 0x4ebc, 0xa0, 0x59, 0xb5, 0xd, 0x72, 0x57, 0x4e, 0xfc);
 
@@ -86,6 +83,52 @@ typedef struct _IMAGE_FORMAT
 	WCHAR ext[8];
 	GUID guid;
 } IMAGE_FORMAT, *PIMAGE_FORMAT;
+
+typedef struct _MONITOR_CONTEXT
+{
+	HWND hwnd;
+	HCURSOR hcursor;
+	RECT rect;
+
+	union
+	{
+		struct
+		{
+			HDC hcapture;
+			HDC hcapture_mask;
+			HBITMAP hbitmap;
+			HBITMAP hbitmap_mask;
+			HPEN hpen;
+			HPEN hpen_draw;
+			HDC hdc;
+
+			POINT pt_start;
+			POINT pt_end;
+
+			BOOLEAN is_drawing;
+		} region;
+
+		struct
+		{
+			PSHOT_INFO shot_info;
+			HFONT hfont;
+			volatile LONG timer_value;
+		} timer;
+	};
+} MONITOR_CONTEXT, *PMONITOR_CONTEXT;
+
+typedef struct _TIMER_CONTEXT
+{
+	HWND hwnd;
+	LONG timer_value;
+	PSHOT_INFO shot_info;
+} TIMER_CONTEXT, *PTIMER_CONTEXT;
+
+typedef struct _DUMMY_CONTEXT
+{
+	HWND hwnd;
+	RECT rect;
+} DUMMY_CONTEXT, *PDUMMY_CONTEXT;
 
 typedef enum _ENUM_TYPE_SCREENSHOT
 {

@@ -87,7 +87,7 @@ VOID _app_initializeregion (
 	height = _r_calc_rectheight (&monitor_context->rect);
 
 	// load cursor
-	monitor_context->hcursor = LoadCursor (_r_sys_getimagebase (), MAKEINTRESOURCE (IDI_MAIN));
+	monitor_context->hcursor = LoadCursorW (_r_sys_getimagebase (), MAKEINTRESOURCE (IDI_MAIN));
 
 	// create pen
 	pen_size = _r_dc_getsystemmetrics (SM_CXBORDER, dpi_value) * 4;
@@ -242,7 +242,7 @@ HWND _app_showdummy (
 
 		CopyRect (&dummy_context.rect, rect);
 
-		hdummy = CreateWindowEx (0, DUMMY_CLASS_DLG, _r_app_getname (), WS_POPUP | WS_OVERLAPPED, 0, 0, 0, 0, NULL, NULL, _r_sys_getimagebase (), &dummy_context);
+		hdummy = CreateWindowExW (0, DUMMY_CLASS_DLG, _r_app_getname (), WS_POPUP | WS_OVERLAPPED, 0, 0, 0, 0, NULL, NULL, _r_sys_getimagebase (), &dummy_context);
 
 		return hdummy;
 	}
@@ -386,13 +386,13 @@ INT_PTR CALLBACK RegionProc (
 
 		case WM_LBUTTONDOWN:
 		{
-			PostMessage (hwnd, WM_COMMAND, MAKEWPARAM (IDM_REGION_START, 0), lparam);
+			PostMessageW (hwnd, WM_COMMAND, MAKEWPARAM (IDM_REGION_START, 0), lparam);
 			break;
 		}
 
 		case WM_MBUTTONDOWN:
 		{
-			PostMessage (hwnd, WM_COMMAND, MAKEWPARAM (IDM_REGION_CANCEL, 0), 0);
+			PostMessageW (hwnd, WM_COMMAND, MAKEWPARAM (IDM_REGION_CANCEL, 0), 0);
 			break;
 		}
 
@@ -406,7 +406,7 @@ INT_PTR CALLBACK RegionProc (
 			if (!GetCursorPos (&pt))
 				break;
 
-			hmenu = LoadMenu (NULL, MAKEINTRESOURCE (IDM_REGION));
+			hmenu = LoadMenuW (NULL, MAKEINTRESOURCE (IDM_REGION));
 
 			if (!hmenu)
 				break;
@@ -423,7 +423,7 @@ INT_PTR CALLBACK RegionProc (
 				command_id = _r_menu_popup (hsubmenu, hwnd, &pt, FALSE);
 
 				if (command_id)
-					PostMessage (hwnd, WM_COMMAND, MAKEWPARAM (command_id, 0), MAKELPARAM (pt.x, pt.y));
+					PostMessageW (hwnd, WM_COMMAND, MAKEWPARAM (command_id, 0), MAKELPARAM (pt.x, pt.y));
 			}
 
 			DestroyMenu (hmenu);
@@ -536,7 +536,7 @@ INT_PTR CALLBACK RegionProc (
 		case WM_KEYDOWN:
 		{
 			if (wparam == VK_ESCAPE)
-				PostMessage (hwnd, WM_COMMAND, MAKEWPARAM (IDM_REGION_CANCEL, 0), 0);
+				PostMessageW (hwnd, WM_COMMAND, MAKEWPARAM (IDM_REGION_CANCEL, 0), 0);
 
 			break;
 		}
@@ -776,7 +776,7 @@ INT_PTR CALLBACK TimerProc (
 
 				length = (INT)(INT_PTR)_r_str_getlength (text);
 
-				DrawTextEx (hdc_buffered, text, length, &rect, DT_VCENTER | DT_CENTER | DT_SINGLELINE | DT_NOCLIP | DT_NOPREFIX, NULL);
+				DrawTextExW (hdc_buffered, text, length, &rect, DT_VCENTER | DT_CENTER | DT_SINGLELINE | DT_NOCLIP | DT_NOPREFIX, NULL);
 
 				EndBufferedPaint (hdpaint, TRUE);
 			}

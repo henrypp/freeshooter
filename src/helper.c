@@ -50,7 +50,7 @@ VOID _app_playsound ()
 	if (!_r_config_getboolean (L"IsPlaySound", TRUE))
 		return;
 
-	PlaySound (MAKEINTRESOURCE (IDW_MAIN), _r_sys_getimagebase (), SND_ASYNC | SND_NODEFAULT | SND_NOWAIT | SND_FILENAME | SND_SENTRY | SND_RESOURCE);
+	PlaySoundW (MAKEINTRESOURCE (IDW_MAIN), _r_sys_getimagebase (), SND_ASYNC | SND_NODEFAULT | SND_NOWAIT | SND_FILENAME | SND_SENTRY | SND_RESOURCE);
 }
 
 LONG _app_getimageformat_id ()
@@ -224,20 +224,19 @@ PR_STRING _app_uniquefilename (
 	WCHAR time_format[MAX_PATH];
 	SYSTEMTIME st;
 	PR_STRING name_prefix;
-	PR_STRING string;
+	PR_STRING string = NULL;
 	PIMAGE_FORMAT format;
 
 	format = _app_getimageformat_data ();
 
 	name_prefix = _r_config_getstring (L"FilenamePrefix", FILE_FORMAT_NAME_PREFIX);
-	string = NULL;
 
 	if (name_type == NAME_DATE)
 	{
 		GetLocalTime (&st);
 
-		if (GetDateFormat (LOCALE_SYSTEM_DEFAULT, 0, &st, FILE_FORMAT_DATE_FORMAT_1, date_format, RTL_NUMBER_OF (date_format)) &&
-			GetTimeFormat (LOCALE_SYSTEM_DEFAULT, 0, &st, FILE_FORMAT_DATE_FORMAT_2, time_format, RTL_NUMBER_OF (time_format)))
+		if (GetDateFormatW (LOCALE_SYSTEM_DEFAULT, 0, &st, FILE_FORMAT_DATE_FORMAT_1, date_format, RTL_NUMBER_OF (date_format)) &&
+			GetTimeFormatW (LOCALE_SYSTEM_DEFAULT, 0, &st, FILE_FORMAT_DATE_FORMAT_2, time_format, RTL_NUMBER_OF (time_format)))
 		{
 			_r_obj_movereference (&string, _r_format_string (
 				L"%s\\%s%s-%s.%s",
@@ -506,7 +505,7 @@ VOID _app_screenshot (
 
 			hmonitor = MonitorFromPoint (pt, MONITOR_DEFAULTTONEAREST);
 
-			if (GetMonitorInfo (hmonitor, &monitor_info))
+			if (GetMonitorInfoW (hmonitor, &monitor_info))
 			{
 				_r_wnd_recttorectangle (&shot_info->rectangle, &monitor_info.rcMonitor);
 

@@ -43,9 +43,9 @@ VOID _app_key2string (
 	}
 	else
 	{
-		scan_code = MapVirtualKey (vk_code, MAPVK_VK_TO_VSC);
+		scan_code = MapVirtualKeyW (vk_code, MAPVK_VK_TO_VSC);
 
-		GetKeyNameText ((scan_code << 16), key_name, RTL_NUMBER_OF (key_name));
+		GetKeyNameTextW ((scan_code << 16), key_name, RTL_NUMBER_OF (key_name));
 	}
 
 	_r_str_append (buffer, length, key_name);
@@ -62,10 +62,10 @@ BOOLEAN _app_hotkeyinit (
 	UINT hk_monitor;
 	UINT hk_window;
 	UINT hk_region;
-	BOOLEAN is_nofullscreen;
-	BOOLEAN is_nomonitor;
-	BOOLEAN is_nowindow;
-	BOOLEAN is_noregion;
+	BOOLEAN is_nofullscreen = FALSE;
+	BOOLEAN is_nomonitor = FALSE;
+	BOOLEAN is_nowindow = FALSE;
+	BOOLEAN is_noregion = FALSE;
 
 	UnregisterHotKey (hwnd, HOTKEY_ID_FULLSCREEN);
 	UnregisterHotKey (hwnd, HOTKEY_ID_MONITOR);
@@ -76,11 +76,6 @@ BOOLEAN _app_hotkeyinit (
 	hk_monitor = _r_config_getlong (L"HotkeyMonitor", HOTKEY_MONITOR);
 	hk_window = _r_config_getlong (L"HotkeyWindow", HOTKEY_WINDOW);
 	hk_region = _r_config_getlong (L"HotkeyRegion", HOTKEY_REGION);
-
-	is_nofullscreen = FALSE;
-	is_nomonitor = FALSE;
-	is_nowindow = FALSE;
-	is_noregion = FALSE;
 
 	if (_r_config_getboolean (L"HotkeyFullscreenEnabled", FALSE))
 	{
@@ -358,10 +353,10 @@ INT_PTR CALLBACK SettingsProc (
 					if (_r_combobox_getcurrentitem (hwnd, IDC_REGION_CB) == CB_ERR)
 						_r_combobox_setcurrentitem (hwnd, IDC_REGION_CB, 0);
 
-					PostMessage (hwnd, WM_COMMAND, MAKEWPARAM (IDC_FULLSCREEN_CB, CBN_SELCHANGE), 0);
-					PostMessage (hwnd, WM_COMMAND, MAKEWPARAM (IDC_MONITOR_CB, CBN_SELCHANGE), 0);
-					PostMessage (hwnd, WM_COMMAND, MAKEWPARAM (IDC_WINDOW_CB, CBN_SELCHANGE), 0);
-					PostMessage (hwnd, WM_COMMAND, MAKEWPARAM (IDC_REGION_CB, CBN_SELCHANGE), 0);
+					PostMessageW (hwnd, WM_COMMAND, MAKEWPARAM (IDC_FULLSCREEN_CB, CBN_SELCHANGE), 0);
+					PostMessageW (hwnd, WM_COMMAND, MAKEWPARAM (IDC_MONITOR_CB, CBN_SELCHANGE), 0);
+					PostMessageW (hwnd, WM_COMMAND, MAKEWPARAM (IDC_WINDOW_CB, CBN_SELCHANGE), 0);
+					PostMessageW (hwnd, WM_COMMAND, MAKEWPARAM (IDC_REGION_CB, CBN_SELCHANGE), 0);
 
 					break;
 				}
@@ -474,7 +469,7 @@ INT_PTR CALLBACK SettingsProc (
 
 					if (!_app_hotkeyinit (_r_app_gethwnd (), hwnd))
 					{
-						SetWindowLongPtr (hwnd, DWLP_MSGRESULT, -1);
+						SetWindowLongPtrW (hwnd, DWLP_MSGRESULT, -1);
 
 						return (INT_PTR)-1;
 					}
@@ -536,8 +531,23 @@ VOID _app_initdropdownmenu (
 
 	string = _r_config_getstring (L"FilenamePrefix", FILE_FORMAT_NAME_PREFIX);
 
-	_r_menu_setitemtextformat (hmenu, IDM_FILENAME_INDEX, FALSE, FILE_FORMAT_NAME_FORMAT L".%s", _r_obj_getstringordefault (string, FILE_FORMAT_NAME_PREFIX), START_IDX, format->ext);
-	_r_menu_setitemtextformat (hmenu, IDM_FILENAME_DATE, FALSE, L"%s" FILE_FORMAT_DATE_FORMAT_1 L"-" FILE_FORMAT_DATE_FORMAT_2 L".%s", _r_obj_getstringordefault (string, FILE_FORMAT_NAME_PREFIX), format->ext);
+	_r_menu_setitemtextformat (
+		hmenu,
+		IDM_FILENAME_INDEX,
+		FALSE,
+		FILE_FORMAT_NAME_FORMAT L".%s",
+		_r_obj_getstringordefault (string, FILE_FORMAT_NAME_PREFIX),
+		START_IDX, format->ext
+	);
+
+	_r_menu_setitemtextformat (
+		hmenu,
+		IDM_FILENAME_DATE,
+		FALSE,
+		L"%s" FILE_FORMAT_DATE_FORMAT_1 L"-" FILE_FORMAT_DATE_FORMAT_2 L".%s",
+		_r_obj_getstringordefault (string, FILE_FORMAT_NAME_PREFIX),
+		format->ext
+	);
 
 	if (string)
 		_r_obj_dereference (string);
@@ -646,9 +656,9 @@ VOID _app_initialize ()
 	wcex.lpszClassName = DUMMY_CLASS_DLG;
 	wcex.lpfnWndProc = &DummyProc;
 	wcex.hbrBackground = GetSysColorBrush (COLOR_WINDOW);
-	wcex.hCursor = LoadCursor (NULL, IDC_ARROW);
+	wcex.hCursor = LoadCursorW (NULL, IDC_ARROW);
 
-	RegisterClassEx (&wcex);
+	RegisterClassExW (&wcex);
 }
 
 INT_PTR CALLBACK DlgProc (
@@ -827,7 +837,7 @@ INT_PTR CALLBACK DlgProc (
 			SAFE_DELETE_HANDLE (config.hregion_mutex);
 			SAFE_DELETE_HANDLE (config.hshot_evt);
 
-			UnregisterClass (DUMMY_CLASS_DLG, _r_sys_getimagebase ());
+			UnregisterClassW (DUMMY_CLASS_DLG, _r_sys_getimagebase ());
 
 			_r_tray_destroy (hwnd, &GUID_TrayIcon);
 
@@ -861,7 +871,7 @@ INT_PTR CALLBACK DlgProc (
 				break;
 			}
 
-			PostMessage (hwnd, WM_COMMAND, MAKEWPARAM (command_id, 0), 0);
+			PostMessageW (hwnd, WM_COMMAND, MAKEWPARAM (command_id, 0), 0);
 
 			break;
 		}
@@ -880,13 +890,13 @@ INT_PTR CALLBACK DlgProc (
 
 				case WM_LBUTTONUP:
 				{
-					PostMessage (hwnd, WM_COMMAND, MAKEWPARAM (IDM_TRAY_SHOW, 0), 0);
+					PostMessageW (hwnd, WM_COMMAND, MAKEWPARAM (IDM_TRAY_SHOW, 0), 0);
 					break;
 				}
 
 				case WM_MBUTTONUP:
 				{
-					PostMessage (hwnd, WM_COMMAND, MAKEWPARAM (IDM_EXPLORE, 0), 0);
+					PostMessageW (hwnd, WM_COMMAND, MAKEWPARAM (IDM_EXPLORE, 0), 0);
 					break;
 				}
 
@@ -904,7 +914,7 @@ INT_PTR CALLBACK DlgProc (
 
 					SetForegroundWindow (hwnd); // don't touch
 
-					hmenu = LoadMenu (NULL, MAKEINTRESOURCE (IDM_TRAY));
+					hmenu = LoadMenuW (NULL, MAKEINTRESOURCE (IDM_TRAY));
 
 					if (hmenu)
 					{
@@ -957,7 +967,7 @@ INT_PTR CALLBACK DlgProc (
 							_r_menu_setitemtext (hsubmenu, IDM_TRAY_EXIT, FALSE, _r_locale_getstring (IDS_EXIT));
 
 							// initialize settings submenu
-							hmenu_settings = LoadMenu (NULL, MAKEINTRESOURCE (IDM_SETTINGS));
+							hmenu_settings = LoadMenuW (NULL, MAKEINTRESOURCE (IDM_SETTINGS));
 
 							if (hmenu_settings)
 							{
@@ -990,7 +1000,6 @@ INT_PTR CALLBACK DlgProc (
 		case WM_NOTIFY:
 		{
 			LPNMHDR nmlp;
-			LPNMBCDROPDOWN lpdropdown;
 
 			nmlp = (LPNMHDR)lparam;
 
@@ -998,14 +1007,17 @@ INT_PTR CALLBACK DlgProc (
 			{
 				case BCN_DROPDOWN:
 				{
+					LPNMBCDROPDOWN lpdropdown;
+
 					lpdropdown = (LPNMBCDROPDOWN)lparam;
 
 					if (lpdropdown->hdr.idFrom != IDC_SETTINGS)
 						break;
 
-					PostMessage (hwnd, WM_COMMAND, MAKEWPARAM (IDC_SETTINGS, 0), 0);
+					PostMessageW (hwnd, WM_COMMAND, MAKEWPARAM (IDC_SETTINGS, 0), 0);
 
-					SetWindowLongPtr (hwnd, DWLP_MSGRESULT, TRUE);
+					SetWindowLongPtrW (hwnd, DWLP_MSGRESULT, TRUE);
+
 					return TRUE;
 
 					break;
@@ -1036,8 +1048,7 @@ INT_PTR CALLBACK DlgProc (
 
 				return FALSE;
 			}
-			else if ((ctrl_id >= IDX_DELAY &&
-					 ctrl_id <= IDX_DELAY + RTL_NUMBER_OF (timer_array)))
+			else if ((ctrl_id >= IDX_DELAY && ctrl_id <= IDX_DELAY + RTL_NUMBER_OF (timer_array)))
 			{
 				LONG index;
 
@@ -1095,7 +1106,7 @@ INT_PTR CALLBACK DlgProc (
 					if (!GetWindowRect (hbutton, &rect))
 						break;
 
-					hmenu = LoadMenu (NULL, MAKEINTRESOURCE (IDM_SETTINGS));
+					hmenu = LoadMenuW (NULL, MAKEINTRESOURCE (IDM_SETTINGS));
 
 					if (!hmenu)
 						break;

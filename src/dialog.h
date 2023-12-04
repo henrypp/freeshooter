@@ -3,54 +3,6 @@
 
 #pragma once
 
-#define DUMMY_CLASS_DLG L"DummyDlg"
-
-typedef struct _MONITOR_CONTEXT
-{
-	HWND hwnd;
-	HCURSOR hcursor;
-	RECT rect;
-
-	union
-	{
-		struct
-		{
-			HDC hcapture;
-			HDC hcapture_mask;
-			HBITMAP hbitmap;
-			HBITMAP hbitmap_mask;
-			HPEN hpen;
-			HPEN hpen_draw;
-			HDC hdc;
-
-			POINT pt_start;
-			POINT pt_end;
-
-			BOOLEAN is_drawing;
-		} region;
-
-		struct
-		{
-			PSHOT_INFO shot_info;
-			HFONT hfont;
-			volatile LONG timer_value;
-		} timer;
-	};
-} MONITOR_CONTEXT, *PMONITOR_CONTEXT;
-
-typedef struct _TIMER_CONTEXT
-{
-	HWND hwnd;
-	LONG timer_value;
-	PSHOT_INFO shot_info;
-} TIMER_CONTEXT, *PTIMER_CONTEXT;
-
-typedef struct _DUMMY_CONTEXT
-{
-	HWND hwnd;
-	RECT rect;
-} DUMMY_CONTEXT, *PDUMMY_CONTEXT;
-
 BOOL CALLBACK enum_monitor_timer_callback (
 	_In_ HMONITOR hmonitor,
 	_In_ HDC hdc,
