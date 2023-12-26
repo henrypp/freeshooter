@@ -294,10 +294,10 @@ INT_PTR CALLBACK SettingsProc (
 
 					disabled_string = _r_locale_getstring (IDS_DISABLE);
 
-					_r_combobox_insertitem (hwnd, IDC_FULLSCREEN_CB, 0, disabled_string);
-					_r_combobox_insertitem (hwnd, IDC_MONITOR_CB, 0, disabled_string);
-					_r_combobox_insertitem (hwnd, IDC_WINDOW_CB, 0, disabled_string);
-					_r_combobox_insertitem (hwnd, IDC_REGION_CB, 0, disabled_string);
+					_r_combobox_insertitem (hwnd, IDC_FULLSCREEN_CB, 0, disabled_string, 0);
+					_r_combobox_insertitem (hwnd, IDC_MONITOR_CB, 0, disabled_string, 0);
+					_r_combobox_insertitem (hwnd, IDC_WINDOW_CB, 0, disabled_string, 0);
+					_r_combobox_insertitem (hwnd, IDC_REGION_CB, 0, disabled_string, 0);
 
 					generate_keys_array (keys, RTL_NUMBER_OF (keys));
 
@@ -312,15 +312,10 @@ INT_PTR CALLBACK SettingsProc (
 
 						_app_key2string (key_string, RTL_NUMBER_OF (key_string), MAKEWORD (key_code, 0));
 
-						_r_combobox_insertitem (hwnd, IDC_FULLSCREEN_CB, index, key_string);
-						_r_combobox_insertitem (hwnd, IDC_MONITOR_CB, index, key_string);
-						_r_combobox_insertitem (hwnd, IDC_WINDOW_CB, index, key_string);
-						_r_combobox_insertitem (hwnd, IDC_REGION_CB, index, key_string);
-
-						_r_combobox_setitemparam (hwnd, IDC_FULLSCREEN_CB, index, (LPARAM)key_code);
-						_r_combobox_setitemparam (hwnd, IDC_MONITOR_CB, index, (LPARAM)key_code);
-						_r_combobox_setitemparam (hwnd, IDC_WINDOW_CB, index, (LPARAM)key_code);
-						_r_combobox_setitemparam (hwnd, IDC_REGION_CB, index, (LPARAM)key_code);
+						_r_combobox_insertitem (hwnd, IDC_FULLSCREEN_CB, index, key_string, (LPARAM)key_code);
+						_r_combobox_insertitem (hwnd, IDC_MONITOR_CB, index, key_string, (LPARAM)key_code);
+						_r_combobox_insertitem (hwnd, IDC_WINDOW_CB, index, key_string, (LPARAM)key_code);
+						_r_combobox_insertitem (hwnd, IDC_REGION_CB, index, key_string, (LPARAM)key_code);
 
 						if (fullscreen_allowed && LOBYTE (fullscreen_code) == key_code)
 							_r_combobox_setcurrentitem (hwnd, IDC_FULLSCREEN_CB, index);
@@ -407,7 +402,7 @@ INT_PTR CALLBACK SettingsProc (
 						if (_r_ctrl_isbuttonchecked (hwnd, IDC_FULLSCREEN_ALT))
 							modifiers |= HOTKEYF_ALT;
 
-						_r_config_setulong (L"HotkeyFullscreen2", (ULONG)MAKEWORD (_r_combobox_getitemparam (hwnd, IDC_FULLSCREEN_CB, fullscreen_idx), modifiers));
+						_r_config_setulong (L"HotkeyFullscreen2", (ULONG)MAKEWORD (_r_combobox_getitemlparam (hwnd, IDC_FULLSCREEN_CB, fullscreen_idx), modifiers));
 					}
 
 					// save monitor hotkey
@@ -424,7 +419,7 @@ INT_PTR CALLBACK SettingsProc (
 						if (_r_ctrl_isbuttonchecked (hwnd, IDC_MONITOR_ALT))
 							modifiers |= HOTKEYF_ALT;
 
-						_r_config_setulong (L"HotkeyMonitor", (ULONG)MAKEWORD (_r_combobox_getitemparam (hwnd, IDC_MONITOR_CB, monitor_idx), modifiers));
+						_r_config_setulong (L"HotkeyMonitor", (ULONG)MAKEWORD (_r_combobox_getitemlparam (hwnd, IDC_MONITOR_CB, monitor_idx), modifiers));
 					}
 
 					// save window hotkey
@@ -441,7 +436,7 @@ INT_PTR CALLBACK SettingsProc (
 						if (_r_ctrl_isbuttonchecked (hwnd, IDC_WINDOW_ALT))
 							modifiers |= HOTKEYF_ALT;
 
-						_r_config_setulong (L"HotkeyWindow", (ULONG)MAKEWORD (_r_combobox_getitemparam (hwnd, IDC_WINDOW_CB, window_idx), modifiers));
+						_r_config_setulong (L"HotkeyWindow", (ULONG)MAKEWORD (_r_combobox_getitemlparam (hwnd, IDC_WINDOW_CB, window_idx), modifiers));
 					}
 
 					// save region hotkey
@@ -458,7 +453,7 @@ INT_PTR CALLBACK SettingsProc (
 						if (_r_ctrl_isbuttonchecked (hwnd, IDC_REGION_ALT))
 							modifiers |= HOTKEYF_ALT;
 
-						_r_config_setulong (L"HotkeyRegion", (ULONG)MAKEWORD (_r_combobox_getitemparam (hwnd, IDC_REGION_CB, region_idx), modifiers));
+						_r_config_setulong (L"HotkeyRegion", (ULONG)MAKEWORD (_r_combobox_getitemlparam (hwnd, IDC_REGION_CB, region_idx), modifiers));
 					}
 
 					if (!_app_hotkeyinit (_r_app_gethwnd (), hwnd))

@@ -201,7 +201,7 @@ CleanupExit:
 	{
 		_r_log (LOG_LEVEL_ERROR, 0, TEXT (__FUNCTION__), status, NULL);
 
-		_r_show_errormessage (hwnd, NULL, status, NULL, NULL, NULL);
+		_r_show_errormessage (hwnd, NULL, status, NULL, FALSE);
 	}
 
 	if (property_bag)
