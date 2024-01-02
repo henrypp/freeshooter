@@ -11,14 +11,14 @@
 -------
 
 <p align="center">
-	<img src="https://www.henrypp.org/images/freeshooter.png" />
+	<img src="/images/freeshooter.png?cachefix" />
 </p>
 
 ### Description:
 This is old-school tool for taking screenshots without bloatware features, simple as life, light as air.<br />
 It is my first application, written in AutoIt3 and now rewritten on C. I love this tool, and i hope you are take to love it too.
 
-![Overlapped windows](https://www.henrypp.org/images/freeshooter_feature.png?cachefix)
+![Overlapped windows](/images/freeshooter_feature.png?cachefix)
 
 ### Features:
 - Simple interface without useless features
@@ -50,7 +50,7 @@ Binaries have GPG signature `freeshooter.exe.sig` in application folder.
 - Key ID: 0x5635B5FD
 - Fingerprint: D985 2361 1524 AB29 BE73 30AC 2881 20A7 5635 B5FD
 
-Website: [www.henrypp.org](https://www.henrypp.org)<br />
+- Website: [github.com/henrypp](https://github.com/henrypp)
 Support: support@henrypp.org<br />
 <br />
 (c) 2009-2023 Henry++
