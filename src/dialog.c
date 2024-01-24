@@ -386,13 +386,13 @@ INT_PTR CALLBACK RegionProc (
 
 		case WM_LBUTTONDOWN:
 		{
-			PostMessageW (hwnd, WM_COMMAND, MAKEWPARAM (IDM_REGION_START, 0), lparam);
+			_r_wnd_sendmessage (hwnd, 0, WM_COMMAND, MAKEWPARAM (IDM_REGION_START, 0), lparam);
 			break;
 		}
 
 		case WM_MBUTTONDOWN:
 		{
-			PostMessageW (hwnd, WM_COMMAND, MAKEWPARAM (IDM_REGION_CANCEL, 0), 0);
+			_r_wnd_sendmessage (hwnd, 0, WM_COMMAND, MAKEWPARAM (IDM_REGION_CANCEL, 0), 0);
 			break;
 		}
 
@@ -423,7 +423,7 @@ INT_PTR CALLBACK RegionProc (
 				command_id = _r_menu_popup (hsubmenu, hwnd, &pt, FALSE);
 
 				if (command_id)
-					PostMessageW (hwnd, WM_COMMAND, MAKEWPARAM (command_id, 0), MAKELPARAM (pt.x, pt.y));
+					_r_wnd_sendmessage (hwnd, 0, WM_COMMAND, MAKEWPARAM (command_id, 0), MAKELPARAM (pt.x, pt.y));
 			}
 
 			DestroyMenu (hmenu);
@@ -536,7 +536,7 @@ INT_PTR CALLBACK RegionProc (
 		case WM_KEYDOWN:
 		{
 			if (wparam == VK_ESCAPE)
-				PostMessageW (hwnd, WM_COMMAND, MAKEWPARAM (IDM_REGION_CANCEL, 0), 0);
+				_r_wnd_sendmessage (hwnd, 0, WM_COMMAND, MAKEWPARAM (IDM_REGION_CANCEL, 0), 0);
 
 			break;
 		}

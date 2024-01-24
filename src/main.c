@@ -342,10 +342,10 @@ INT_PTR CALLBACK SettingsProc (
 					if (_r_combobox_getcurrentitem (hwnd, IDC_REGION_CB) == CB_ERR)
 						_r_combobox_setcurrentitem (hwnd, IDC_REGION_CB, 0);
 
-					PostMessageW (hwnd, WM_COMMAND, MAKEWPARAM (IDC_FULLSCREEN_CB, CBN_SELCHANGE), 0);
-					PostMessageW (hwnd, WM_COMMAND, MAKEWPARAM (IDC_MONITOR_CB, CBN_SELCHANGE), 0);
-					PostMessageW (hwnd, WM_COMMAND, MAKEWPARAM (IDC_WINDOW_CB, CBN_SELCHANGE), 0);
-					PostMessageW (hwnd, WM_COMMAND, MAKEWPARAM (IDC_REGION_CB, CBN_SELCHANGE), 0);
+					_r_wnd_sendmessage (hwnd, 0, WM_COMMAND, MAKEWPARAM (IDC_FULLSCREEN_CB, CBN_SELCHANGE), 0);
+					_r_wnd_sendmessage (hwnd, 0, WM_COMMAND, MAKEWPARAM (IDC_MONITOR_CB, CBN_SELCHANGE), 0);
+					_r_wnd_sendmessage (hwnd, 0, WM_COMMAND, MAKEWPARAM (IDC_WINDOW_CB, CBN_SELCHANGE), 0);
+					_r_wnd_sendmessage (hwnd, 0, WM_COMMAND, MAKEWPARAM (IDC_REGION_CB, CBN_SELCHANGE), 0);
 
 					break;
 				}
@@ -858,7 +858,7 @@ INT_PTR CALLBACK DlgProc (
 				break;
 			}
 
-			PostMessageW (hwnd, WM_COMMAND, MAKEWPARAM (command_id, 0), 0);
+			_r_wnd_sendmessage (hwnd, 0, WM_COMMAND, MAKEWPARAM (command_id, 0), 0);
 
 			break;
 		}
@@ -877,13 +877,13 @@ INT_PTR CALLBACK DlgProc (
 
 				case WM_LBUTTONUP:
 				{
-					PostMessageW (hwnd, WM_COMMAND, MAKEWPARAM (IDM_TRAY_SHOW, 0), 0);
+					_r_wnd_sendmessage (hwnd, 0, WM_COMMAND, MAKEWPARAM (IDM_TRAY_SHOW, 0), 0);
 					break;
 				}
 
 				case WM_MBUTTONUP:
 				{
-					PostMessageW (hwnd, WM_COMMAND, MAKEWPARAM (IDM_EXPLORE, 0), 0);
+					_r_wnd_sendmessage (hwnd, 0, WM_COMMAND, MAKEWPARAM (IDM_EXPLORE, 0), 0);
 					break;
 				}
 
@@ -1001,7 +1001,7 @@ INT_PTR CALLBACK DlgProc (
 					if (lpdropdown->hdr.idFrom != IDC_SETTINGS)
 						break;
 
-					PostMessageW (hwnd, WM_COMMAND, MAKEWPARAM (IDC_SETTINGS, 0), 0);
+					_r_wnd_sendmessage (hwnd, 0, WM_COMMAND, MAKEWPARAM (IDC_SETTINGS, 0), 0);
 
 					SetWindowLongPtrW (hwnd, DWLP_MSGRESULT, TRUE);
 
