@@ -36,7 +36,7 @@ BOOL CALLBACK enum_monitor_timer_callback (
 VOID _app_createregion ()
 {
 	PMONITOR_CONTEXT monitor_context;
-	NTSTATUS status;
+	ULONG status;
 
 	status = _r_sys_waitforsingleobject (config.hregion_mutex, 0);
 
