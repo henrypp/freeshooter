@@ -28,7 +28,7 @@ BOOL CALLBACK enum_monitor_timer_callback (
 		timer_context->shot_info = NULL;
 	}
 
-	_r_wnd_createwindow (_r_sys_getimagebase (), MAKEINTRESOURCE (IDD_DUMMY), _r_app_gethwnd (), &TimerProc, monitor_context);
+	_r_wnd_createwindow (_r_sys_getimagebase (), MAKEINTRESOURCEW (IDD_DUMMY), _r_app_gethwnd (), &TimerProc, monitor_context);
 
 	return TRUE;
 }
@@ -38,7 +38,7 @@ VOID _app_createregion ()
 	PMONITOR_CONTEXT monitor_context;
 	NTSTATUS status;
 
-	status = NtWaitForSingleObject (config.hregion_mutex, FALSE, NULL);
+	status = _r_sys_waitforsingleobject (config.hregion_mutex, 0);
 
 	if (status != WAIT_OBJECT_0)
 		return;
@@ -47,7 +47,7 @@ VOID _app_createregion ()
 
 	monitor_context = _r_freelist_allocateitem (&context_list);
 
-	_r_wnd_createwindow (_r_sys_getimagebase (), MAKEINTRESOURCE (IDD_DUMMY), _r_app_gethwnd (), &RegionProc, monitor_context);
+	_r_wnd_createwindow (_r_sys_getimagebase (), MAKEINTRESOURCEW (IDD_DUMMY), _r_app_gethwnd (), &RegionProc, monitor_context);
 }
 
 VOID _app_createtimer (
@@ -67,15 +67,15 @@ VOID _app_initializeregion (
 	_Inout_ PMONITOR_CONTEXT monitor_context
 )
 {
+	R_BYTEREF bmp_bytes;
 	HDC hdc;
-	LONG dpi_value;
-	COLORREF pen_clr;
 	COLORREF pen_draw_clr;
+	COLORREF pen_clr;
+	COLORREF clr;
+	LONG dpi_value;
 	LONG pen_size;
 	LONG width;
 	LONG height;
-	COLORREF clr;
-	R_BYTEREF bmp_bytes;
 	PULONG bmp_buffer;
 
 	// cleanup resources
@@ -87,7 +87,7 @@ VOID _app_initializeregion (
 	height = _r_calc_rectheight (&monitor_context->rect);
 
 	// load cursor
-	monitor_context->hcursor = LoadCursorW (_r_sys_getimagebase (), MAKEINTRESOURCE (IDI_MAIN));
+	monitor_context->hcursor = LoadCursorW (_r_sys_getimagebase (), MAKEINTRESOURCEW (IDI_MAIN));
 
 	// create pen
 	pen_size = _r_dc_getsystemmetrics (SM_CXBORDER, dpi_value) * 4;
@@ -179,7 +179,7 @@ VOID _app_initializetimer (
 	logfont.lfWeight = FW_BOLD;
 	logfont.lfHeight = _r_dc_fontsizetoheight (90, dpi_value); // size
 
-	monitor_context->timer.hfont = CreateFontIndirect (&logfont);
+	monitor_context->timer.hfont = CreateFontIndirectW (&logfont);
 
 	width = _r_calc_percentval (18, _r_calc_rectwidth (&monitor_context->rect));
 	height = _r_calc_percentval (24, _r_calc_rectheight (&monitor_context->rect));
@@ -406,7 +406,7 @@ INT_PTR CALLBACK RegionProc (
 			if (!GetCursorPos (&pt))
 				break;
 
-			hmenu = LoadMenuW (NULL, MAKEINTRESOURCE (IDM_REGION));
+			hmenu = LoadMenuW (NULL, MAKEINTRESOURCEW (IDM_REGION));
 
 			if (!hmenu)
 				break;

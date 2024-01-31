@@ -526,7 +526,8 @@ VOID _app_initdropdownmenu (
 		FALSE,
 		FILE_FORMAT_NAME_FORMAT L".%s",
 		_r_obj_getstringordefault (string, FILE_FORMAT_NAME_PREFIX),
-		START_IDX, format->ext
+		START_IDX,
+		format->ext
 	);
 
 	_r_menu_setitemtextformat (
@@ -1006,8 +1007,6 @@ INT_PTR CALLBACK DlgProc (
 					SetWindowLongPtrW (hwnd, DWLP_MSGRESULT, TRUE);
 
 					return TRUE;
-
-					break;
 				}
 			}
 

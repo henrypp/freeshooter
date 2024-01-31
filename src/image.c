@@ -107,12 +107,12 @@ BOOLEAN _app_image_wicsavehbitmap (
 	_In_ LPCWSTR filepath
 )
 {
+	IWICImagingFactory2 *wic_factory = NULL;
+	IWICBitmapFrameEncode *wic_frame = NULL;
+	IWICBitmapEncoder *wic_encoder = NULL;
+	IPropertyBag2 *property_bag = NULL;
 	IWICStream *wic_stream = NULL;
 	IWICBitmap *wic_bitmap = NULL;
-	IWICBitmapEncoder *wic_encoder = NULL;
-	IWICBitmapFrameEncode *wic_frame = NULL;
-	IWICImagingFactory2 *wic_factory = NULL;
-	IPropertyBag2 *property_bag = NULL;
 	PIMAGE_FORMAT format;
 	BITMAP bitmap = {0};
 	GUID pixel_format;
