@@ -1,3 +1,7 @@
+v2.1.1 (12 February 2024)
+- fixed pressing print screen key (or configured hotkey) freezes app (issue #43)
+- fixed update installation (issue #42)
+
 v2.1 (4 December 2023)
 - dropped windows 7 and windows 8 support
 - use windows image coding (wic) library
