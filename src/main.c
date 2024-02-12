@@ -691,7 +691,7 @@ INT_PTR CALLBACK DlgProc (
 
 			icon_small = _r_dc_getsystemmetrics (SM_CXSMICON, dpi_value);
 
-			hicon = _r_sys_loadsharedicon (_r_sys_getimagebase (), MAKEINTRESOURCE (IDI_MAIN), icon_small);
+			hicon = _r_sys_loadsharedicon (_r_sys_getimagebase (), MAKEINTRESOURCEW (IDI_MAIN), icon_small);
 
 			// initialize tray icon
 			_r_tray_create (hwnd, &GUID_TrayIcon, RM_TRAYICON, hicon, _r_app_getname (), FALSE);
@@ -734,7 +734,7 @@ INT_PTR CALLBACK DlgProc (
 
 			icon_small = _r_dc_getsystemmetrics (SM_CXSMICON, dpi_value);
 
-			hicon = _r_sys_loadsharedicon (_r_sys_getimagebase (), MAKEINTRESOURCE (IDI_MAIN), icon_small);
+			hicon = _r_sys_loadsharedicon (_r_sys_getimagebase (), MAKEINTRESOURCEW (IDI_MAIN), icon_small);
 
 			_r_tray_create (hwnd, &GUID_TrayIcon, RM_TRAYICON, hicon, _r_app_getname (), FALSE);
 
@@ -807,7 +807,7 @@ INT_PTR CALLBACK DlgProc (
 
 			icon_small = _r_dc_getsystemmetrics (SM_CXSMICON, dpi_value);
 
-			hicon = _r_sys_loadsharedicon (_r_sys_getimagebase (), MAKEINTRESOURCE (IDI_MAIN), icon_small);
+			hicon = _r_sys_loadsharedicon (_r_sys_getimagebase (), MAKEINTRESOURCEW (IDI_MAIN), icon_small);
 
 			_r_tray_setinfo (hwnd, &GUID_TrayIcon, hicon, NULL);
 
@@ -890,19 +890,19 @@ INT_PTR CALLBACK DlgProc (
 
 				case WM_CONTEXTMENU:
 				{
-					HMENU hmenu;
-					HMENU hsubmenu;
-					HMENU hmenu_settings;
-					HMENU hsubmenu_settings;
 					WCHAR mode_fullscreen[128];
 					WCHAR mode_monitor[128];
 					WCHAR mode_window[128];
 					WCHAR mode_region[128];
 					WCHAR key_string[128];
+					HMENU hsubmenu_settings;
+					HMENU hmenu_settings;
+					HMENU hsubmenu;
+					HMENU hmenu;
 
 					SetForegroundWindow (hwnd); // don't touch
 
-					hmenu = LoadMenuW (NULL, MAKEINTRESOURCE (IDM_TRAY));
+					hmenu = LoadMenuW (NULL, MAKEINTRESOURCEW (IDM_TRAY));
 
 					if (hmenu)
 					{
@@ -955,7 +955,7 @@ INT_PTR CALLBACK DlgProc (
 							_r_menu_setitemtext (hsubmenu, IDM_TRAY_EXIT, FALSE, _r_locale_getstring (IDS_EXIT));
 
 							// initialize settings submenu
-							hmenu_settings = LoadMenuW (NULL, MAKEINTRESOURCE (IDM_SETTINGS));
+							hmenu_settings = LoadMenuW (NULL, MAKEINTRESOURCEW (IDM_SETTINGS));
 
 							if (hmenu_settings)
 							{
@@ -1092,7 +1092,7 @@ INT_PTR CALLBACK DlgProc (
 					if (!GetWindowRect (hbutton, &rect))
 						break;
 
-					hmenu = LoadMenuW (NULL, MAKEINTRESOURCE (IDM_SETTINGS));
+					hmenu = LoadMenuW (NULL, MAKEINTRESOURCEW (IDM_SETTINGS));
 
 					if (!hmenu)
 						break;
@@ -1443,10 +1443,10 @@ INT APIENTRY wWinMain (
 	if (!_r_app_initialize (NULL))
 		return ERROR_APP_INIT_FAILURE;
 
-	hwnd = _r_app_createwindow (hinst, MAKEINTRESOURCE (IDD_MAIN), MAKEINTRESOURCE (IDI_MAIN), &DlgProc);
+	hwnd = _r_app_createwindow (hinst, MAKEINTRESOURCEW (IDD_MAIN), MAKEINTRESOURCEW (IDI_MAIN), &DlgProc);
 
 	if (!hwnd)
 		return ERROR_APP_INIT_FAILURE;
 
-	return _r_wnd_message_callback (hwnd, MAKEINTRESOURCE (IDA_MAIN));
+	return _r_wnd_message_callback (hwnd, MAKEINTRESOURCEW (IDA_MAIN));
 }
