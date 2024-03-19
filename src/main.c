@@ -713,6 +713,7 @@ INT_PTR CALLBACK DlgProc (
 			if (hmenu)
 			{
 				_r_menu_checkitem (hmenu, IDM_ALWAYSONTOP_CHK, 0, MF_BYCOMMAND, _r_config_getboolean (L"AlwaysOnTop", FALSE));
+				_r_menu_checkitem (hmenu, IDM_DARKMODE_CHK, 0, MF_BYCOMMAND, _r_theme_isenabled ());
 				_r_menu_checkitem (hmenu, IDM_LOADONSTARTUP_CHK, 0, MF_BYCOMMAND, _r_autorun_isenabled ());
 				_r_menu_checkitem (hmenu, IDM_STARTMINIMIZED_CHK, 0, MF_BYCOMMAND, _r_config_getboolean (L"IsStartMinimized", FALSE));
 				_r_menu_checkitem (hmenu, IDM_HIDEME_CHK, 0, MF_BYCOMMAND, _r_config_getboolean (L"IsHideMe", TRUE));
@@ -773,6 +774,7 @@ INT_PTR CALLBACK DlgProc (
 			_r_menu_setitemtextformat (hmenu, IDM_EXPLORE, FALSE, L"%s...\tCtrl+E", _r_locale_getstring (IDS_EXPLORE));
 			_r_menu_setitemtext (hmenu, IDM_EXIT, FALSE, _r_locale_getstring (IDS_EXIT));
 			_r_menu_setitemtext (hmenu, IDM_ALWAYSONTOP_CHK, FALSE, _r_locale_getstring (IDS_ALWAYSONTOP_CHK));
+			_r_menu_setitemtext (hmenu, IDM_DARKMODE_CHK, FALSE, _r_locale_getstring (IDS_DARKMODE_CHK));
 			_r_menu_setitemtext (hmenu, IDM_LOADONSTARTUP_CHK, FALSE, _r_locale_getstring (IDS_LOADONSTARTUP_CHK));
 			_r_menu_setitemtext (hmenu, IDM_STARTMINIMIZED_CHK, FALSE, _r_locale_getstring (IDS_STARTMINIMIZED_CHK));
 			_r_menu_setitemtext (hmenu, IDM_HIDEME_CHK, FALSE, _r_locale_getstring (IDS_HIDEME_CHK));
@@ -1153,6 +1155,19 @@ INT_PTR CALLBACK DlgProc (
 					_r_config_setboolean (L"AlwaysOnTop", new_val);
 
 					_r_wnd_top (hwnd, new_val);
+
+					break;
+				}
+
+				case IDM_DARKMODE_CHK:
+				{
+					BOOLEAN new_val;
+
+					new_val = !_r_theme_isenabled ();
+
+					_r_menu_checkitem (GetMenu (hwnd), ctrl_id, 0, MF_BYCOMMAND, new_val);
+
+					_r_theme_enable (hwnd, new_val);
 
 					break;
 				}

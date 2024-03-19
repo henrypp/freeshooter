@@ -13,7 +13,8 @@
 #pragma comment(lib, "windowscodecs.lib")
 #pragma comment(lib, "winmm.lib")
 
-#define LANG_MENU 6
+#define LANG_MENU 7
+
 #define SETTINGS_MENU 7
 #define FORMAT_MENU 0
 #define FILENAME_MENU 1
