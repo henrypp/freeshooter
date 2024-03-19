@@ -167,7 +167,7 @@ VOID _app_initializetimer (
 	_app_destroytimer (monitor_context);
 
 	// set window configuration
-	_r_wnd_setstyle_ex (monitor_context->hwnd, _r_wnd_getstyle_ex (monitor_context->hwnd) | WS_EX_LAYERED);
+	_r_wnd_setstyle_ex (monitor_context->hwnd, WS_EX_LAYERED, WS_EX_LAYERED);
 
 	SetLayeredWindowAttributes (monitor_context->hwnd, 0, 0, LWA_COLORKEY);
 

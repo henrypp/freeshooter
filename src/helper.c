@@ -337,7 +337,7 @@ VOID _app_proceedscreenshot (
 
 		if (!hdc)
 		{
-			_r_log (LOG_LEVEL_WARNING, 0, L"GetDC", PebLastError (), NULL);
+			_r_log (LOG_LEVEL_WARNING, 0, L"GetDC", NtLastError (), NULL);
 
 			goto CleanupExit;
 		}
@@ -347,7 +347,7 @@ VOID _app_proceedscreenshot (
 
 	if (!hcapture)
 	{
-		_r_log (LOG_LEVEL_WARNING, 0, L"CreateCompatibleDC", PebLastError (), NULL);
+		_r_log (LOG_LEVEL_WARNING, 0, L"CreateCompatibleDC", NtLastError (), NULL);
 
 		goto CleanupExit;
 	}
