@@ -183,7 +183,7 @@ BOOLEAN _app_isnormalwindow (
 	_In_ HWND hwnd
 )
 {
-	if (!_r_wnd_isvisible (hwnd))
+	if (!_r_wnd_isvisible (hwnd, FALSE))
 		return FALSE;
 
 	return !_r_wnd_ismenu (hwnd) && !_r_wnd_isdesktop (hwnd) && (hwnd != GetShellWindow ());
@@ -303,7 +303,7 @@ VOID _app_proceedscreenshot (
 	my_hwnd = _r_app_gethwnd ();
 
 	is_hideme = _r_config_getboolean (L"IsHideMe", TRUE);
-	is_windowdisplayed = _r_wnd_isvisible (my_hwnd);
+	is_windowdisplayed = _r_wnd_isvisible (my_hwnd, TRUE);
 
 	if (is_hideme)
 	{
