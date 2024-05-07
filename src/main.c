@@ -168,7 +168,7 @@ BOOLEAN _app_hotkeyinit (
 			);
 		}
 
-		_r_str_trim (buffer, L"\r\n");
+		StrTrimW (buffer, L"\r\n");
 
 		if (_r_show_message (hwnd_hotkey ? hwnd_hotkey : hwnd, MB_YESNO | MB_ICONWARNING, _r_locale_getstring (IDS_WARNING_HOTKEYS), buffer) == IDYES)
 		{
@@ -566,7 +566,7 @@ VOID _app_initdropdownmenu (
 	{
 		for (UINT i = 0; i < RTL_NUMBER_OF (timer_array); i++)
 		{
-			string = _r_format_interval (timer_array[i], 1);
+			string = _r_format_interval (timer_array[i]);
 
 			if (string)
 			{
