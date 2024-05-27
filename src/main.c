@@ -566,7 +566,7 @@ VOID _app_initdropdownmenu (
 	{
 		for (UINT i = 0; i < RTL_NUMBER_OF (timer_array); i++)
 		{
-			string = _r_format_interval (timer_array[i]);
+			string = _r_format_interval (timer_array[i], FALSE);
 
 			if (string)
 			{
