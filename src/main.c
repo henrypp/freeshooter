@@ -1094,7 +1094,7 @@ INT_PTR CALLBACK DlgProc (
 					if (!GetWindowRect (hbutton, &rect))
 						break;
 
-					hmenu = LoadMenuW (NULL, MAKEINTRESOURCEW (IDM_SETTINGS));
+					hmenu = LoadMenuW (_r_sys_getimagebase (), MAKEINTRESOURCEW (IDM_SETTINGS));
 
 					if (!hmenu)
 						break;
