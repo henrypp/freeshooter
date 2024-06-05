@@ -34,7 +34,7 @@ To activate portable mode, create "freeshooter.ini" in application folder, or mo
 ```
 
 ### System requirements:
-- Windows 8.1 and above operating system.
+- Windows 7SP1 and above operating system.
 - [Visual C++ 2022 Redistributable package](https://learn.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist?view=msvc-170)
 
 ### Donate:
@@ -51,6 +51,6 @@ Binaries have GPG signature `freeshooter.exe.sig` in application folder.
 - Fingerprint: D985 2361 1524 AB29 BE73 30AC 2881 20A7 5635 B5FD
 ---
 - Website: [github.com/henrypp](https://github.com/henrypp)
-- Support: support@henrypp.org<br />
+- Support: sforce5@mail.ru<br />
 <br />
 (c) 2009-2024 Henry++
