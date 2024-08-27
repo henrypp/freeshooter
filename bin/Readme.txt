@@ -4,6 +4,10 @@ Description:
 This is old-school tool for taking screenshots without bloatware features, simple as life, light as air.
 It is my first application, written in AutoIt3 and now rewritten on C. I love this tool, and i hope you are take to love it too.
 
+System requirements:
+- Windows 7, 8, 8.1, 10, 11 32-bit/64-bit/ARM64
+- An SSE2-capable CPU
+
 Features:
 - Simple interface without useless features
 - Take screenshots including all overlapped windows
