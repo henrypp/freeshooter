@@ -112,10 +112,10 @@ PR_STRING _app_getdirectory ()
 
 	if (_r_initonce_begin (&init_once))
 	{
-		status = _r_path_getknownfolder (&FOLDERID_Desktop, NULL, &string);
+		status = _r_path_getknownfolder (&FOLDERID_Desktop, 0, NULL, &string);
 
 		if (FAILED (status))
-			status = _r_path_getknownfolder (&FOLDERID_Pictures, NULL, &string);
+			status = _r_path_getknownfolder (&FOLDERID_Pictures, 0, NULL, &string);
 
 		if (FAILED (status))
 			string = _r_obj_createstring (DEFAULT_DIRECTORY);
