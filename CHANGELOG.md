@@ -1,3 +1,9 @@
+v2.2 (17 October 2024)
+- revert back windows 7 and windows 8 support
+- added mitigations (win10+)
+- added dark theme support
+- updated project sdk
+
 v2.1.1 (12 February 2024)
 - fixed pressing print screen key (or configured hotkey) freezes app (issue #43)
 - fixed update installation (issue #42)
