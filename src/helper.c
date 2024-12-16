@@ -247,7 +247,7 @@ PR_STRING _app_uniquefilename (
 				format->ext)
 			);
 
-			if (_r_fs_exists (string->buffer))
+			if (_r_fs_exists (&string->sr))
 				_r_obj_clearreference (&string);
 		}
 
@@ -267,7 +267,7 @@ PR_STRING _app_uniquefilename (
 				format->ext)
 			);
 
-			if (!_r_fs_exists (string->buffer))
+			if (!_r_fs_exists (&string->sr))
 				break;
 		}
 

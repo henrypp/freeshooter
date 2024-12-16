@@ -600,20 +600,20 @@ VOID _app_initdropdownmenu (
 
 VOID _app_initialize ()
 {
-	static LPCWSTR szext[] = {
-		L"bmp",
-		L"jpeg",
-		L"png",
-		L"jxr",
-		L"tiff",
+	LPCWSTR szext[] = {
+	   L"bmp",
+	   L"jpeg",
+	   L"png",
+	   L"jxr",
+	   L"tiff",
 	};
 
-	static LPCGUID guids[] = {
-		&GUID_ContainerFormatBmp,
-		&GUID_ContainerFormatJpeg,
-		&GUID_ContainerFormatPng,
-		&GUID_ContainerFormatTiff,
-		&GUID_ContainerFormatWmp,
+	LPCGUID guids[] = {
+	   &GUID_ContainerFormatBmp,
+	   &GUID_ContainerFormatJpeg,
+	   &GUID_ContainerFormatPng,
+	   &GUID_ContainerFormatTiff,
+	   &GUID_ContainerFormatWmp,
 	};
 
 	C_ASSERT (RTL_NUMBER_OF (szext) == RTL_NUMBER_OF (guids));
@@ -621,7 +621,7 @@ VOID _app_initialize ()
 	WNDCLASSEX wcex = {0};
 	IMAGE_FORMAT image_format;
 
-	config.formats = _r_obj_createarray_ex (sizeof (IMAGE_FORMAT), RTL_NUMBER_OF (szext), NULL);
+	config.formats = _r_obj_createarray (sizeof (IMAGE_FORMAT), RTL_NUMBER_OF (szext), NULL);
 
 	for (ULONG_PTR i = 0; i < RTL_NUMBER_OF (szext); i++)
 	{
@@ -631,7 +631,7 @@ VOID _app_initialize ()
 
 		RtlCopyMemory (&image_format.guid, guids[i], sizeof (image_format.guid));
 
-		_r_obj_addarrayitem (config.formats, &image_format);
+		_r_obj_addarrayitem (config.formats, &image_format, NULL);
 	}
 
 	_r_freelist_initialize (&context_list, sizeof (MONITOR_CONTEXT), 8);
