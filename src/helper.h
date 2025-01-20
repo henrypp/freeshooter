@@ -22,7 +22,7 @@ ENUM_IMAGE_NAME _app_getimagename_id ();
 
 ENUM_TYPE_SCREENSHOT _app_getmode_id ();
 
-_Success_ (return != -1)
+_Success_ (return != INT_ERROR)
 LONG _app_getdelay_id ();
 
 PR_STRING _app_getdirectory ();

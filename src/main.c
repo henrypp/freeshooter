@@ -458,9 +458,9 @@ INT_PTR CALLBACK SettingsProc (
 
 					if (!_app_hotkeyinit (_r_app_gethwnd (), hwnd))
 					{
-						SetWindowLongPtrW (hwnd, DWLP_MSGRESULT, -1);
+						SetWindowLongPtrW (hwnd, DWLP_MSGRESULT, INT_ERROR);
 
-						return (INT_PTR)-1;
+						return (INT_PTR)INT_ERROR;
 					}
 
 					break;
@@ -579,7 +579,7 @@ VOID _app_initdropdownmenu (
 
 	delay_idx = _app_getdelay_id ();
 
-	if (delay_idx == -1)
+	if (delay_idx == INT_ERROR)
 	{
 		_r_menu_checkitem (hmenu, IDM_DELAY_DISABLE, IDM_DELAY_DISABLE, MF_BYCOMMAND, IDM_DELAY_DISABLE);
 	}
@@ -625,11 +625,11 @@ VOID _app_initialize ()
 
 	for (ULONG_PTR i = 0; i < RTL_NUMBER_OF (szext); i++)
 	{
-		RtlZeroMemory (&image_format, sizeof (image_format));
+		RtlZeroMemory (&image_format, sizeof (IMAGE_FORMAT));
 
 		_r_str_copy (image_format.ext, RTL_NUMBER_OF (image_format.ext), szext[i]);
 
-		RtlCopyMemory (&image_format.guid, guids[i], sizeof (image_format.guid));
+		RtlCopyMemory (&image_format.guid, guids[i], sizeof (GUID));
 
 		_r_obj_addarrayitem (config.formats, &image_format, NULL);
 	}
@@ -642,7 +642,6 @@ VOID _app_initialize ()
 	wcex.cbSize = sizeof (wcex);
 	wcex.style = CS_VREDRAW | CS_HREDRAW;
 	wcex.hInstance = _r_sys_getimagebase ();
-
 	wcex.lpszClassName = DUMMY_CLASS_DLG;
 	wcex.lpfnWndProc = &DummyProc;
 	wcex.hbrBackground = GetSysColorBrush (COLOR_WINDOW);

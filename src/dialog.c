@@ -181,8 +181,8 @@ VOID _app_initializetimer (
 
 	monitor_context->timer.hfont = CreateFontIndirectW (&logfont);
 
-	width = _r_calc_percentval (18, _r_calc_rectwidth (&monitor_context->rect));
-	height = _r_calc_percentval (24, _r_calc_rectheight (&monitor_context->rect));
+	width = PR_CALC_PERCENTVAL (18, _r_calc_rectwidth (&monitor_context->rect));
+	height = PR_CALC_PERCENTVAL (24, _r_calc_rectheight (&monitor_context->rect));
 
 	SetTimer (monitor_context->hwnd, 5431, 1000, NULL);
 

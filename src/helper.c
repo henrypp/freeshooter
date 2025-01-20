@@ -89,7 +89,7 @@ ENUM_TYPE_SCREENSHOT _app_getmode_id ()
 	return _r_calc_clamp (mode_id, SHOT_FULLSCREEN, SHOT_REGION);
 }
 
-_Success_ (return != -1)
+_Success_ (return != INT_ERROR)
 LONG _app_getdelay_id ()
 {
 	LONG delay_idx;
@@ -97,7 +97,7 @@ LONG _app_getdelay_id ()
 	delay_idx = _r_config_getlong (L"Delay", 0);
 
 	if (delay_idx <= 0)
-		return -1;
+		return INT_ERROR;
 
 	return _r_calc_clamp (delay_idx - 1, 0, RTL_NUMBER_OF (timer_array));
 }
@@ -291,14 +291,14 @@ VOID _app_proceedscreenshot (
 	CURSORINFO cursor_info = {0};
 	R_RECTANGLE prev_rect = {0};
 	ICONINFO icon_info;
+	HBITMAP old_bitmap;
 	HBITMAP hbitmap;
-	HGDIOBJ old_bitmap;
 	HDC hcapture = NULL;
 	HDC hdc;
 	HWND my_hwnd;
 	LONG dpi_value;
-	BOOLEAN is_hideme;
 	BOOLEAN is_windowdisplayed;
+	BOOLEAN is_hideme;
 
 	my_hwnd = _r_app_gethwnd ();
 
@@ -450,7 +450,7 @@ VOID _app_savescreenshot (
 
 	delay_id = _app_getdelay_id ();
 
-	if (delay_id == -1)
+	if (delay_id == INT_ERROR)
 	{
 		_app_proceedscreenshot (shot_info);
 	}
