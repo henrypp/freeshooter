@@ -268,7 +268,7 @@ VOID _app_image_savebitmaptofile (
 
 	_app_playsound ();
 
-	if (_r_config_getboolean (L"CopyToClipboard", FALSE))
+	if (_r_config_getboolean (L"CopyToClipboard", FALSE, NULL))
 	{
 		if (OpenClipboard (hwnd))
 		{

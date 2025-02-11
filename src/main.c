@@ -72,12 +72,12 @@ BOOLEAN _app_hotkeyinit (
 	UnregisterHotKey (hwnd, HOTKEY_ID_WINDOW);
 	UnregisterHotKey (hwnd, HOTKEY_ID_REGION);
 
-	hk_fullscreen = _r_config_getlong (L"HotkeyFullscreen2", HOTKEY_FULLSCREEN);
-	hk_monitor = _r_config_getlong (L"HotkeyMonitor", HOTKEY_MONITOR);
-	hk_window = _r_config_getlong (L"HotkeyWindow", HOTKEY_WINDOW);
-	hk_region = _r_config_getlong (L"HotkeyRegion", HOTKEY_REGION);
+	hk_fullscreen = _r_config_getlong (L"HotkeyFullscreen2", HOTKEY_FULLSCREEN, NULL);
+	hk_monitor = _r_config_getlong (L"HotkeyMonitor", HOTKEY_MONITOR, NULL);
+	hk_window = _r_config_getlong (L"HotkeyWindow", HOTKEY_WINDOW, NULL);
+	hk_region = _r_config_getlong (L"HotkeyRegion", HOTKEY_REGION, NULL);
 
-	if (_r_config_getboolean (L"HotkeyFullscreenEnabled", FALSE))
+	if (_r_config_getboolean (L"HotkeyFullscreenEnabled", FALSE, NULL))
 	{
 		if (hk_fullscreen)
 		{
@@ -86,7 +86,7 @@ BOOLEAN _app_hotkeyinit (
 		}
 	}
 
-	if (_r_config_getboolean (L"HotkeyMonitorEnabled", TRUE))
+	if (_r_config_getboolean (L"HotkeyMonitorEnabled", TRUE, NULL))
 	{
 		if (hk_monitor)
 		{
@@ -95,7 +95,7 @@ BOOLEAN _app_hotkeyinit (
 		}
 	}
 
-	if (_r_config_getboolean (L"HotkeyWindowEnabled", TRUE))
+	if (_r_config_getboolean (L"HotkeyWindowEnabled", TRUE, NULL))
 	{
 		if (hk_window)
 		{
@@ -104,7 +104,7 @@ BOOLEAN _app_hotkeyinit (
 		}
 	}
 
-	if (_r_config_getboolean (L"HotkeyRegionEnabled", TRUE))
+	if (_r_config_getboolean (L"HotkeyRegionEnabled", TRUE, NULL))
 	{
 		if (hk_region)
 		{
@@ -266,15 +266,15 @@ INT_PTR CALLBACK SettingsProc (
 					BOOLEAN window_allowed;
 					BOOLEAN region_allowed;
 
-					fullscreen_code = _r_config_getlong (L"HotkeyFullscreen2", HOTKEY_FULLSCREEN);
-					monitor_code = _r_config_getlong (L"HotkeyMonitor", HOTKEY_MONITOR);
-					window_code = _r_config_getlong (L"HotkeyWindow", HOTKEY_WINDOW);
-					region_code = _r_config_getlong (L"HotkeyRegion", HOTKEY_REGION);
+					fullscreen_code = _r_config_getlong (L"HotkeyFullscreen2", HOTKEY_FULLSCREEN, NULL);
+					monitor_code = _r_config_getlong (L"HotkeyMonitor", HOTKEY_MONITOR, NULL);
+					window_code = _r_config_getlong (L"HotkeyWindow", HOTKEY_WINDOW, NULL);
+					region_code = _r_config_getlong (L"HotkeyRegion", HOTKEY_REGION, NULL);
 
-					fullscreen_allowed = _r_config_getboolean (L"HotkeyFullscreenEnabled", FALSE);
-					monitor_allowed = _r_config_getboolean (L"HotkeyMonitorEnabled", TRUE);
-					window_allowed = _r_config_getboolean (L"HotkeyWindowEnabled", TRUE);
-					region_allowed = _r_config_getboolean (L"HotkeyRegionEnabled", TRUE);
+					fullscreen_allowed = _r_config_getboolean (L"HotkeyFullscreenEnabled", FALSE, NULL);
+					monitor_allowed = _r_config_getboolean (L"HotkeyMonitorEnabled", TRUE, NULL);
+					window_allowed = _r_config_getboolean (L"HotkeyWindowEnabled", TRUE, NULL);
+					region_allowed = _r_config_getboolean (L"HotkeyRegionEnabled", TRUE, NULL);
 
 					_r_ctrl_checkbutton (hwnd, IDC_FULLSCREEN_SHIFT, ((HIBYTE (fullscreen_code) & HOTKEYF_SHIFT) != 0));
 					_r_ctrl_checkbutton (hwnd, IDC_FULLSCREEN_CTRL, ((HIBYTE (fullscreen_code) & HOTKEYF_CONTROL) != 0));
@@ -383,10 +383,10 @@ INT_PTR CALLBACK SettingsProc (
 					window_idx = _r_combobox_getcurrentitem (hwnd, IDC_WINDOW_CB);
 					region_idx = _r_combobox_getcurrentitem (hwnd, IDC_REGION_CB);
 
-					_r_config_setboolean (L"HotkeyFullscreenEnabled", fullscreen_idx > 0);
-					_r_config_setboolean (L"HotkeyMonitorEnabled", monitor_idx > 0);
-					_r_config_setboolean (L"HotkeyWindowEnabled", window_idx > 0);
-					_r_config_setboolean (L"HotkeyRegionEnabled", region_idx > 0);
+					_r_config_setboolean (L"HotkeyFullscreenEnabled", fullscreen_idx > 0, NULL);
+					_r_config_setboolean (L"HotkeyMonitorEnabled", monitor_idx > 0, NULL);
+					_r_config_setboolean (L"HotkeyWindowEnabled", window_idx > 0, NULL);
+					_r_config_setboolean (L"HotkeyRegionEnabled", region_idx > 0, NULL);
 
 					// save fullscreen hotkey
 					if (fullscreen_idx > 0)
@@ -402,7 +402,7 @@ INT_PTR CALLBACK SettingsProc (
 						if (_r_ctrl_isbuttonchecked (hwnd, IDC_FULLSCREEN_ALT))
 							modifiers |= HOTKEYF_ALT;
 
-						_r_config_setulong (L"HotkeyFullscreen2", (ULONG)MAKEWORD (_r_combobox_getitemlparam (hwnd, IDC_FULLSCREEN_CB, fullscreen_idx), modifiers));
+						_r_config_setulong (L"HotkeyFullscreen2", (ULONG)MAKEWORD (_r_combobox_getitemlparam (hwnd, IDC_FULLSCREEN_CB, fullscreen_idx), modifiers), NULL);
 					}
 
 					// save monitor hotkey
@@ -419,7 +419,7 @@ INT_PTR CALLBACK SettingsProc (
 						if (_r_ctrl_isbuttonchecked (hwnd, IDC_MONITOR_ALT))
 							modifiers |= HOTKEYF_ALT;
 
-						_r_config_setulong (L"HotkeyMonitor", (ULONG)MAKEWORD (_r_combobox_getitemlparam (hwnd, IDC_MONITOR_CB, monitor_idx), modifiers));
+						_r_config_setulong (L"HotkeyMonitor", (ULONG)MAKEWORD (_r_combobox_getitemlparam (hwnd, IDC_MONITOR_CB, monitor_idx), modifiers), NULL);
 					}
 
 					// save window hotkey
@@ -436,7 +436,7 @@ INT_PTR CALLBACK SettingsProc (
 						if (_r_ctrl_isbuttonchecked (hwnd, IDC_WINDOW_ALT))
 							modifiers |= HOTKEYF_ALT;
 
-						_r_config_setulong (L"HotkeyWindow", (ULONG)MAKEWORD (_r_combobox_getitemlparam (hwnd, IDC_WINDOW_CB, window_idx), modifiers));
+						_r_config_setulong (L"HotkeyWindow", (ULONG)MAKEWORD (_r_combobox_getitemlparam (hwnd, IDC_WINDOW_CB, window_idx), modifiers), NULL);
 					}
 
 					// save region hotkey
@@ -453,7 +453,7 @@ INT_PTR CALLBACK SettingsProc (
 						if (_r_ctrl_isbuttonchecked (hwnd, IDC_REGION_ALT))
 							modifiers |= HOTKEYF_ALT;
 
-						_r_config_setulong (L"HotkeyRegion", (ULONG)MAKEWORD (_r_combobox_getitemlparam (hwnd, IDC_REGION_CB, region_idx), modifiers));
+						_r_config_setulong (L"HotkeyRegion", (ULONG)MAKEWORD (_r_combobox_getitemlparam (hwnd, IDC_REGION_CB, region_idx), modifiers), NULL);
 					}
 
 					if (!_app_hotkeyinit (_r_app_gethwnd (), hwnd))
@@ -518,7 +518,7 @@ VOID _app_initdropdownmenu (
 
 	format = _app_getimageformat_data ();
 
-	string = _r_config_getstring (L"FilenamePrefix", FILE_FORMAT_NAME_PREFIX);
+	string = _r_config_getstring (L"FilenamePrefix", FILE_FORMAT_NAME_PREFIX, NULL);
 
 	_r_menu_setitemtextformat (
 		hmenu,
@@ -590,12 +590,12 @@ VOID _app_initdropdownmenu (
 
 	_r_menu_checkitem (hmenu, IDX_FORMATS, IDX_FORMATS + formats_count, MF_BYCOMMAND, IDX_FORMATS + _app_getimageformat_id ());
 	_r_menu_checkitem (hmenu, IDM_FILENAME_INDEX, IDM_FILENAME_DATE, MF_BYCOMMAND, IDM_FILENAME_INDEX + _app_getimagename_id ());
-	_r_menu_checkitem (hmenu, IDM_INCLUDEMOUSECURSOR_CHK, 0, MF_BYCOMMAND, _r_config_getboolean (L"IsIncludeMouseCursor", FALSE));
-	_r_menu_checkitem (hmenu, IDM_INCLUDEWINDOWSHADOW_CHK, 0, MF_BYCOMMAND, _r_config_getboolean (L"IsIncludeWindowShadow", TRUE));
-	_r_menu_checkitem (hmenu, IDM_CLEARBACKGROUND_CHK, 0, MF_BYCOMMAND, _r_config_getboolean (L"IsClearBackground", TRUE));
-	_r_menu_checkitem (hmenu, IDM_DISABLEAEROONWND_CHK, 0, MF_BYCOMMAND, _r_config_getboolean (L"IsDisableAeroOnWnd", FALSE));
-	_r_menu_checkitem (hmenu, IDM_COPYTOCLIPBOARD_CHK, 0, MF_BYCOMMAND, _r_config_getboolean (L"CopyToClipboard", FALSE));
-	_r_menu_checkitem (hmenu, IDM_PLAYSOUNDS_CHK, 0, MF_BYCOMMAND, _r_config_getboolean (L"IsPlaySound", TRUE));
+	_r_menu_checkitem (hmenu, IDM_INCLUDEMOUSECURSOR_CHK, 0, MF_BYCOMMAND, _r_config_getboolean (L"IsIncludeMouseCursor", FALSE, NULL));
+	_r_menu_checkitem (hmenu, IDM_INCLUDEWINDOWSHADOW_CHK, 0, MF_BYCOMMAND, _r_config_getboolean (L"IsIncludeWindowShadow", TRUE, NULL));
+	_r_menu_checkitem (hmenu, IDM_CLEARBACKGROUND_CHK, 0, MF_BYCOMMAND, _r_config_getboolean (L"IsClearBackground", TRUE, NULL));
+	_r_menu_checkitem (hmenu, IDM_DISABLEAEROONWND_CHK, 0, MF_BYCOMMAND, _r_config_getboolean (L"IsDisableAeroOnWnd", FALSE, NULL));
+	_r_menu_checkitem (hmenu, IDM_COPYTOCLIPBOARD_CHK, 0, MF_BYCOMMAND, _r_config_getboolean (L"CopyToClipboard", FALSE, NULL));
+	_r_menu_checkitem (hmenu, IDM_PLAYSOUNDS_CHK, 0, MF_BYCOMMAND, _r_config_getboolean (L"IsPlaySound", TRUE, NULL));
 }
 
 VOID _app_initialize ()
@@ -700,9 +700,9 @@ INT_PTR CALLBACK DlgProc (
 
 			_r_ctrl_setstring (hwnd, IDC_FOLDER, string->buffer);
 
-			_r_ctrl_checkbutton (hwnd, IDC_INCLUDEMOUSECURSOR_CHK, _r_config_getboolean (L"IsIncludeMouseCursor", FALSE));
-			_r_ctrl_checkbutton (hwnd, IDC_INCLUDEWINDOWSHADOW_CHK, _r_config_getboolean (L"IsIncludeWindowShadow", TRUE));
-			_r_ctrl_checkbutton (hwnd, IDC_CLEARBACKGROUND_CHK, _r_config_getboolean (L"IsClearBackground", TRUE));
+			_r_ctrl_checkbutton (hwnd, IDC_INCLUDEMOUSECURSOR_CHK, _r_config_getboolean (L"IsIncludeMouseCursor", FALSE, NULL));
+			_r_ctrl_checkbutton (hwnd, IDC_INCLUDEWINDOWSHADOW_CHK, _r_config_getboolean (L"IsIncludeWindowShadow", TRUE, NULL));
+			_r_ctrl_checkbutton (hwnd, IDC_CLEARBACKGROUND_CHK, _r_config_getboolean (L"IsClearBackground", TRUE, NULL));
 
 			CheckRadioButton (hwnd, IDC_MODE_MONITOR, IDC_MODE_REGION, IDC_MODE_MONITOR + _app_getmode_id () - 1);
 
@@ -711,11 +711,11 @@ INT_PTR CALLBACK DlgProc (
 
 			if (hmenu)
 			{
-				_r_menu_checkitem (hmenu, IDM_ALWAYSONTOP_CHK, 0, MF_BYCOMMAND, _r_config_getboolean (L"AlwaysOnTop", FALSE));
+				_r_menu_checkitem (hmenu, IDM_ALWAYSONTOP_CHK, 0, MF_BYCOMMAND, _r_config_getboolean (L"AlwaysOnTop", FALSE, NULL));
 				_r_menu_checkitem (hmenu, IDM_DARKMODE_CHK, 0, MF_BYCOMMAND, _r_theme_isenabled ());
 				_r_menu_checkitem (hmenu, IDM_LOADONSTARTUP_CHK, 0, MF_BYCOMMAND, _r_autorun_isenabled ());
-				_r_menu_checkitem (hmenu, IDM_STARTMINIMIZED_CHK, 0, MF_BYCOMMAND, _r_config_getboolean (L"IsStartMinimized", FALSE));
-				_r_menu_checkitem (hmenu, IDM_HIDEME_CHK, 0, MF_BYCOMMAND, _r_config_getboolean (L"IsHideMe", TRUE));
+				_r_menu_checkitem (hmenu, IDM_STARTMINIMIZED_CHK, 0, MF_BYCOMMAND, _r_config_getboolean (L"IsStartMinimized", FALSE, NULL));
+				_r_menu_checkitem (hmenu, IDM_HIDEME_CHK, 0, MF_BYCOMMAND, _r_config_getboolean (L"IsHideMe", TRUE, NULL));
 				_r_menu_checkitem (hmenu, IDM_CHECKUPDATES_CHK, 0, MF_BYCOMMAND, _r_update_isenabled (FALSE));
 			}
 
@@ -916,30 +916,30 @@ INT_PTR CALLBACK DlgProc (
 							_r_str_copy (mode_window, RTL_NUMBER_OF (mode_window), _r_locale_getstring (IDS_MODE_WINDOW));
 							_r_str_copy (mode_region, RTL_NUMBER_OF (mode_region), _r_locale_getstring (IDS_MODE_REGION));
 
-							if (_r_config_getboolean (L"HotkeyFullscreenEnabled", FALSE))
+							if (_r_config_getboolean (L"HotkeyFullscreenEnabled", FALSE, NULL))
 							{
-								_app_key2string (key_string, RTL_NUMBER_OF (key_string), _r_config_getlong (L"HotkeyFullscreen2", HOTKEY_FULLSCREEN));
+								_app_key2string (key_string, RTL_NUMBER_OF (key_string), _r_config_getlong (L"HotkeyFullscreen2", HOTKEY_FULLSCREEN, NULL));
 
 								_r_str_appendformat (mode_fullscreen, RTL_NUMBER_OF (mode_fullscreen), L"\t%s", key_string);
 							}
 
-							if (_r_config_getboolean (L"HotkeyMonitorEnabled", TRUE))
+							if (_r_config_getboolean (L"HotkeyMonitorEnabled", TRUE, NULL))
 							{
-								_app_key2string (key_string, RTL_NUMBER_OF (key_string), _r_config_getlong (L"HotkeyMonitor", HOTKEY_MONITOR));
+								_app_key2string (key_string, RTL_NUMBER_OF (key_string), _r_config_getlong (L"HotkeyMonitor", HOTKEY_MONITOR, NULL));
 
 								_r_str_appendformat (mode_monitor, RTL_NUMBER_OF (mode_monitor), L"\t%s", key_string);
 							}
 
-							if (_r_config_getboolean (L"HotkeyWindowEnabled", TRUE))
+							if (_r_config_getboolean (L"HotkeyWindowEnabled", TRUE, NULL))
 							{
-								_app_key2string (key_string, RTL_NUMBER_OF (key_string), _r_config_getlong (L"HotkeyWindow", HOTKEY_WINDOW));
+								_app_key2string (key_string, RTL_NUMBER_OF (key_string), _r_config_getlong (L"HotkeyWindow", HOTKEY_WINDOW, NULL));
 
 								_r_str_appendformat (mode_window, RTL_NUMBER_OF (mode_window), L"\t%s", key_string);
 							}
 
-							if (_r_config_getboolean (L"HotkeyRegionEnabled", TRUE))
+							if (_r_config_getboolean (L"HotkeyRegionEnabled", TRUE, NULL))
 							{
-								_app_key2string (key_string, RTL_NUMBER_OF (key_string), _r_config_getlong (L"HotkeyRegion", HOTKEY_REGION));
+								_app_key2string (key_string, RTL_NUMBER_OF (key_string), _r_config_getlong (L"HotkeyRegion", HOTKEY_REGION, NULL));
 
 								_r_str_appendformat (mode_region, RTL_NUMBER_OF (mode_region), L"\t%s", key_string);
 							}
@@ -1031,7 +1031,7 @@ INT_PTR CALLBACK DlgProc (
 
 				index = (ctrl_id - IDX_FORMATS);
 
-				_r_config_setlong (L"ImageFormat", _r_calc_clamp (index, 0, (LONG)_r_obj_getarraysize (config.formats) - 1));
+				_r_config_setlong (L"ImageFormat", _r_calc_clamp (index, 0, (LONG)_r_obj_getarraysize (config.formats) - 1), NULL);
 
 				return FALSE;
 			}
@@ -1041,7 +1041,7 @@ INT_PTR CALLBACK DlgProc (
 
 				index = (ctrl_id - IDX_DELAY);
 
-				_r_config_setlong (L"Delay", _r_calc_clamp (index, 0, RTL_NUMBER_OF (timer_array)) + 1);
+				_r_config_setlong (L"Delay", _r_calc_clamp (index, 0, RTL_NUMBER_OF (timer_array)) + 1, NULL);
 
 				return FALSE;
 			}
@@ -1053,7 +1053,7 @@ INT_PTR CALLBACK DlgProc (
 
 				if (path_string)
 				{
-					_r_config_setstringexpand (L"Folder", path_string->buffer);
+					_r_config_setstringexpand (L"Folder", path_string->buffer, NULL);
 
 					_r_obj_dereference (path_string);
 				}
@@ -1148,10 +1148,10 @@ INT_PTR CALLBACK DlgProc (
 				{
 					BOOLEAN new_val;
 
-					new_val = !_r_config_getboolean (L"AlwaysOnTop", FALSE);
+					new_val = !_r_config_getboolean (L"AlwaysOnTop", FALSE, NULL);
 
 					_r_menu_checkitem (GetMenu (hwnd), ctrl_id, 0, MF_BYCOMMAND, new_val);
-					_r_config_setboolean (L"AlwaysOnTop", new_val);
+					_r_config_setboolean (L"AlwaysOnTop", new_val, NULL);
 
 					_r_wnd_top (hwnd, new_val);
 
@@ -1188,10 +1188,10 @@ INT_PTR CALLBACK DlgProc (
 				{
 					BOOLEAN new_val;
 
-					new_val = !_r_config_getboolean (L"IsStartMinimized", FALSE);
+					new_val = !_r_config_getboolean (L"IsStartMinimized", FALSE, NULL);
 
 					_r_menu_checkitem (GetMenu (hwnd), ctrl_id, 0, MF_BYCOMMAND, new_val);
-					_r_config_setboolean (L"IsStartMinimized", new_val);
+					_r_config_setboolean (L"IsStartMinimized", new_val, NULL);
 
 					break;
 				}
@@ -1200,10 +1200,10 @@ INT_PTR CALLBACK DlgProc (
 				{
 					BOOLEAN new_val;
 
-					new_val = !_r_config_getboolean (L"IsHideMe", TRUE);
+					new_val = !_r_config_getboolean (L"IsHideMe", TRUE, NULL);
 
 					_r_menu_checkitem (GetMenu (hwnd), ctrl_id, 0, MF_BYCOMMAND, new_val);
-					_r_config_setboolean (L"IsHideMe", new_val);
+					_r_config_setboolean (L"IsHideMe", new_val, NULL);
 
 					break;
 				}
@@ -1243,7 +1243,7 @@ INT_PTR CALLBACK DlgProc (
 
 							if (SUCCEEDED (status))
 							{
-								_r_config_setstringexpand (L"Folder", path->buffer);
+								_r_config_setstringexpand (L"Folder", path->buffer, NULL);
 
 								_r_ctrl_setstring (hwnd, IDC_FOLDER, path->buffer);
 
@@ -1261,9 +1261,9 @@ INT_PTR CALLBACK DlgProc (
 				{
 					BOOLEAN new_val;
 
-					new_val = !_r_config_getboolean (L"IsPlaySound", TRUE);
+					new_val = !_r_config_getboolean (L"IsPlaySound", TRUE, NULL);
 
-					_r_config_setboolean (L"IsPlaySound", new_val);
+					_r_config_setboolean (L"IsPlaySound", new_val, NULL);
 
 					break;
 				}
@@ -1278,9 +1278,9 @@ INT_PTR CALLBACK DlgProc (
 				{
 					BOOLEAN new_val;
 
-					new_val = !_r_config_getboolean (L"CopyToClipboard", FALSE);
+					new_val = !_r_config_getboolean (L"CopyToClipboard", FALSE, NULL);
 
-					_r_config_setboolean (L"CopyToClipboard", new_val);
+					_r_config_setboolean (L"CopyToClipboard", new_val, NULL);
 
 					break;
 				}
@@ -1289,16 +1289,16 @@ INT_PTR CALLBACK DlgProc (
 				{
 					BOOLEAN new_val;
 
-					new_val = !_r_config_getboolean (L"IsDisableAeroOnWnd", FALSE);
+					new_val = !_r_config_getboolean (L"IsDisableAeroOnWnd", FALSE, NULL);
 
-					_r_config_setboolean (L"IsDisableAeroOnWnd", new_val);
+					_r_config_setboolean (L"IsDisableAeroOnWnd", new_val, NULL);
 
 					break;
 				}
 
 				case IDM_DELAY_DISABLE:
 				{
-					_r_config_setlong (L"Delay", 0);
+					_r_config_setlong (L"Delay", 0, NULL);
 					break;
 				}
 
@@ -1307,9 +1307,9 @@ INT_PTR CALLBACK DlgProc (
 				{
 					BOOLEAN new_val;
 
-					new_val = !_r_config_getboolean (L"IsIncludeMouseCursor", FALSE);
+					new_val = !_r_config_getboolean (L"IsIncludeMouseCursor", FALSE, NULL);
 
-					_r_config_setboolean (L"IsIncludeMouseCursor", new_val);
+					_r_config_setboolean (L"IsIncludeMouseCursor", new_val, NULL);
 					_r_ctrl_checkbutton (hwnd, IDC_INCLUDEMOUSECURSOR_CHK, new_val);
 
 					break;
@@ -1320,9 +1320,9 @@ INT_PTR CALLBACK DlgProc (
 				{
 					BOOLEAN new_val;
 
-					new_val = !_r_config_getboolean (L"IsClearBackground", TRUE);
+					new_val = !_r_config_getboolean (L"IsClearBackground", TRUE, NULL);
 
-					_r_config_setboolean (L"IsClearBackground", new_val);
+					_r_config_setboolean (L"IsClearBackground", new_val, NULL);
 					_r_ctrl_checkbutton (hwnd, IDC_CLEARBACKGROUND_CHK, new_val);
 
 					break;
@@ -1333,9 +1333,9 @@ INT_PTR CALLBACK DlgProc (
 				{
 					BOOLEAN new_val;
 
-					new_val = !_r_config_getboolean (L"IsIncludeWindowShadow", TRUE);
+					new_val = !_r_config_getboolean (L"IsIncludeWindowShadow", TRUE, NULL);
 
-					_r_config_setboolean (L"IsIncludeWindowShadow", new_val);
+					_r_config_setboolean (L"IsIncludeWindowShadow", new_val, NULL);
 					_r_ctrl_checkbutton (hwnd, IDC_INCLUDEWINDOWSHADOW_CHK, new_val);
 
 					break;
@@ -1347,15 +1347,15 @@ INT_PTR CALLBACK DlgProc (
 				{
 					if (ctrl_id == IDC_MODE_WINDOW)
 					{
-						_r_config_setlong (L"Mode", SHOT_WINDOW);
+						_r_config_setlong (L"Mode", SHOT_WINDOW, NULL);
 					}
 					else if (ctrl_id == IDC_MODE_REGION)
 					{
-						_r_config_setlong (L"Mode", SHOT_REGION);
+						_r_config_setlong (L"Mode", SHOT_REGION, NULL);
 					}
 					else if (ctrl_id == IDC_MODE_MONITOR)
 					{
-						_r_config_setlong (L"Mode", SHOT_MONITOR);
+						_r_config_setlong (L"Mode", SHOT_MONITOR, NULL);
 					}
 
 					break;
@@ -1366,11 +1366,11 @@ INT_PTR CALLBACK DlgProc (
 				{
 					if (ctrl_id == IDM_FILENAME_DATE)
 					{
-						_r_config_setlong (L"FilenameType", NAME_DATE);
+						_r_config_setlong (L"FilenameType", NAME_DATE, NULL);
 					}
 					else
 					{
-						_r_config_setlong (L"FilenameType", NAME_INDEX);
+						_r_config_setlong (L"FilenameType", NAME_INDEX, NULL);
 					}
 
 					break;

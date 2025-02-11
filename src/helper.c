@@ -47,7 +47,7 @@ VOID dump_wnd_info (
 
 VOID _app_playsound ()
 {
-	if (!_r_config_getboolean (L"IsPlaySound", TRUE))
+	if (!_r_config_getboolean (L"IsPlaySound", TRUE, NULL))
 		return;
 
 	PlaySoundW (MAKEINTRESOURCE (IDW_MAIN), _r_sys_getimagebase (), SND_ASYNC | SND_NODEFAULT | SND_NOWAIT | SND_FILENAME | SND_SENTRY | SND_RESOURCE);
@@ -57,7 +57,7 @@ LONG _app_getimageformat_id ()
 {
 	LONG format_id;
 
-	format_id = _r_config_getlong (L"ImageFormat", 2);
+	format_id = _r_config_getlong (L"ImageFormat", 2, NULL);
 
 	return _r_calc_clamp (format_id, 0, (LONG)_r_obj_getarraysize (config.formats) - 1);
 }
@@ -75,7 +75,7 @@ ENUM_IMAGE_NAME _app_getimagename_id ()
 {
 	LONG name_id;
 
-	name_id = _r_config_getlong (L"FilenameType", NAME_INDEX);
+	name_id = _r_config_getlong (L"FilenameType", NAME_INDEX, NULL);
 
 	return _r_calc_clamp (name_id, NAME_INDEX, NAME_DATE);
 }
@@ -84,7 +84,7 @@ ENUM_TYPE_SCREENSHOT _app_getmode_id ()
 {
 	LONG mode_id;
 
-	mode_id = _r_config_getlong (L"Mode", SHOT_MONITOR);
+	mode_id = _r_config_getlong (L"Mode", SHOT_MONITOR, NULL);
 
 	return _r_calc_clamp (mode_id, SHOT_FULLSCREEN, SHOT_REGION);
 }
@@ -94,7 +94,7 @@ LONG _app_getdelay_id ()
 {
 	LONG delay_idx;
 
-	delay_idx = _r_config_getlong (L"Delay", 0);
+	delay_idx = _r_config_getlong (L"Delay", 0, NULL);
 
 	if (delay_idx <= 0)
 		return INT_ERROR;
@@ -125,7 +125,7 @@ PR_STRING _app_getdirectory ()
 		_r_initonce_end (&init_once);
 	}
 
-	return _r_config_getstringexpand (L"Folder", _r_obj_getstring (default_folder));
+	return _r_config_getstringexpand (L"Folder", _r_obj_getstring (default_folder), NULL);
 }
 
 BOOL CALLBACK enum_monitor_proc (
@@ -229,7 +229,7 @@ PR_STRING _app_uniquefilename (
 
 	format = _app_getimageformat_data ();
 
-	name_prefix = _r_config_getstring (L"FilenamePrefix", FILE_FORMAT_NAME_PREFIX);
+	name_prefix = _r_config_getstring (L"FilenamePrefix", FILE_FORMAT_NAME_PREFIX, NULL);
 
 	if (name_type == NAME_DATE)
 	{
@@ -302,7 +302,7 @@ VOID _app_proceedscreenshot (
 
 	my_hwnd = _r_app_gethwnd ();
 
-	is_hideme = _r_config_getboolean (L"IsHideMe", TRUE);
+	is_hideme = _r_config_getboolean (L"IsHideMe", TRUE, NULL);
 	is_windowdisplayed = _r_wnd_isvisible (my_hwnd, TRUE);
 
 	if (is_hideme)
@@ -360,7 +360,7 @@ VOID _app_proceedscreenshot (
 
 		BitBlt (hcapture, 0, 0, shot_info->width, shot_info->height, hdc, shot_info->left, shot_info->top, SRCCOPY);
 
-		if (_r_config_getboolean (L"IsIncludeMouseCursor", FALSE))
+		if (_r_config_getboolean (L"IsIncludeMouseCursor", FALSE, NULL))
 		{
 			cursor_info.cbSize = sizeof (cursor_info);
 
@@ -525,9 +525,9 @@ VOID _app_screenshot (
 
 			is_maximized = _r_wnd_ismaximized (hwnd);
 			is_menu = _r_wnd_ismenu (hwnd);
-			is_includewindowshadow = !is_maximized && _r_config_getboolean (L"IsIncludeWindowShadow", TRUE);
-			is_clearbackground = !is_maximized && _r_config_getboolean (L"IsClearBackground", TRUE);
-			is_disableaeroonwnd = !is_menu && _r_config_getboolean (L"IsDisableAeroOnWnd", FALSE);
+			is_includewindowshadow = !is_maximized && _r_config_getboolean (L"IsIncludeWindowShadow", TRUE, NULL);
+			is_clearbackground = !is_maximized && _r_config_getboolean (L"IsClearBackground", TRUE, NULL);
+			is_disableaeroonwnd = !is_menu && _r_config_getboolean (L"IsDisableAeroOnWnd", FALSE, NULL);
 
 			if (is_includewindowshadow)
 				shadow_size = _app_getwindowshadowsize (hwnd);
