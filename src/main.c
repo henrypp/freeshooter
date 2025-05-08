@@ -1232,7 +1232,7 @@ INT_PTR CALLBACK DlgProc (
 					{
 						path = _app_getdirectory ();
 
-						_r_filedialog_setpath (&file_dialog, path->buffer);
+						_r_filedialog_setpath (&file_dialog, &path->sr);
 						_r_obj_dereference (path);
 
 						status = _r_filedialog_show (hwnd, &file_dialog);
