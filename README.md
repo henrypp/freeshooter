@@ -54,4 +54,4 @@ Binaries have GPG signature `freeshooter.exe.sig` in application folder.
 - Website: [github.com/henrypp](https://github.com/henrypp)
 - Support: sforce5@mail.ru<br />
 <br />
-(c) 2009-2024 Henry++
+(c) 2009-2025 Henry++
