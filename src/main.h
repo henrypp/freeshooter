@@ -1,5 +1,5 @@
 // Free Shooter
-// Copyright (c) 2009-2023 Henry++
+// Copyright (c) 2009-2025 Henry++
 
 #pragma once
 
@@ -46,7 +46,7 @@
 
 #define DEFAULT_DIRECTORY L"%userprofile%\\Desktop"
 
-DEFINE_GUID (GUID_TrayIcon, 0xabb007cc, 0xd7aa, 0x4ebc, 0xa0, 0x59, 0xb5, 0xd, 0x72, 0x57, 0x4e, 0xfc);
+DEFINE_GUID (GUID_TrayIcon, 0xABB007CC, 0xD7AA, 0x4EBC, 0xA0, 0x59, 0xB5, 0xD, 0x72, 0x57, 0x4E, 0xFC);
 
 typedef struct _STATIC_DATA
 {
@@ -149,7 +149,7 @@ typedef enum _ENUM_IMAGE_NAME
 typedef enum _DWMNCRENDERINGPOLICY
 {
 	NCRP_USEWINDOWSTYLE, // Enable/disable non-client rendering based on window style
-	NCRP_DISABLED,       // Disabled non-client rendering; window style is ignored
-	NCRP_ENABLED,        // Enabled non-client rendering; window style is ignored
+	NCRP_DISABLED, // Disabled non-client rendering; window style is ignored
+	NCRP_ENABLED, // Enabled non-client rendering; window style is ignored
 	NCRP_LAST
 } DWMNCRENDERINGPOLICY;

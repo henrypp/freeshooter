@@ -1,5 +1,5 @@
 // Free Shooter
-// Copyright (c) 2009-2023 Henry++
+// Copyright (c) 2009-2025 Henry++
 
 #include "global.h"
 
@@ -10,8 +10,8 @@ VOID _app_image_wicsetoptions (
 {
 	PROPBAG2 options[5];
 	VARIANT values[5];
-	HRESULT hr;
 	INT options_count = 0;
+	HRESULT status;
 
 	RtlZeroMemory (options, sizeof (options));
 	RtlZeroMemory (values, sizeof (values)); // VariantInit
@@ -94,10 +94,10 @@ VOID _app_image_wicsetoptions (
 
 	if (options_count)
 	{
-		hr = IPropertyBag2_Write (property_bag, options_count, options, values);
+		status = IPropertyBag2_Write (property_bag, options_count, options, values);
 
-		if (hr != S_OK)
-			_r_log (LOG_LEVEL_WARNING, 0, L"IPropertyBag2_Write", hr, NULL);
+		if (status != S_OK)
+			_r_log (LOG_LEVEL_WARNING, NULL, L"IPropertyBag2_Write", status, NULL);
 	}
 }
 
@@ -199,7 +199,7 @@ CleanupExit:
 
 	if (FAILED (status))
 	{
-		_r_log (LOG_LEVEL_ERROR, 0, TEXT (__FUNCTION__), status, NULL);
+		_r_log (LOG_LEVEL_ERROR, NULL, TEXT (__FUNCTION__), status, NULL);
 
 		_r_show_errormessage (hwnd, NULL, status, NULL, ET_WINDOWS);
 	}
