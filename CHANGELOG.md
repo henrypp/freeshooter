@@ -1,3 +1,7 @@
+v2.2.1 (11 May 2025)
+- fixed dark theme of hotkey dialog
+- updated project sdk
+
 v2.2 (17 October 2024)
 - revert back windows 7 and windows 8 support
 - added mitigations (win10+)
