@@ -860,7 +860,7 @@ INT_PTR CALLBACK DlgProc (
 				break;
 			}
 
-			_r_wnd_sendmessage (hwnd, 0, WM_COMMAND, MAKEWPARAM (command_id, 0), 0);
+			_r_ctrl_sendcommand (hwnd, command_id, 0);
 
 			break;
 		}
@@ -879,13 +879,13 @@ INT_PTR CALLBACK DlgProc (
 
 				case WM_LBUTTONUP:
 				{
-					_r_wnd_sendmessage (hwnd, 0, WM_COMMAND, MAKEWPARAM (IDM_TRAY_SHOW, 0), 0);
+					_r_ctrl_sendcommand (hwnd, IDM_TRAY_SHOW, 0);
 					break;
 				}
 
 				case WM_MBUTTONUP:
 				{
-					_r_wnd_sendmessage (hwnd, 0, WM_COMMAND, MAKEWPARAM (IDM_EXPLORE, 0), 0);
+					_r_ctrl_sendcommand (hwnd, IDM_EXPLORE, 0);
 					break;
 				}
 
@@ -1003,7 +1003,7 @@ INT_PTR CALLBACK DlgProc (
 					if (lpdropdown->hdr.idFrom != IDC_SETTINGS)
 						break;
 
-					_r_wnd_sendmessage (hwnd, 0, WM_COMMAND, MAKEWPARAM (IDC_SETTINGS, 0), 0);
+					_r_ctrl_sendcommand (hwnd, IDC_SETTINGS, 0);
 
 					SetWindowLongPtrW (hwnd, DWLP_MSGRESULT, TRUE);
 
@@ -1138,7 +1138,8 @@ INT_PTR CALLBACK DlgProc (
 
 					string = _app_getdirectory ();
 
-					_r_shell_opendefault (string->buffer);
+					_r_shell_showfile (&string->sr);
+
 					_r_obj_dereference (string);
 
 					break;
