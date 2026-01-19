@@ -21,9 +21,9 @@ It is my first application, written in AutoIt3 and now rewritten on C. I love th
 ![Overlapped windows](/images/freeshooter_feature.png?cachefix)
 
 ### System requirements:
-- Windows 7, 8, 8.1, 10, 11 32-bit/64-bit/ARM64
+- Windows 7, 8, 8.1, 10, 11 64-bit/ARM64
 - An SSE2-capable CPU
-- <s>KB2533623</s> KB3063858 update for Windows 7 was required [[x64](https://www.microsoft.com/en-us/download/details.aspx?id=47442) / [x32](https://www.microsoft.com/en-us/download/details.aspx?id=47409)]
+- <s>KB2533623</s> [KB3063858](https://www.microsoft.com/en-us/download/details.aspx?id=47442) update for Windows 7 was required
 
 ### Features:
 - Simple interface without useless features
@@ -54,4 +54,4 @@ Binaries have GPG signature `freeshooter.exe.sig` in application folder.
 - Website: [github.com/henrypp](https://github.com/henrypp)
 - Support: sforce5@mail.ru<br />
 <br />
-(c) 2009-2025 Henry++
+(c) 2009-2026 Henry++
