@@ -1,5 +1,5 @@
 // Free Shooter
-// Copyright (c) 2009-2023 Henry++
+// Copyright (c) 2009-2026 Henry++
 
 #pragma once
 

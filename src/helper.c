@@ -1,5 +1,5 @@
 // Free Shooter
-// Copyright (c) 2009-2023 Henry++
+// Copyright (c) 2009-2026 Henry++
 
 #include "global.h"
 
@@ -108,16 +108,15 @@ PR_STRING _app_getdirectory ()
 	static PR_STRING default_folder = NULL;
 
 	PR_STRING string;
-	HRESULT status;
 
 	if (_r_initonce_begin (&init_once))
 	{
-		status = _r_path_getknownfolder (&FOLDERID_Desktop, 0, NULL, &string);
+		string = _r_path_getknownfolder (&FOLDERID_Desktop, 0, NULL);
 
-		if (FAILED (status))
-			status = _r_path_getknownfolder (&FOLDERID_Pictures, 0, NULL, &string);
+		if (!string)
+			string = _r_path_getknownfolder (&FOLDERID_Pictures, 0, NULL);
 
-		if (FAILED (status))
+		if (string)
 			string = _r_obj_createstring (DEFAULT_DIRECTORY);
 
 		default_folder = string;

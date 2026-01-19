@@ -1,5 +1,5 @@
 // Free Shooter
-// Copyright (c) 2009-2025 Henry++
+// Copyright (c) 2009-2026 Henry++
 
 #include "routine.h"
 
@@ -661,15 +661,10 @@ INT_PTR CALLBACK DlgProc (
 	{
 		case WM_INITDIALOG:
 		{
-			HWND hctrl;
-
 			_r_app_sethwnd (hwnd); // HACK!!!
 
 			// set edit control configuration
-			hctrl = GetDlgItem (hwnd, IDC_FOLDER);
-
-			if (hctrl)
-				SHAutoComplete (hctrl, SHACF_FILESYS_ONLY | SHACF_FILESYS_DIRS | SHACF_AUTOSUGGEST_FORCE_ON | SHACF_USETAB);
+			_r_ctrl_setautocomplete (hwnd, IDC_FOLDER, 0);
 
 			_r_settings_addpage (IDD_SETTINGS_HOTKEYS, IDS_HOTKEYS);
 
