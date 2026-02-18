@@ -639,7 +639,7 @@ VOID _app_initialize ()
 	NtCreateEvent (&config.hregion_mutex, EVENT_ALL_ACCESS, NULL, NotificationEvent, TRUE);
 	NtCreateEvent (&config.hshot_evt, EVENT_ALL_ACCESS, NULL, NotificationEvent, TRUE);
 
-	wcex.cbSize = sizeof (wcex);
+	wcex.cbSize = sizeof (WNDCLASSEX);
 	wcex.style = CS_VREDRAW | CS_HREDRAW;
 	wcex.hInstance = _r_sys_getimagebase ();
 	wcex.lpszClassName = DUMMY_CLASS_DLG;
@@ -664,7 +664,7 @@ INT_PTR CALLBACK DlgProc (
 			_r_app_sethwnd (hwnd); // HACK!!!
 
 			// set edit control configuration
-			_r_ctrl_setautocomplete (hwnd, IDC_FOLDER, 0);
+			_r_ctrl_setautocomplete (hwnd, IDC_FOLDER, TRUE);
 
 			_r_settings_addpage (IDD_SETTINGS_HOTKEYS, IDS_HOTKEYS);
 
