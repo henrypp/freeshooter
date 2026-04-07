@@ -171,7 +171,7 @@ VOID _app_initializetimer (
 
 	SetLayeredWindowAttributes (monitor_context->hwnd, 0, 0, LWA_COLORKEY);
 
-	dpi_value = _r_dc_getmonitordpi (&monitor_context->rect);
+	dpi_value = _r_dc_getdpivalue (NULL, &monitor_context->rect);
 
 	// initialize font
 	_r_str_copy (logfont.lfFaceName, LF_FACESIZE, L"Segoe UI"); // face name
