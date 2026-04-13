@@ -308,7 +308,7 @@ VOID _app_proceedscreenshot (
 	{
 		if (is_windowdisplayed)
 		{
-			_r_wnd_getposition (my_hwnd, &prev_rect);
+			_r_wnd_getposition (&prev_rect, my_hwnd);
 
 			dpi_value = _r_dc_getwindowdpi (my_hwnd);
 
