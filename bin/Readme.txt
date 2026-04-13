@@ -22,4 +22,4 @@ To activate portable mode, create "freeshooter.ini" in application folder, or mo
 Website: https://github.com/henrypp
 Support: sforce5@mail.ru
 
-(c) 2009-2025 Henry++
+(c) 2009-2026 Henry++
