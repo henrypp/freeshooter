@@ -5,7 +5,7 @@ This is old-school tool for taking screenshots without bloatware features, simpl
 It is my first application, written in AutoIt3 and now rewritten on C. I love this tool, and i hope you are take to love it too.
 
 System requirements:
-- Windows 7, 8, 8.1, 10, 11 32-bit/64-bit/ARM64
+- Windows 7, 8, 8.1, 10, 11 64-bit/ARM64
 - An SSE2-capable CPU
 
 Features:
