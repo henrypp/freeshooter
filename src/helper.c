@@ -21,15 +21,14 @@ VOID dump_wnd_info (
 	_In_ HWND hwnd
 )
 {
-	WCHAR title[128];
-	WCHAR class_name[128];
+	WCHAR class_name[0x80], title[0x80];
 	RECT rect = {0};
-
-	if (!GetWindowTextW (hwnd, title, RTL_NUMBER_OF (title)))
-		_r_str_copy (title, RTL_NUMBER_OF (title), L"n/a");
 
 	if (!GetClassNameW (hwnd, class_name, RTL_NUMBER_OF (class_name)))
 		_r_str_copy (class_name, RTL_NUMBER_OF (class_name), L"n/a");
+
+	if (!GetWindowTextW (hwnd, title, RTL_NUMBER_OF (title)))
+		_r_str_copy (title, RTL_NUMBER_OF (title), L"n/a");
 
 	_app_getwindowrect (hwnd, &rect);
 
@@ -47,54 +46,34 @@ VOID dump_wnd_info (
 
 VOID _app_playsound ()
 {
-	if (!_r_config_getboolean (L"IsPlaySound", TRUE, NULL))
-		return;
-
-	PlaySoundW (MAKEINTRESOURCE (IDW_MAIN), _r_sys_getimagebase (), SND_ASYNC | SND_NODEFAULT | SND_NOWAIT | SND_FILENAME | SND_SENTRY | SND_RESOURCE);
+	if (_r_config_getboolean (L"IsPlaySound", TRUE, NULL))
+		PlaySoundW (MAKEINTRESOURCE (IDW_MAIN), _r_sys_getimagebase (), SND_ASYNC | SND_NODEFAULT | SND_NOWAIT | SND_FILENAME | SND_SENTRY | SND_RESOURCE);
 }
 
-LONG _app_getimageformat_id ()
+ULONG _app_getimageformat_id ()
 {
-	LONG format_id;
-
-	format_id = _r_config_getlong (L"ImageFormat", 2, NULL);
-
-	return _r_calc_clamp (format_id, 0, (LONG)_r_obj_getarraysize (config.formats) - 1);
+	return _r_calc_clamp (_r_config_getlong (L"ImageFormat", FORMAT_PNG, NULL), 0, (ULONG)(_r_obj_getarraysize (config.formats) - 1));
 }
 
 PIMAGE_FORMAT _app_getimageformat_data ()
 {
-	PIMAGE_FORMAT format_data;
-
-	format_data = _r_obj_getarrayitem (config.formats, _app_getimageformat_id ());
-
-	return format_data;
+	return (PIMAGE_FORMAT)_r_obj_getarrayitem (config.formats, _app_getimageformat_id ());
 }
 
 ENUM_IMAGE_NAME _app_getimagename_id ()
 {
-	LONG name_id;
-
-	name_id = _r_config_getlong (L"FilenameType", NAME_INDEX, NULL);
-
-	return _r_calc_clamp (name_id, NAME_INDEX, NAME_DATE);
+	return (ENUM_IMAGE_NAME)_r_calc_clamp (_r_config_getlong (L"FilenameType", NAME_INDEX, NULL), NAME_INDEX, NAME_DATE);
 }
 
 ENUM_TYPE_SCREENSHOT _app_getmode_id ()
 {
-	LONG mode_id;
-
-	mode_id = _r_config_getlong (L"Mode", SHOT_MONITOR, NULL);
-
-	return _r_calc_clamp (mode_id, SHOT_FULLSCREEN, SHOT_REGION);
+	return (ENUM_TYPE_SCREENSHOT)_r_calc_clamp (_r_config_getlong (L"Mode", SHOT_MONITOR, NULL), SHOT_FULLSCREEN, SHOT_REGION);
 }
 
 _Success_ (return != INT_ERROR)
 LONG _app_getdelay_id ()
 {
-	LONG delay_idx;
-
-	delay_idx = _r_config_getlong (L"Delay", 0, NULL);
+	LONG delay_idx = _r_config_getlong (L"Delay", 0, NULL);
 
 	if (delay_idx <= 0)
 		return INT_ERROR;
@@ -116,7 +95,7 @@ PR_STRING _app_getdirectory ()
 		if (!string)
 			string = _r_path_getknownfolder (&FOLDERID_Pictures, 0, NULL);
 
-		if (string)
+		if (!string)
 			string = _r_obj_createstring (DEFAULT_DIRECTORY);
 
 		default_folder = string;
@@ -124,7 +103,12 @@ PR_STRING _app_getdirectory ()
 		_r_initonce_end (&init_once);
 	}
 
-	return _r_config_getstringexpand (L"Folder", _r_obj_getstring (default_folder), NULL);
+	string = _r_config_getstringexpand (L"Folder", _r_obj_getstring (default_folder), NULL);
+
+	if (!string)
+		string = _r_obj_reference (default_folder);
+
+	return string;
 }
 
 BOOL CALLBACK enum_monitor_proc (
@@ -160,7 +144,9 @@ VOID _app_switchaeroonwnd (
 	_In_ BOOLEAN is_disable
 )
 {
-	DwmSetWindowAttribute (hwnd, DWMWA_NCRENDERING_POLICY, &(DWMNCRENDERINGPOLICY){is_disable ? NCRP_DISABLED : NCRP_ENABLED}, sizeof (DWMNCRENDERINGPOLICY));
+	DWMNCRENDERINGPOLICY value = is_disable ? NCRP_DISABLED : NCRP_ENABLED;
+
+	DwmSetWindowAttribute (hwnd, DWMWA_NCRENDERING_POLICY, &value, sizeof (DWMNCRENDERINGPOLICY));
 }
 
 BOOLEAN _app_getwindowrect (
@@ -170,19 +156,21 @@ BOOLEAN _app_getwindowrect (
 {
 	HRESULT status;
 
+	SetRectEmpty (rect); // cleanup!
+
 	status = DwmGetWindowAttribute (hwnd, DWMWA_EXTENDED_FRAME_BOUNDS, rect, sizeof (RECT));
 
 	if (SUCCEEDED (status))
 		return TRUE;
 
-	return !!GetWindowRect (hwnd, rect); // fallback
+	return !!GetWindowRect (hwnd, rect); // fallback!
 }
 
 BOOLEAN _app_isnormalwindow (
-	_In_ HWND hwnd
+	_In_opt_ HWND hwnd
 )
 {
-	if (!_r_wnd_isvisible (hwnd, FALSE))
+	if (!hwnd || !_r_wnd_isvisible (hwnd, FALSE))
 		return FALSE;
 
 	return !_r_wnd_ismenu (hwnd) && !_r_wnd_isdesktop (hwnd) && (hwnd != GetShellWindow ());
@@ -192,62 +180,49 @@ LONG _app_getwindowshadowsize (
 	_In_ HWND hwnd
 )
 {
-	RECT rect_dwm = {0};
-	RECT rect;
-	LONG size;
+	RECT rect, rect_dwm = {0};
 	HRESULT status;
 
-	if (_r_wnd_ismaximized (hwnd))
+	if (_r_wnd_ismaximized (hwnd) || !GetWindowRect (hwnd, &rect))
 		return 0;
 
-	if (!GetWindowRect (hwnd, &rect))
-		return 0;
-
-	status = DwmGetWindowAttribute (hwnd, DWMWA_EXTENDED_FRAME_BOUNDS, &rect_dwm, sizeof (rect_dwm));
+	status = DwmGetWindowAttribute (hwnd, DWMWA_EXTENDED_FRAME_BOUNDS, &rect_dwm, sizeof (RECT));
 
 	if (FAILED (status))
 		return 0;
 
-	size = max (rect_dwm.left, rect.left) - min (rect_dwm.left, rect.left);
-
-	return _r_calc_clamp (size, 0, 32);
+	return _r_calc_clamp (max (rect_dwm.left, rect.left) - min (rect_dwm.left, rect.left), 0, 32);
 }
 
 _Ret_maybenull_
 PR_STRING _app_uniquefilename (
-	_In_ LPCWSTR directory,
-	_In_ ENUM_IMAGE_NAME name_type
+	_In_ PR_STRING directory
 )
 {
-	WCHAR date_format[MAX_PATH];
-	WCHAR time_format[MAX_PATH];
-	SYSTEMTIME st;
-	PR_STRING name_prefix;
-	PR_STRING string = NULL;
-	PIMAGE_FORMAT format;
-
-	format = _app_getimageformat_data ();
+	SYSTEMTIME system_time;
+	WCHAR date_format[0x100], time_format[0x100];
+	PR_STRING name_prefix, string = NULL;
 
 	name_prefix = _r_config_getstring (L"FilenamePrefix", FILE_FORMAT_NAME_PREFIX, NULL);
 
-	if (name_type == NAME_DATE)
+	if (_app_getimagename_id () == NAME_DATE)
 	{
-		GetLocalTime (&st);
+		GetLocalTime (&system_time);
 
-		if (GetDateFormatW (LOCALE_SYSTEM_DEFAULT, 0, &st, FILE_FORMAT_DATE_FORMAT_1, date_format, RTL_NUMBER_OF (date_format)) &&
-			GetTimeFormatW (LOCALE_SYSTEM_DEFAULT, 0, &st, FILE_FORMAT_DATE_FORMAT_2, time_format, RTL_NUMBER_OF (time_format)))
+		if (GetDateFormatW (LOCALE_SYSTEM_DEFAULT, 0, &system_time, FILE_FORMAT_DATE_FORMAT_1, date_format, RTL_NUMBER_OF (date_format)) &&
+			GetTimeFormatW (LOCALE_SYSTEM_DEFAULT, 0, &system_time, FILE_FORMAT_DATE_FORMAT_2, time_format, RTL_NUMBER_OF (time_format)))
 		{
-			_r_obj_movereference (&string, _r_format_string (
+			_r_obj_movereference ((PVOID_PTR)&string, _r_format_string (
 				L"%s\\%s%s-%s.%s",
-				directory,
+				directory->buffer,
 				_r_obj_getstringordefault (name_prefix, FILE_FORMAT_NAME_PREFIX),
 				date_format,
 				time_format,
-				format->ext)
+				_app_getimageformat_data ()->ext)
 			);
 
 			if (_r_fs_isexists (&string->sr))
-				_r_obj_clearreference (&string);
+				_r_obj_clearreference ((PVOID_PTR)&string);
 		}
 
 		//if (PathYetAnotherMakeUniqueName (result, path_format, NULL, short_path_format))
@@ -256,14 +231,14 @@ PR_STRING _app_uniquefilename (
 
 	if (!string)
 	{
-		for (USHORT i = START_IDX; i < USHRT_MAX; i++)
+		for (ULONG_PTR i = START_IDX; i < USHRT_MAX; i++)
 		{
-			_r_obj_movereference (&string, _r_format_string (
+			_r_obj_movereference ((PVOID_PTR)&string, _r_format_string (
 				L"%s\\" FILE_FORMAT_NAME_FORMAT L".%s",
-				directory,
+				directory->buffer,
 				_r_obj_getstringordefault (name_prefix, FILE_FORMAT_NAME_PREFIX),
 				i,
-				format->ext)
+				_app_getimageformat_data ()->ext)
 			);
 
 			if (!_r_fs_isexists (&string->sr))
@@ -290,14 +265,11 @@ VOID _app_proceedscreenshot (
 	CURSORINFO cursor_info = {0};
 	R_RECTANGLE prev_rect = {0};
 	ICONINFO icon_info;
-	HBITMAP old_bitmap;
-	HBITMAP hbitmap;
-	HDC hcapture = NULL;
-	HDC hdc;
+	HBITMAP hbitmap, old_bitmap;
+	HDC hdc, hcapture = NULL;
 	HWND my_hwnd;
 	LONG dpi_value;
-	BOOLEAN is_windowdisplayed;
-	BOOLEAN is_hideme;
+	BOOLEAN is_hideme, is_windowdisplayed;
 
 	my_hwnd = _r_app_gethwnd ();
 
@@ -355,13 +327,13 @@ VOID _app_proceedscreenshot (
 
 	if (hbitmap)
 	{
-		old_bitmap = SelectObject (hcapture, hbitmap);
+		old_bitmap = (HBITMAP)SelectObject (hcapture, hbitmap);
 
 		BitBlt (hcapture, 0, 0, shot_info->width, shot_info->height, hdc, shot_info->left, shot_info->top, SRCCOPY);
 
 		if (_r_config_getboolean (L"IsIncludeMouseCursor", FALSE, NULL))
 		{
-			cursor_info.cbSize = sizeof (cursor_info);
+			cursor_info.cbSize = sizeof (CURSORINFO);
 
 			if (GetCursorInfo (&cursor_info))
 			{
@@ -445,9 +417,7 @@ VOID _app_savescreenshot (
 	_In_ PSHOT_INFO shot_info
 )
 {
-	LONG delay_id;
-
-	delay_id = _app_getdelay_id ();
+	LONG delay_id = _app_getdelay_id ();
 
 	if (delay_id == INT_ERROR)
 	{
@@ -466,29 +436,20 @@ VOID _app_screenshot (
 	_In_ ENUM_TYPE_SCREENSHOT mode
 )
 {
-	MONITORINFO monitor_info = {0};
 	PSHOT_INFO shot_info;
-	RECT rect;
-	RECT window_rect;
 	POINT pt;
-	HMONITOR hmonitor;
-	HWND hdummy;
-	LONG shadow_size;
-	BOOLEAN is_maximized;
-	BOOLEAN is_menu;
-	BOOLEAN is_includewindowshadow;
-	BOOLEAN is_clearbackground;
-	BOOLEAN is_disableaeroonwnd;
 
 	if (!GetCursorPos (&pt))
-		pt.x = pt.y = 0;
+		RtlZeroMemory (&pt, sizeof (POINT));
 
-	shot_info = _r_obj_allocate (sizeof (SHOT_INFO), NULL);
+	shot_info = (PSHOT_INFO)_r_obj_allocate (sizeof (SHOT_INFO), NULL);
 
 	switch (mode)
 	{
 		case SHOT_FULLSCREEN:
 		{
+			RECT rect;
+
 			_app_getmonitorrect (&rect);
 
 			_r_wnd_setrectangle (&shot_info->rectangle, rect.left, rect.top, rect.right, rect.bottom);
@@ -500,7 +461,10 @@ VOID _app_screenshot (
 
 		case SHOT_MONITOR:
 		{
-			monitor_info.cbSize = sizeof (monitor_info);
+			MONITORINFO monitor_info = {0};
+			HMONITOR hmonitor;
+
+			monitor_info.cbSize = sizeof (MONITORINFO);
 
 			hmonitor = MonitorFromPoint (pt, MONITOR_DEFAULTTONEAREST);
 
@@ -516,10 +480,12 @@ VOID _app_screenshot (
 
 		case SHOT_WINDOW:
 		{
-			if (!hwnd)
-				break;
+			RECT rect;
+			HWND hdummy;
+			LONG shadow_size = 0;
+			BOOLEAN is_clearbackground, is_disableaeroonwnd, is_includewindowshadow, is_maximized, is_menu;
 
-			if (!_app_isnormalwindow (hwnd))
+			if (!hwnd || !_app_isnormalwindow (hwnd))
 				break;
 
 			is_maximized = _r_wnd_ismaximized (hwnd);
@@ -534,24 +500,24 @@ VOID _app_screenshot (
 			if (is_disableaeroonwnd)
 				_app_switchaeroonwnd (hwnd, TRUE);
 
-			if (_app_getwindowrect (hwnd, &window_rect))
+			if (_app_getwindowrect (hwnd, &rect))
 			{
 				// increment all overlapped windows size
 				if (!is_maximized)
-					_r_wnd_calculateoverlappedrect (hwnd, &window_rect);
+					_r_wnd_calculateoverlappedrect (hwnd, &rect);
 
 				// increment shadow size
 				if (is_includewindowshadow)
 				{
-					if (shadow_size)
-						InflateRect (&window_rect, shadow_size, shadow_size);
+					if (shadow_size != 0)
+						InflateRect (&rect, shadow_size, shadow_size);
 				}
 
-				hdummy = is_clearbackground ? _app_showdummy (NULL, hwnd, &window_rect) : NULL;
+				hdummy = is_clearbackground ? _app_showdummy (NULL, hwnd, &rect) : NULL;
 
 				_r_sys_sleep (WND_SLEEP);
 
-				_r_wnd_recttorectangle (&shot_info->rectangle, &window_rect);
+				_r_wnd_recttorectangle (&shot_info->rectangle, &rect);
 
 				_app_savescreenshot (shot_info);
 

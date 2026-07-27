@@ -14,7 +14,7 @@ VOID dump_wnd_info (
 
 VOID _app_playsound ();
 
-LONG _app_getimageformat_id ();
+ULONG _app_getimageformat_id ();
 
 PIMAGE_FORMAT _app_getimageformat_data ();
 
@@ -42,7 +42,7 @@ BOOLEAN _app_getwindowrect (
 );
 
 BOOLEAN _app_isnormalwindow (
-	_In_ HWND hwnd
+	_In_opt_ HWND hwnd
 );
 
 LONG _app_getwindowshadowsize (
@@ -51,8 +51,7 @@ LONG _app_getwindowshadowsize (
 
 _Ret_maybenull_
 PR_STRING _app_uniquefilename (
-	_In_ LPCWSTR directory,
-	_In_ ENUM_IMAGE_NAME name_type
+	_In_ PR_STRING directory
 );
 
 VOID _app_proceedscreenshot (

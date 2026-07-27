@@ -5,6 +5,7 @@
 
 #include "routine.h"
 
+#include <dwmapi.h>
 #include <mmsystem.h>
 
 #include "app.h"
@@ -14,7 +15,6 @@
 #include "resource.h"
 
 DECLSPEC_SELECTANY STATIC_DATA config = {0};
-
 DECLSPEC_SELECTANY R_FREE_LIST context_list = {0};
 
 DECLSPEC_SELECTANY const LONG timer_array[] =

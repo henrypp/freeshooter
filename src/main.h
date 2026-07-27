@@ -13,6 +13,7 @@
 #pragma comment(lib, "windowscodecs.lib")
 #pragma comment(lib, "winmm.lib")
 
+#define LANG_SUBMENU 1
 #define LANG_MENU 7
 
 #define SETTINGS_MENU 7
@@ -25,12 +26,12 @@
 #define WND_SLEEP 150
 #define JPEG_QUALITY 95
 #define BLEND 1.8
-#define START_IDX 1
+#define START_IDX 1ULL
 
-#define BG_COLOR_WINDOW RGB (255, 255, 255)
+#define BG_COLOR_WINDOW RGB (0xFF, 0xFF, 0xFF)
 
 #define FILE_FORMAT_NAME_PREFIX L"sshot-"
-#define FILE_FORMAT_NAME_FORMAT L"%s%03d"
+#define FILE_FORMAT_NAME_FORMAT L"%s%03llu"
 #define FILE_FORMAT_DATE_FORMAT_1 L"yyyy-MM-dd"
 #define FILE_FORMAT_DATE_FORMAT_2 L"HH-mm-ss"
 
@@ -138,6 +139,15 @@ typedef enum _ENUM_TYPE_SCREENSHOT
 	SHOT_WINDOW,
 	SHOT_REGION,
 } ENUM_TYPE_SCREENSHOT, *PENUM_TYPE_SCREENSHOT;
+
+typedef enum _ENUM_IMAGE_FORMAT
+{
+	FORMAT_BMP,
+	FORMAT_JPEG,
+	FORMAT_PNG,
+	FORMAT_JXR,
+	FORMAT_TIFF,
+} ENUM_IMAGE_FORMAT, *PENUM_IMAGE_FORMAT;
 
 typedef enum _ENUM_IMAGE_NAME
 {

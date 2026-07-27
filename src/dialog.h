@@ -1,5 +1,5 @@
 // Free Shooter
-// Copyright (c) 2009-2023 Henry++
+// Copyright (c) 2009-2026 Henry++
 
 #pragma once
 
@@ -33,6 +33,7 @@ VOID _app_destroytimer (
 	_Inout_ PMONITOR_CONTEXT monitor_context
 );
 
+_Ret_maybenull_
 HWND _app_showdummy (
 	_In_opt_ HWND hdummy,
 	_In_opt_ HWND hwnd,

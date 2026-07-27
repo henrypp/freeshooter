@@ -18,7 +18,7 @@ HBITMAP _app_image_createbitmap (
 	_In_opt_ HDC hdc,
 	_In_ LONG width,
 	_In_ LONG height,
-	_Out_opt_ PR_BYTEREF out_bytes
+	_Out_opt_ PR_STORAGE out_bytes
 );
 
 VOID _app_image_savebitmaptofile (
