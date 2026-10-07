@@ -106,7 +106,7 @@ PR_STRING _app_getdirectory ()
 	string = _r_config_getstringexpand (L"Folder", _r_obj_getstring (default_folder), NULL);
 
 	if (!string)
-		string = _r_obj_reference (default_folder);
+		string = _r_obj_referencesafe (default_folder);
 
 	return string;
 }
@@ -118,9 +118,7 @@ BOOL CALLBACK enum_monitor_proc (
 	_In_ LPARAM lparam
 )
 {
-	LPRECT new_rect;
-
-	new_rect = (LPRECT)lparam;
+	LPRECT new_rect = (LPRECT)lparam;
 
 	if (IsRectEmpty (new_rect))
 		CopyRect (new_rect, rect);
@@ -308,7 +306,7 @@ VOID _app_proceedscreenshot (
 
 		if (!hdc)
 		{
-			_r_log (LOG_LEVEL_WARNING, NULL, L"GetDC", NtLastError (), NULL);
+			_r_log (LOG_LEVEL_WARNING, NULL, L"GetDC", NULL, NtLastError ());
 
 			goto CleanupExit;
 		}
@@ -318,7 +316,7 @@ VOID _app_proceedscreenshot (
 
 	if (!hcapture)
 	{
-		_r_log (LOG_LEVEL_WARNING, NULL, L"CreateCompatibleDC", NtLastError (), NULL);
+		_r_log (LOG_LEVEL_WARNING, NULL, L"CreateCompatibleDC", NULL, NtLastError ());
 
 		goto CleanupExit;
 	}

@@ -86,7 +86,7 @@ VOID _app_image_wicsetoptions (
 		status = IPropertyBag2_Write (property_bag, options_count, options, values);
 
 		if (status != S_OK)
-			_r_log (LOG_LEVEL_WARNING, NULL, L"IPropertyBag2_Write", status, NULL);
+			_r_log (LOG_LEVEL_WARNING, NULL, L"IPropertyBag2_Write", NULL, status);
 	}
 }
 
@@ -108,7 +108,7 @@ BOOLEAN _app_image_wicsavehbitmap (
 	BOOLEAN is_success = FALSE;
 	HRESULT status;
 
-	status = CoCreateInstance (&CLSID_WICImagingFactory2, NULL, CLSCTX_INPROC_SERVER, &IID_IWICImagingFactory2, (PVOID_PTR)&wic_factory);
+	status = CoCreateInstance (&CLSID_WICImagingFactory2, NULL, CLSCTX_INPROC_SERVER, _r_sys_isosversiongreaterorequal (WINDOWS_8) ? &IID_IWICImagingFactory2 : &IID_IWICImagingFactory, (PVOID_PTR)&wic_factory);
 
 	if (FAILED (status))
 		goto CleanupExit;
@@ -187,7 +187,7 @@ BOOLEAN _app_image_wicsavehbitmap (
 CleanupExit:
 
 	if (FAILED (status))
-		_r_show_errormessage (hwnd, L"WIC saving image!", status, NULL, ET_WINDOWS);
+		_r_show_errormessage (hwnd, L"WIC saving image!", NULL, status, ET_WINDOWS);
 
 	if (property_bag)
 		IPropertyBag2_Release (property_bag);
@@ -214,7 +214,7 @@ HBITMAP _app_image_createbitmap (
 	_In_opt_ HDC hdc,
 	_In_ LONG width,
 	_In_ LONG height,
-	_Out_opt_ PR_STORAGE out_bytes
+	_Out_opt_ PR_STORAGE out_buffer
 )
 {
 	BITMAPINFO bmi = {0};
@@ -227,12 +227,12 @@ HBITMAP _app_image_createbitmap (
 	bmi.bmiHeader.biHeight = height;
 	bmi.bmiHeader.biPlanes = 1;
 	bmi.bmiHeader.biBitCount = 32; // four 8-bit components
-	bmi.bmiHeader.biSizeImage = (width * height) * sizeof (RGBQUAD); // rgba
+	bmi.bmiHeader.biSizeImage = (width * height) * sizeof (RGBQUAD); // RGBA
 
 	hbitmap = CreateDIBSection (hdc, &bmi, DIB_RGB_COLORS, &bits, NULL, 0);
 
-	if (out_bytes)
-		_r_obj_initializestorage (out_bytes, bits, bmi.bmiHeader.biSizeImage);
+	if (out_buffer)
+		_r_obj_initializestorage (out_buffer, bits, bmi.bmiHeader.biSizeImage);
 
 	return hbitmap;
 }
